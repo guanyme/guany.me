@@ -1,0 +1,182 @@
+'use client'
+
+import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { createPortal } from 'react-dom'
+import { useTheme } from 'next-themes'
+
+const emptySubscribe = () => () => {}
+const getClientSnapshot = () => true
+const getServerSnapshot = () => false
+
+function useMounted() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  )
+}
+import {
+  Streamdown,
+  type PluginConfig,
+  type LinkSafetyModalProps,
+} from 'streamdown'
+import { createCodePlugin } from '@streamdown/code'
+import { createMermaidPlugin } from '@streamdown/mermaid'
+import { createMathPlugin } from '@streamdown/math'
+import { createCjkPlugin } from '@streamdown/cjk'
+import rehypeRaw from 'rehype-raw'
+import { rehypeCustomSlug } from '@/lib/rehype-custom-slug'
+import rehypeUnwrapImages from 'rehype-unwrap-images'
+import { useTranslations } from 'next-intl'
+import { ExternalLink, X, Copy } from 'lucide-react'
+
+const plugins: PluginConfig = {
+  code: createCodePlugin({ themes: ['vitesse-light', 'vitesse-dark'] }),
+  mermaid: createMermaidPlugin(),
+  math: createMathPlugin(),
+  cjk: createCjkPlugin(),
+}
+
+const rehypePlugins = [rehypeRaw, rehypeUnwrapImages, rehypeCustomSlug]
+
+function LinkSafetyModal({
+  url,
+  isOpen,
+  onClose,
+  onConfirm,
+}: LinkSafetyModalProps) {
+  const t = useTranslations('linkSafety')
+  if (!isOpen || typeof document === 'undefined') return null
+
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(url)
+  }
+
+  const modalContent = (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="mx-4 w-full max-w-md rounded-lg border bg-background p-6 shadow-lg">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ExternalLink className="h-5 w-5" />
+            <span className="text-lg font-semibold">{t('title')}</span>
+          </div>
+          <button onClick={onClose} className="rounded p-1 hover:bg-muted">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <span className="mb-4 block text-muted-foreground">
+          {t('description')}
+        </span>
+        <div className="mb-4 rounded bg-muted p-3 text-sm break-all">{url}</div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleCopy}
+            className="flex flex-1 items-center justify-center gap-2 rounded border px-4 py-2 hover:bg-muted"
+          >
+            <Copy className="h-4 w-4" />
+            {t('copyLink')}
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex flex-1 items-center justify-center gap-2 rounded bg-primary px-4 py-2 text-primary-foreground hover:opacity-90"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {t('openLink')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  return createPortal(modalContent, document.body)
+}
+
+interface StreamdownRendererProps {
+  content: string
+  className?: string
+  /** Render mode, static by default; AI features can pass streaming later */
+  mode?: 'streaming' | 'static'
+  /** Enable when rendering untrusted content; uses Streamdown's default security rehype plugin */
+  untrusted?: boolean
+}
+
+export function StreamdownRenderer({
+  content,
+  className,
+  mode = 'static',
+  untrusted = false,
+}: StreamdownRendererProps) {
+  const mounted = useMounted()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { resolvedTheme } = useTheme()
+  const trimmedContent = content.trim().replace(/\n{3,}/g, '\n\n')
+  // Use 'default' during SSR, and the actual theme only after the client has mounted
+  const mermaidTheme = mounted && resolvedTheme === 'dark' ? 'dark' : 'default'
+
+  // Dynamically set scroll-margin-top based on the actual header height + the heading's marginTop
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    let hashHandled = false
+
+    const applyScrollMargins = () => {
+      const header = document.querySelector('header')
+      const headerHeight = header?.offsetHeight ?? 64
+      const headings = container.querySelectorAll<HTMLElement>(
+        'h2[id], h3[id], h4[id], h5[id], h6[id]',
+      )
+      for (const h of headings) {
+        if (h.style.scrollMarginTop) continue
+        const marginTop = parseFloat(getComputedStyle(h).marginTop) || 0
+        h.style.scrollMarginTop = `${headerHeight + marginTop}px`
+      }
+      // Compensate for initial hash navigation
+      if (!hashHandled && headings.length > 0) {
+        hashHandled = true
+        const hash = decodeURIComponent(window.location.hash.slice(1))
+        if (hash) {
+          const target = document.getElementById(hash)
+          if (target) target.scrollIntoView()
+        }
+      }
+    }
+
+    applyScrollMargins()
+    // Streamdown may render asynchronously or replace the DOM, so keep observing
+    const observer = new MutationObserver(applyScrollMargins)
+    observer.observe(container, { childList: true, subtree: true })
+    return () => observer.disconnect()
+  }, [content])
+
+  return (
+    <div ref={containerRef} className={className}>
+      <Streamdown
+        mode={mode}
+        key={mermaidTheme}
+        plugins={plugins}
+        mermaid={{ config: { theme: mermaidTheme } }}
+        rehypePlugins={untrusted ? undefined : rehypePlugins}
+        linkSafety={{
+          enabled: true,
+          onLinkCheck: (url) => {
+            // Allow internal links and proxy links directly
+            if (url.startsWith('/') || url.startsWith('#')) return true
+            // Open a dialog for external links that were not rewritten
+            return false
+          },
+          renderModal: ({ url, isOpen, onClose, onConfirm }) => (
+            <LinkSafetyModal
+              url={url}
+              isOpen={isOpen}
+              onClose={onClose}
+              onConfirm={onConfirm}
+            />
+          ),
+        }}
+      >
+        {trimmedContent}
+      </Streamdown>
+    </div>
+  )
+}

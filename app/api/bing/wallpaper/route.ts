@@ -1,0 +1,31 @@
+import { type NextRequest, NextResponse } from 'next/server'
+import type { BingWallpaperResponse } from '@/types/bing'
+import { toMkt } from '@/lib/locale'
+
+export async function GET(request: NextRequest) {
+  const locale = request.nextUrl.searchParams.get('locale') || 'en'
+  const mkt = toMkt(locale)
+
+  const res = await fetch(
+    `https://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1&mkt=${mkt}`,
+    {
+      next: { revalidate: 3600 }, // Cache for 1 hour
+    },
+  )
+
+  if (!res.ok) {
+    return NextResponse.json(
+      { error: 'Failed to fetch Bing wallpaper' },
+      { status: res.status },
+    )
+  }
+
+  const data: BingWallpaperResponse = await res.json()
+  const wallpaperUrl = `https://www.bing.com${data.images[0].url}`
+
+  return NextResponse.json({
+    url: wallpaperUrl,
+    copyright: data.images[0].copyright,
+    title: data.images[0].title,
+  })
+}
