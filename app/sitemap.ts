@@ -25,7 +25,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     alternates: {
       languages: {
         en: `${siteUrl}/`,
-        'zh-CN': `${siteUrl}/zh-cn`,
+        zh: `${siteUrl}/zh`,
       },
     },
   })
@@ -44,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: {
         languages: {
           en: `${siteUrl}/docs/${slug}`,
-          'zh-CN': `${siteUrl}/zh-cn/docs/${slug}`,
+          zh: `${siteUrl}/zh/docs/${slug}`,
         },
       },
     })
@@ -60,7 +60,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         alternates: {
           languages: {
             en: `${siteUrl}/projects/${repo.name}`,
-            'zh-CN': `${siteUrl}/zh-cn/projects/${repo.name}`,
+            zh: `${siteUrl}/zh/projects/${repo.name}`,
           },
         },
       })
@@ -77,7 +77,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     alternates: {
       languages: {
         en: `${siteUrl}/uses`,
-        'zh-CN': `${siteUrl}/zh-cn/uses`,
+        zh: `${siteUrl}/zh/uses`,
       },
     },
   })

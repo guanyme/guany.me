@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: DocsPageProps) {
       canonical: `${siteUrl}/docs/${slugPath}`,
       languages: {
         en: `${siteUrl}/docs/${slugPath}`,
-        'zh-CN': `${siteUrl}/zh-cn/docs/${slugPath}`,
+        zh: `${siteUrl}/zh/docs/${slugPath}`,
       },
     },
   }

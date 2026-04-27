@@ -41,7 +41,7 @@ export async function generateMetadata({
     openGraph: {
       type: 'website',
       siteName: title,
-      locale: locale === 'zh-cn' ? 'zh_CN' : 'en_US',
+      locale: locale === 'zh' ? 'zh' : 'en_US',
       url: `${siteUrl}${localePrefix}`,
       title,
       description,
@@ -55,7 +55,7 @@ export async function generateMetadata({
       canonical: `${siteUrl}${localePrefix}`,
       languages: {
         en: `${siteUrl}/`,
-        'zh-CN': `${siteUrl}/zh-cn`,
+        zh: `${siteUrl}/zh`,
       },
     },
   }

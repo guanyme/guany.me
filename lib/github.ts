@@ -272,12 +272,10 @@ export async function getRepoReadme(
   if (!token) return null
 
   // For non-default locales, try to fetch the corresponding language's README first
-  // Intl.Locale automatically normalizes casing: zh-cn → zh-CN
   if (locale && locale !== 'en') {
-    const readmeLocale = new Intl.Locale(locale).toString()
     const localizedContent = await fetchReadmeByName(
       fullName,
-      `README.${readmeLocale}.md`,
+      `README.${locale}.md`,
     )
     if (localizedContent) {
       return processReadmeContent(localizedContent, fullName, defaultBranch)

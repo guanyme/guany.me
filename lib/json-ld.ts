@@ -15,7 +15,7 @@ export function webSiteJsonLd({
     name,
     description,
     url: siteUrl,
-    inLanguage: locale === 'zh-cn' ? 'zh-CN' : 'en',
+    inLanguage: locale === 'zh' ? 'zh' : 'en',
     author: {
       '@type': 'Person',
       name: 'Guany',
@@ -43,7 +43,7 @@ export function techArticleJsonLd({
     headline: title,
     ...(description && { description }),
     url,
-    inLanguage: locale === 'zh-cn' ? 'zh-CN' : 'en',
+    inLanguage: locale === 'zh' ? 'zh' : 'en',
     ...(dateModified && { dateModified }),
     author: {
       '@type': 'Person',

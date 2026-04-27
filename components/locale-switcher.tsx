@@ -13,7 +13,7 @@ import {
 
 const localeLabels: Record<string, string> = {
   en: 'English',
-  'zh-cn': '中文',
+  zh: '中文',
 }
 
 export function LocaleSwitcher() {

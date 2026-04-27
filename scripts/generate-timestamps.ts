@@ -26,15 +26,21 @@ const timestamps: Record<string, string> = {}
 
 for (const filePath of files) {
   const relativePath = path.relative(contentDir, filePath)
+  const gitPath = path.relative(process.cwd(), filePath)
   try {
-    const result = execSync(`git log -1 --format=%cI -- "${filePath}"`, {
-      encoding: 'utf8',
-    }).trim()
+    const result = execSync(
+      `git log -1 --follow --format=%cI -- "${gitPath}"`,
+      {
+        encoding: 'utf8',
+      },
+    ).trim()
     if (result) {
       timestamps[relativePath] = result
+    } else {
+      timestamps[relativePath] = fs.statSync(filePath).mtime.toISOString()
     }
   } catch {
-    // ignore
+    timestamps[relativePath] = fs.statSync(filePath).mtime.toISOString()
   }
 }
 

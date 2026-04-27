@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: ProjectPageProps) {
       canonical: `${siteUrl}/projects/${slug}`,
       languages: {
         en: `${siteUrl}/projects/${slug}`,
-        'zh-CN': `${siteUrl}/zh-cn/projects/${slug}`,
+        zh: `${siteUrl}/zh/projects/${slug}`,
       },
     },
   }
@@ -128,7 +128,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
       <div className="mt-16 border-t pt-6">
         <ContentFooter
-          editUrl={`https://github.com/${repo.full_name}/edit/${repo.default_branch}/${locale !== 'en' ? `README.${new Intl.Locale(locale).toString()}.md` : 'README.md'}`}
+          editUrl={`https://github.com/${repo.full_name}/edit/${repo.default_branch}/${locale !== 'en' ? `README.${locale}.md` : 'README.md'}`}
           locale={locale}
           prev={
             prevRepo
