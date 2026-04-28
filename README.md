@@ -22,7 +22,7 @@ cp .env.example .env.local
 | ----------------- | -------- | ------------------------------------------------------------------------------- |
 | `SITE_URL`        | No       | Public site URL used for sitemap and metadata                                   |
 | `GITHUB_TOKEN`    | Yes      | GitHub personal access token                                                    |
-| `HOME_CONFIG_URL` | No       | Remote project config JSON URL, e.g. `https://cdn.example.com/config/home.json` |
+| `HOME_CONFIG_URL` | No       | Remote project config JSON URL, e.g. `https://assets.example.com/config/home.json` |
 
 ## Usage
 
@@ -48,7 +48,7 @@ Example `home.json`:
 {
   "hero": {
     "mode": "custom",
-    "url": "https://cdn.example.com/img/background.webp",
+    "url": "https://assets.example.com/img/background.webp",
     "position": "center"
   }
 }
