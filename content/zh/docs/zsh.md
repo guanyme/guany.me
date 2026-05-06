@@ -49,7 +49,7 @@ eval "$(starship init zsh)"
 ```
 
 ```sh
-function i() {
+i() {
   cd ~/i/$1
 }
 ```
