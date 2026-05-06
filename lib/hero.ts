@@ -7,7 +7,7 @@ import type {
 import { toMkt } from '@/lib/locale'
 import { fetchWithTimeout } from '@/lib/server-fetch'
 
-const HOME_CONFIG_URL = process.env.HOME_CONFIG_URL
+const SITE_CONFIG_URL = process.env.SITE_CONFIG_URL
 
 function normalizePosition(position?: string): string {
   const trimmed = position?.trim()
@@ -29,10 +29,10 @@ function toCustomBackground(
 }
 
 async function getRemoteHeroConfig(): Promise<HeroBackgroundConfig | null> {
-  if (!HOME_CONFIG_URL) return null
+  if (!SITE_CONFIG_URL) return null
 
   try {
-    const res = await fetchWithTimeout(HOME_CONFIG_URL, {
+    const res = await fetchWithTimeout(SITE_CONFIG_URL, {
       next: { revalidate: 300 },
       timeoutMs: 5000,
     })

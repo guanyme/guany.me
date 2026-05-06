@@ -12,7 +12,7 @@ export async function DocsFooter({ slug, locale }: DocsFooterProps) {
   const t = await getTranslations({ locale, namespace: 'docs' })
   const { prev, next } = getDocNavigation(slug)
   const lastUpdated = getDocLastUpdated(locale, slug)
-  const editUrl = `https://github.com/guanyme/home/edit/main/content/${locale}/docs/${slug}.md`
+  const editUrl = `https://github.com/guanyme/guany.me/edit/main/content/${locale}/docs/${slug}.md`
 
   return (
     <footer className="mt-16 border-t pt-6 xl:mr-[17rem]">
