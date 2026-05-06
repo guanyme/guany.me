@@ -46,7 +46,7 @@ export default async function UsesPage({
       </article>
       <div className="mt-16 border-t pt-6">
         <ContentFooter
-          editUrl={`https://github.com/guanyme/home/edit/main/content/${locale}/pages/uses.md`}
+          editUrl={`https://github.com/guanyme/guany.me/edit/main/content/${locale}/pages/uses.md`}
           locale={locale}
           lastUpdated={getDocLastUpdated(locale, 'uses', 'pages')}
         />

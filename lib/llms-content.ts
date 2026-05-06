@@ -16,9 +16,9 @@ export async function buildLlmsContent({
   const canonicalOrigin = origin ?? siteUrl
   const today = new Date().toISOString().split('T')[0]
   const lines: string[] = [
-    "# Guany's Home",
+    "# Guany's website",
     '',
-    '> Personal home with projects, docs, and uses',
+    '> Website with projects, docs, and uses',
     '',
     `> Author: Guany`,
     `> Source: ${canonicalOrigin}`,

@@ -1,5 +1,6 @@
 {
-  "name": "home",
+  "name": "guany.me",
+  "description": "▲ Guany's website",
   "version": "0.1.0",
   "private": true,
   "scripts": {

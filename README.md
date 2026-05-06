@@ -1,6 +1,6 @@
-# home
+# guany.me
 
-▲ Guany's home
+▲ Guany's website
 
 | Category  | Stack                      |
 | --------- | -------------------------- |
@@ -22,7 +22,7 @@ cp .env.example .env.local
 | ----------------- | -------- | ------------------------------------------------------------------------------- |
 | `SITE_URL`        | No       | Public site URL used for sitemap and metadata                                   |
 | `GITHUB_TOKEN`    | Yes      | GitHub personal access token                                                    |
-| `HOME_CONFIG_URL` | No       | Remote project config JSON URL, e.g. `https://assets.example.com/config/home.json` |
+| `SITE_CONFIG_URL` | No       | Remote site config JSON URL, e.g. `https://assets.example.com/config/site.json` |
 
 ## Usage
 
@@ -40,9 +40,9 @@ pnpm build
 
 ### Hero Background Config
 
-Hero background first tries to load the remote project config from `HOME_CONFIG_URL` and read the `hero` field. If the remote config is unavailable or invalid, it falls back to Bing daily wallpaper.
+Hero background first tries to load the remote site config from `SITE_CONFIG_URL` and read the `hero` field. If the remote config is unavailable or invalid, it falls back to Bing daily wallpaper.
 
-Example `home.json`:
+Example `site.json`:
 
 ```json
 {

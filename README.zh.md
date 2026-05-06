@@ -1,6 +1,6 @@
-# home
+# guany.me
 
-▲ Guany 的首页
+▲ Guany 的网站
 
 | 分类   | 技术栈                     |
 | ------ | -------------------------- |
@@ -22,7 +22,7 @@ cp .env.example .env.local
 | ----------------- | ---- | ----------------------------------------------------------------------- |
 | `SITE_URL`        | 否   | 站点公开地址，用于 sitemap 和 metadata                                  |
 | `GITHUB_TOKEN`    | 是   | GitHub 个人访问令牌                                                     |
-| `HOME_CONFIG_URL` | 否   | 远程项目配置 JSON 地址，例如 `https://assets.example.com/config/home.json` |
+| `SITE_CONFIG_URL` | 否   | 远程站点配置 JSON 地址，例如 `https://assets.example.com/config/site.json` |
 
 ## 使用说明
 
@@ -40,9 +40,9 @@ pnpm build
 
 ### Hero 背景图配置
 
-Hero 背景图会优先读取 `HOME_CONFIG_URL` 指向的远程项目配置，并从中读取 `hero` 字段；如果远程配置不可用或无效，则自动回退到必应每日壁纸。
+Hero 背景图会优先读取 `SITE_CONFIG_URL` 指向的远程站点配置，并从中读取 `hero` 字段；如果远程配置不可用或无效，则自动回退到必应每日壁纸。
 
-`home.json` 示例：
+`site.json` 示例：
 
 ```json
 {
