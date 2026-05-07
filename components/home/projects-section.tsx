@@ -1,9 +1,20 @@
-import { getTranslations } from 'next-intl/server'
-import { getRepos } from '@/lib/github'
+import { getLocale, getTranslations } from 'next-intl/server'
+import { getRepos, getRepoTagline } from '@/lib/github'
 import { ProjectCard } from './project-card'
 
 export async function ProjectsSection() {
-  const [repos, t] = await Promise.all([getRepos(), getTranslations('home')])
+  const [repos, t, locale] = await Promise.all([
+    getRepos(),
+    getTranslations('home'),
+    getLocale(),
+  ])
+  const featured = repos.slice(0, 6)
+  const enriched = await Promise.all(
+    featured.map(async (repo) => ({
+      ...repo,
+      tagline: await getRepoTagline(repo.full_name, repo.default_branch, locale),
+    })),
+  )
 
   return (
     <section className="px-5 py-16">
@@ -13,7 +24,7 @@ export async function ProjectsSection() {
         </h2>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {repos.slice(0, 6).map((repo, index) => (
+          {enriched.map((repo, index) => (
             <ProjectCard key={repo.id} repo={repo} index={index} />
           ))}
         </div>

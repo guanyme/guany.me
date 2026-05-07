@@ -35,6 +35,7 @@ export function ProjectList({ repos, initialKeyword = '' }: ProjectListProps) {
         const query = search.toLowerCase()
         return (
           repo.name.toLowerCase().includes(query) ||
+          repo.tagline?.toLowerCase().includes(query) ||
           repo.description?.toLowerCase().includes(query) ||
           repo.language?.toLowerCase().includes(query)
         )
@@ -95,7 +96,7 @@ export function ProjectList({ repos, initialKeyword = '' }: ProjectListProps) {
                 </div>
 
                 <p className="line-clamp-2 flex-1 text-sm text-muted-foreground">
-                  {repo.description || t('noDescription')}
+                  {repo.tagline ?? repo.description ?? t('noDescription')}
                 </p>
               </div>
 
