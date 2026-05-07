@@ -264,6 +264,43 @@ async function fetchReadmeByName(
   return res.text()
 }
 
+// Extract the tagline that follows the H1 title in a README. Convention:
+//
+//   # ProjectName
+//
+//   🤖 Short description here
+//
+//   <picture>...</picture>
+//
+// Skip blank lines, headings, lists, tables, blockquotes, code fences,
+// and HTML/Markdown image blocks; the first remaining line is the tagline.
+function extractTagline(content: string): string | null {
+  const lines = content.split(/\r?\n/)
+  let pastTitle = false
+  for (const line of lines) {
+    const trimmed = line.trim()
+    if (!pastTitle) {
+      if (/^#\s+/.test(trimmed)) pastTitle = true
+      continue
+    }
+    if (!trimmed) continue
+    if (/^[<#|*\->`+]/.test(trimmed)) continue
+    if (/^!\[/.test(trimmed)) continue
+    return trimmed
+  }
+  return null
+}
+
+export async function getRepoTagline(
+  fullName: string,
+  defaultBranch: string,
+  locale: string,
+): Promise<string | null> {
+  const readme = await getRepoReadme(fullName, defaultBranch, locale)
+  if (!readme) return null
+  return extractTagline(readme)
+}
+
 export async function getRepoReadme(
   fullName: string,
   defaultBranch: string,

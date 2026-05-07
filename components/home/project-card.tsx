@@ -49,7 +49,7 @@ export function ProjectCard({ repo, index }: ProjectCardProps) {
 
         {/* Description */}
         <p className="line-clamp-2 text-sm text-muted-foreground">
-          {repo.description || t('noDescription')}
+          {repo.tagline ?? repo.description ?? t('noDescription')}
         </p>
       </div>
 

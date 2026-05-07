@@ -1,5 +1,5 @@
 import { setRequestLocale, getTranslations } from 'next-intl/server'
-import { getRepos } from '@/lib/github'
+import { getRepos, getRepoTagline } from '@/lib/github'
 import { ProjectList } from '@/components/home/project-list'
 
 export async function generateMetadata({
@@ -29,13 +29,19 @@ export default async function ProjectsPage({
   const initialKeyword = typeof keyword === 'string' ? keyword : ''
 
   const repos = await getRepos()
+  const enriched = await Promise.all(
+    repos.map(async (repo) => ({
+      ...repo,
+      tagline: await getRepoTagline(repo.full_name, repo.default_branch, locale),
+    })),
+  )
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-24">
       <h1 className="mb-8 text-3xl font-bold">
         <ProjectsTitle />
       </h1>
-      <ProjectList repos={repos} initialKeyword={initialKeyword} />
+      <ProjectList repos={enriched} initialKeyword={initialKeyword} />
     </div>
   )
 }

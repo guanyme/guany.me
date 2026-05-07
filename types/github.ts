@@ -23,4 +23,7 @@ export interface GitHubRepo {
   forks_count: number
   updated_at: string
   default_branch: string
+  // Optional: line right after the H1 in the repo's README. Populated by
+  // pages that fetch via `getRepoTagline`; not part of the GitHub response.
+  tagline?: string | null
 }
