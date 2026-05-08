@@ -1,7 +1,6 @@
 import { Inter, Fira_Code } from 'next/font/google'
 import { getLocale } from 'next-intl/server'
 import { ThemeProvider } from '@/components/theme-provider'
-import 'katex/dist/katex.min.css'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })

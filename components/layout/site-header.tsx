@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import NextLink from 'next/link'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type MouseEvent } from 'react'
 import { useTranslations } from 'next-intl'
 import { Link, usePathname } from '@/i18n/navigation'
 import { ModeToggle } from '@/components/mode-toggle'
@@ -42,6 +42,32 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // After clicking a nav anchor (e.g. /#projects), the URL keeps the hash and
+  // a follow-up click on the / logo is a same-path no-op — the page stays
+  // parked at the anchor. Clear the hash via replaceState so a smooth scroll
+  // to top runs cleanly.
+  function handleLogoClick(e: MouseEvent<HTMLAnchorElement>) {
+    if (
+      e.button !== 0 ||
+      e.metaKey ||
+      e.ctrlKey ||
+      e.shiftKey ||
+      e.altKey
+    ) {
+      return
+    }
+    if (pathname !== '/') return
+    e.preventDefault()
+    if (window.location.hash) {
+      window.history.replaceState(
+        null,
+        '',
+        window.location.pathname + window.location.search,
+      )
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <header
       className={`fixed top-0 right-0 left-0 z-50 h-16 backdrop-blur-xl transition-all duration-300 ${
@@ -54,7 +80,11 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
         <div className="flex items-center gap-2">
           {isDocsPage && <MobileNav className="mr-1 lg:hidden" />}
 
-          <Link href="/" className="group flex items-center gap-3">
+          <Link
+            href="/"
+            className="group flex items-center gap-3"
+            onClick={handleLogoClick}
+          >
             {avatar && (
               <Image
                 className="size-9 rounded-full ring-2 ring-border transition-all group-hover:ring-primary"

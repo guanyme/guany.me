@@ -291,47 +291,60 @@ function extractTagline(content: string): string | null {
   return null
 }
 
-export async function getRepoTagline(
-  fullName: string,
-  defaultBranch: string,
-  locale: string,
-): Promise<string | null> {
-  const readme = await getRepoReadme(fullName, defaultBranch, locale)
-  if (!readme) return null
-  return extractTagline(readme)
-}
+export const getRepoTagline = cache(
+  async (
+    fullName: string,
+    defaultBranch: string,
+    locale: string,
+  ): Promise<string | null> => {
+    const readme = await getRepoReadme(fullName, defaultBranch, locale)
+    if (!readme) return null
+    return extractTagline(readme)
+  },
+)
 
-export async function getRepoReadme(
-  fullName: string,
-  defaultBranch: string,
-  locale?: string,
-): Promise<string | null> {
-  if (!token) return null
-
-  // 非默认 locale 优先获取对应语言的 README
-  if (locale && locale !== 'en') {
-    const localizedContent = await fetchReadmeByName(
-      fullName,
-      `README.${locale}.md`,
-    )
-    if (localizedContent) {
-      return processReadmeContent(localizedContent, fullName, defaultBranch)
-    }
-  }
-
-  // 回退到默认 README
-  const res = await fetchWithTimeout(
-    `https://api.github.com/repos/${fullName}/readme`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/vnd.github.raw+json',
+const fetchDefaultReadme = cache(
+  async (fullName: string): Promise<string | null> => {
+    if (!token) return null
+    const res = await fetchWithTimeout(
+      `https://api.github.com/repos/${fullName}/readme`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github.raw+json',
+        },
+        next: { revalidate: 3600 },
+        timeoutMs: 5000,
       },
-      next: { revalidate: 3600 },
-      timeoutMs: 5000,
-    },
-  )
-  if (!res.ok) return null
-  const content = await res.text()
-  return processReadmeContent(content, fullName, defaultBranch)
-}
+    )
+    if (!res.ok) return null
+    return res.text()
+  },
+)
+
+export const getRepoReadme = cache(
+  async (
+    fullName: string,
+    defaultBranch: string,
+    locale?: string,
+  ): Promise<string | null> => {
+    if (!token) return null
+
+    // For non-default locales, race the localized README and the default one
+    // in parallel so we save a round-trip when the localized variant exists.
+    // The fallback fetch is cheap (cached + GitHub bills nothing for reads).
+    if (locale && locale !== 'en') {
+      const [localized, fallback] = await Promise.all([
+        fetchReadmeByName(fullName, `README.${locale}.md`),
+        fetchDefaultReadme(fullName),
+      ])
+      const content = localized ?? fallback
+      if (!content) return null
+      return processReadmeContent(content, fullName, defaultBranch)
+    }
+
+    const content = await fetchDefaultReadme(fullName)
+    if (!content) return null
+    return processReadmeContent(content, fullName, defaultBranch)
+  },
+)
