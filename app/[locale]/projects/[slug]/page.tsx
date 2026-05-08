@@ -53,21 +53,24 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   setRequestLocale(locale)
 
   const t = await getTranslations('projects')
-  const [repo, repos] = await Promise.all([getRepo(slug), getRepos()])
+  const repo = await getRepo(slug)
 
   if (!repo) {
     notFound()
   }
 
+  // Once we have the repo, fetch the README and the prev/next repo list in
+  // parallel — getRepos() hits the React cache populated by getRepo() and
+  // returns synchronously, so this collapses into a single round-trip for
+  // the README.
+  const [repos, readme] = await Promise.all([
+    getRepos(),
+    getRepoReadme(repo.full_name, repo.default_branch, locale),
+  ])
+
   const index = repos.findIndex((r) => r.name === slug)
   const prevRepo = index > 0 ? repos[index - 1] : null
   const nextRepo = index < repos.length - 1 ? repos[index + 1] : null
-
-  const readme = await getRepoReadme(
-    repo.full_name,
-    repo.default_branch,
-    locale,
-  )
 
   const localePrefix = locale === 'en' ? '' : `/${locale}`
 
