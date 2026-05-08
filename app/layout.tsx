@@ -3,8 +3,16 @@ import { getLocale } from 'next-intl/server'
 import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
-const firaCode = Fira_Code({ subsets: ['latin'], variable: '--font-mono' })
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans',
+})
+const firaCode = Fira_Code({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-mono',
+})
 
 export default async function RootLayout({
   children,

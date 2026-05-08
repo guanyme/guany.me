@@ -21,6 +21,11 @@ export default async function Home({
 
   return (
     <>
+      {hero?.url && (
+        // React 19 hoists this <link> into <head> automatically, giving the
+        // hero wallpaper an LCP-friendly preload.
+        <link rel="preload" as="image" href={hero.url} fetchPriority="high" />
+      )}
       <HeroSection
         user={user}
         backgroundUrl={hero?.url}

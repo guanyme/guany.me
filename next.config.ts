@@ -6,7 +6,7 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
-    optimizePackageImports: ['lucide-react', 'simple-icons'],
+    optimizePackageImports: ['lucide-react', 'simple-icons', 'streamdown'],
   },
   images: {
     dangerouslyAllowLocalIP: true,
