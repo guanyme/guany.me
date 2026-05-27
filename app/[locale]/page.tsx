@@ -34,7 +34,7 @@ export default async function Home({
       <Suspense fallback={<ProjectsSectionSkeleton />}>
         <ProjectsSection />
       </Suspense>
-      <SiteFooter avatar={user?.avatar_url} name={user?.name || undefined} />
+      <SiteFooter avatar="/avatar.png" name="Guany" />
     </>
   )
 }

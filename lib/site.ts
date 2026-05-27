@@ -9,3 +9,8 @@ export function getSiteUrl(): string {
 }
 
 export const siteUrl = getSiteUrl()
+
+export const THEME_COLOR = {
+  light: '#ffffff',
+  dark: '#121212',
+} as const

@@ -1,7 +1,8 @@
 {
   "metadata": {
-    "siteTitle": "{name} 的网站",
-    "siteDescription": "{name} 的网站"
+    "siteTitle": "Guany 的网站",
+    "siteDescription": "Guany 的个人网站",
+    "shortName": "Guany"
   },
   "nav": {
     "projects": "项目",

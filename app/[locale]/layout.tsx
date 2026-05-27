@@ -24,10 +24,9 @@ export async function generateMetadata({
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'metadata' })
   const user = await getUser()
-  const name = user?.name || 'Guany'
 
-  const title = t('siteTitle', { name })
-  const description = user?.bio || t('siteDescription', { name })
+  const title = t('siteTitle')
+  const description = user?.bio || t('siteDescription')
   const localePrefix = locale === 'en' ? '' : `/${locale}`
 
   return {
@@ -37,7 +36,6 @@ export async function generateMetadata({
       template: `%s | ${title}`,
     },
     description,
-    icons: user?.avatar_url ? [{ url: '/api/avatar' }] : undefined,
     openGraph: {
       type: 'website',
       siteName: title,
@@ -79,7 +77,6 @@ export default async function LocaleLayout({
     getMessages(),
     getTranslations({ locale, namespace: 'metadata' }),
   ])
-  const name = user?.name || 'Guany'
 
   return (
     <NextIntlClientProvider messages={messages}>
@@ -88,15 +85,15 @@ export default async function LocaleLayout({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
             webSiteJsonLd({
-              name: t('siteTitle', { name }),
-              description: user?.bio || t('siteDescription', { name }),
+              name: t('siteTitle'),
+              description: user?.bio || t('siteDescription'),
               locale,
             }),
           ).replace(/</g, '\\u003c'),
         }}
       />
       <div className="flex min-h-full flex-col">
-        <SiteHeader avatar={user?.avatar_url} name={user?.name || undefined} />
+        <SiteHeader avatar="/avatar.png" name="Guany" />
         <main className="flex-1">{children}</main>
       </div>
     </NextIntlClientProvider>

@@ -36,23 +36,19 @@ export function HeroSection({
       <div className="relative z-10 flex min-h-125 items-center justify-center px-5 py-20">
         <div className="animate-fade-in-up flex flex-col items-center text-center">
           {/* Avatar */}
-          {user?.avatar_url && (
-            <div className="mb-6">
-              <Image
-                src={user.avatar_url}
-                alt={user.name || 'Avatar'}
-                width={128}
-                height={128}
-                priority
-                className="size-32 rounded-full shadow-xl ring-4 ring-white/80 dark:ring-white/20"
-              />
-            </div>
-          )}
+          <div className="mb-6">
+            <Image
+              src="/avatar.png"
+              alt="Guany"
+              width={128}
+              height={128}
+              priority
+              className="size-32 rounded-full shadow-xl ring-4 ring-white/80 dark:ring-white/20"
+            />
+          </div>
 
           {/* Name */}
-          <h1 className="mb-3 text-4xl font-bold md:text-5xl">
-            {user?.name || 'Guany'}
-          </h1>
+          <h1 className="mb-3 text-4xl font-bold md:text-5xl">Guany</h1>
 
           {/* Bio */}
           {user?.bio && (
