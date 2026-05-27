@@ -71,9 +71,7 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
   return (
     <header
       className={`sticky top-0 z-50 h-16 backdrop-blur-xl transition-all duration-300 ${
-        isScrolled
-          ? 'border-b border-border bg-background/85 shadow-md'
-          : 'bg-background/85'
+        isScrolled ? 'border-b border-border shadow-md' : ''
       }`}
     >
       <div className="mx-auto flex h-full w-full max-w-7xl items-center justify-between px-4">
