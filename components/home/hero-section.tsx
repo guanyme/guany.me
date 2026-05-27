@@ -17,7 +17,7 @@ export function HeroSection({
   const t = useTranslations('home')
 
   return (
-    <section className="relative pt-16">
+    <section className="relative">
       {/* Background Image */}
       {backgroundUrl && (
         <div

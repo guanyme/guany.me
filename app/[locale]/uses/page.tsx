@@ -37,7 +37,7 @@ export default async function UsesPage({
   const { content: rawContent } = matter(doc.content)
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-24">
+    <div className="mx-auto max-w-4xl px-4 pt-8 pb-24">
       <div className="mb-8 flex items-center justify-end">
         <CopyMarkdownButton content={rawContent} />
       </div>

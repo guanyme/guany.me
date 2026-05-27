@@ -70,7 +70,7 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
 
   return (
     <header
-      className={`fixed top-0 right-0 left-0 z-50 h-16 backdrop-blur-xl transition-all duration-300 ${
+      className={`sticky top-0 z-50 h-16 backdrop-blur-xl transition-all duration-300 ${
         isScrolled
           ? 'border-b border-border bg-background/85 shadow-md'
           : 'bg-background/85'

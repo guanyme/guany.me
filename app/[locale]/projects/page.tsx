@@ -37,7 +37,7 @@ export default async function ProjectsPage({
   )
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-24">
+    <div className="mx-auto max-w-4xl px-4 pt-8 pb-24">
       <h1 className="mb-8 text-3xl font-bold">
         <ProjectsTitle />
       </h1>
