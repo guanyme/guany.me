@@ -1,7 +1,8 @@
 {
   "metadata": {
-    "siteTitle": "{name}'s website",
-    "siteDescription": "{name}'s website"
+    "siteTitle": "Guany's website",
+    "siteDescription": "Guany's personal website",
+    "shortName": "Guany"
   },
   "nav": {
     "projects": "Projects",

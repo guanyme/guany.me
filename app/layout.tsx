@@ -1,7 +1,11 @@
 import { Inter, Fira_Code } from 'next/font/google'
 import { getLocale } from 'next-intl/server'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeColorSync } from '@/components/theme-color-sync'
+import { THEME_COLOR } from '@/lib/site'
 import './globals.css'
+
+const themeColorScript = `(function(){try{var s=localStorage.getItem('theme')||'system';var d=s==='system'?matchMedia('(prefers-color-scheme: dark)').matches:s==='dark';var m=document.createElement('meta');m.setAttribute('name','theme-color');m.setAttribute('content',d?'${THEME_COLOR.dark}':'${THEME_COLOR.light}');document.head.appendChild(m);}catch(e){}})();`
 
 const inter = Inter({
   subsets: ['latin'],
@@ -29,11 +33,7 @@ export default async function RootLayout({
       className={`${inter.variable} ${firaCode.variable} font-sans antialiased`}
     >
       <head>
-        <script
-          async
-          crossOrigin="anonymous"
-          src="https://tweakcn.com/live-preview.min.js"
-        />
+        <script dangerouslySetInnerHTML={{ __html: themeColorScript }} />
       </head>
       <body>
         <ThemeProvider
@@ -42,6 +42,7 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <ThemeColorSync />
           {children}
         </ThemeProvider>
       </body>

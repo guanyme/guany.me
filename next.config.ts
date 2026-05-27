@@ -8,15 +8,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'simple-icons', 'streamdown'],
   },
-  images: {
-    dangerouslyAllowLocalIP: true,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'avatars.githubusercontent.com',
-      },
-    ],
-  },
 }
 
 export default withNextIntl(nextConfig)
