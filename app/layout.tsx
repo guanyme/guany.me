@@ -1,11 +1,13 @@
+import type { Viewport } from 'next'
 import { Inter, Fira_Code } from 'next/font/google'
 import { getLocale } from 'next-intl/server'
 import { ThemeProvider } from '@/components/theme-provider'
-import { ThemeColorSync } from '@/components/theme-color-sync'
 import { THEME_COLOR } from '@/lib/site'
 import './globals.css'
 
-const themeColorScript = `(function(){try{var s=localStorage.getItem('theme')||'system';var d=s==='system'?matchMedia('(prefers-color-scheme: dark)').matches:s==='dark';var m=document.createElement('meta');m.setAttribute('name','theme-color');m.setAttribute('content',d?'${THEME_COLOR.dark}':'${THEME_COLOR.light}');document.head.appendChild(m);}catch(e){}})();`
+export const viewport: Viewport = {
+  themeColor: THEME_COLOR.light,
+}
 
 const inter = Inter({
   subsets: ['latin'],
@@ -32,9 +34,7 @@ export default async function RootLayout({
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${firaCode.variable} font-sans antialiased`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeColorScript }} />
-      </head>
+      <head />
       <body>
         <ThemeProvider
           attribute="class"
@@ -42,7 +42,6 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <ThemeColorSync />
           {children}
         </ThemeProvider>
       </body>
