@@ -75,7 +75,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   const localePrefix = locale === 'en' ? '' : `/${locale}`
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-24">
+    <div className="mx-auto max-w-4xl px-4 pt-8 pb-24">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

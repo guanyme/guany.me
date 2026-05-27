@@ -12,7 +12,7 @@ export default async function DocsLayout({
   setRequestLocale(locale)
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pt-20">
+    <div className="mx-auto max-w-7xl px-4 pt-4">
       <DocsSidebar />
       <div className="py-8 lg:ml-[17rem]">{children}</div>
     </div>
