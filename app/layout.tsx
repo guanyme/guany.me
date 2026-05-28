@@ -1,4 +1,4 @@
-import type { Viewport } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter, Fira_Code } from 'next/font/google'
 import { getLocale } from 'next-intl/server'
 import { ThemeProvider } from '@/components/theme-provider'
@@ -6,7 +6,16 @@ import { THEME_COLOR } from '@/lib/site'
 import './globals.css'
 
 export const viewport: Viewport = {
-  themeColor: THEME_COLOR.light,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: THEME_COLOR.light },
+    { media: '(prefers-color-scheme: dark)', color: THEME_COLOR.dark },
+  ],
+}
+
+export const metadata: Metadata = {
+  appleWebApp: {
+    statusBarStyle: 'default',
+  },
 }
 
 const inter = Inter({
