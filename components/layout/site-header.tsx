@@ -70,7 +70,7 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
 
   return (
     <header
-      className={`sticky top-0 z-50 h-16 bg-background transition-all duration-300 ${
+      className={`fixed inset-x-0 top-0 z-50 h-16 bg-background transition-all duration-300 ${
         isScrolled ? 'border-b border-border shadow-md' : ''
       }`}
     >
