@@ -34,6 +34,33 @@ codex --dangerously-bypass-approvals-and-sandbox
 
 ### Shell Function
 
+#### No auto-resume
+
+Always start a fresh session with just the base arguments:
+
+**Zsh**
+
+```zsh
+codex() {
+  local base_args="--dangerously-bypass-approvals-and-sandbox"
+
+  command codex ${=base_args} "$@"
+}
+```
+
+**PowerShell**
+
+```powershell
+function codex {
+    $baseArgs = @("--dangerously-bypass-approvals-and-sandbox")
+    $codexPath = (Get-Command codex -CommandType Application | Select-Object -First 1).Source
+
+    & $codexPath @baseArgs @args
+}
+```
+
+#### Auto-resume
+
 Try to continue the latest session for the current directory first; if it fails, start a new one:
 
 **Zsh**
