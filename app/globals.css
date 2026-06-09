@@ -173,12 +173,13 @@ html.dark {
 
 /* Animations */
 @keyframes fade-in-up {
+  /* Animate transform only — no opacity:0 start. Chrome's LCP algorithm ignores
+     opacity:0 paints, so fading the hero text in would defer LCP whenever the
+     bio <p> is the largest element. Sliding up keeps the entrance motion. */
   from {
-    opacity: 0;
     transform: translateY(20px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
