@@ -57,6 +57,33 @@ claude --dangerously-skip-permissions
 
 ### Shell 函数 {#shell-function}
 
+#### 不自动续接
+
+每次都新开对话，只带上基础参数：
+
+**Zsh**
+
+```zsh
+claude() {
+  local base_args="--allow-dangerously-skip-permissions --permission-mode plan"
+
+  command claude ${=base_args} "$@"
+}
+```
+
+**PowerShell**
+
+```powershell
+function claude {
+    $baseArgs = @("--allow-dangerously-skip-permissions", "--permission-mode", "plan")
+    $claudePath = (Get-Command claude -CommandType Application).Source
+
+    & $claudePath @baseArgs @args
+}
+```
+
+#### 自动续接
+
 优先尝试继续上次对话，失败则新建对话：
 
 **Zsh**

@@ -42,6 +42,33 @@ codex --dangerously-bypass-approvals-and-sandbox
 
 ### Shell 函数 {#shell-function}
 
+#### 不自动续接
+
+每次都新开会话，只带上基础参数：
+
+**Zsh**
+
+```zsh
+codex() {
+  local base_args="--dangerously-bypass-approvals-and-sandbox"
+
+  command codex ${=base_args} "$@"
+}
+```
+
+**PowerShell**
+
+```powershell
+function codex {
+    $baseArgs = @("--dangerously-bypass-approvals-and-sandbox")
+    $codexPath = (Get-Command codex -CommandType Application | Select-Object -First 1).Source
+
+    & $codexPath @baseArgs @args
+}
+```
+
+#### 自动续接
+
 优先尝试继续当前目录最近的一次会话，失败则新建对话：
 
 **Zsh**

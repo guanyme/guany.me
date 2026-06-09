@@ -56,6 +56,33 @@ claude --dangerously-skip-permissions
 
 ### Shell Function
 
+#### No auto-resume
+
+Always start a fresh conversation with just the base arguments:
+
+**Zsh**
+
+```zsh
+claude() {
+  local base_args="--allow-dangerously-skip-permissions --permission-mode plan"
+
+  command claude ${=base_args} "$@"
+}
+```
+
+**PowerShell**
+
+```powershell
+function claude {
+    $baseArgs = @("--allow-dangerously-skip-permissions", "--permission-mode", "plan")
+    $claudePath = (Get-Command claude -CommandType Application).Source
+
+    & $claudePath @baseArgs @args
+}
+```
+
+#### Auto-resume
+
 Try to continue the last conversation first; if it fails, start a new one:
 
 **Zsh**
