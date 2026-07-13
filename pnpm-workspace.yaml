@@ -5,3 +5,5 @@ allowBuilds:
   msw: true
   sharp: true
   unrs-resolver: true
+minimumReleaseAgeExclude:
+  - simple-icons@16.26.0
