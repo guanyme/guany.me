@@ -6,7 +6,6 @@ VS Code
 
 ```json
 {
-  "claudeCode.useTerminal": true,
   "editor.cursorSmoothCaretAnimation": "on",
   "editor.fontFamily": "'FiraCode Nerd Font', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   "editor.fontLigatures": true,
@@ -34,14 +33,12 @@ VS Code
   "terminal.integrated.cursorStyle": "line",
   "terminal.integrated.fontSize": 16,
   "terminal.integrated.smoothScrolling": true,
-  "typescript.experimental.useTsgo": true,
   "where-am-i.colorful": false,
   "window.autoDetectColorScheme": true,
   "window.dialogStyle": "custom",
   "window.nativeTabs": true,
   "workbench.activityBar.orientation": "vertical",
-  "workbench.colorTheme": "Vitesse Dark",
-  "workbench.iconTheme": "file-icons",
+  "workbench.iconTheme": "catppuccin-mocha",
   "workbench.list.smoothScrolling": true,
   "workbench.preferredDarkColorTheme": "Vitesse Dark",
   "workbench.preferredLightColorTheme": "Vitesse Light",
