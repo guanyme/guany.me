@@ -21,6 +21,7 @@ export const docsConfig: DocGroup[] = [
       { titleKey: 'Ubuntu', slug: 'ubuntu' },
       { titleKey: 'Windows', slug: 'windows' },
       { titleKey: 'WSL', slug: 'wsl' },
+      { titleKey: 'Surge', slug: 'surge' },
       { titleKey: 'Zsh', slug: 'zsh' },
       { titleKey: 'PowerShell', slug: 'powershell' },
       { titleKey: 'Ghostty', slug: 'ghostty' },

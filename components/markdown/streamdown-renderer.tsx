@@ -1,9 +1,13 @@
 'use client'
 
 import 'katex/dist/katex.min.css'
-import { useEffect, useRef, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import type { ComponentProps } from 'react'
 import { createPortal } from 'react-dom'
 import { useTheme } from 'next-themes'
+import { Link } from '@/i18n/navigation'
+import { isInternalMarkdownLink } from '@/lib/markdown-link'
+import { cn } from '@/lib/utils'
 
 const emptySubscribe = () => () => {}
 const getClientSnapshot = () => true
@@ -39,6 +43,71 @@ const plugins: PluginConfig = {
 }
 
 const rehypePlugins = [rehypeRaw, rehypeUnwrapImages, rehypeCustomSlug]
+
+const linkClassName = 'wrap-anywhere font-medium text-primary underline'
+
+function MarkdownLink({
+  href,
+  children,
+  className,
+  node: _node,
+  ...rest
+}: ComponentProps<'a'> & { node?: unknown }) {
+  const [externalOpen, setExternalOpen] = useState(false)
+  const classes = cn(linkClassName, className)
+  const incomplete = href === 'streamdown:incomplete-link'
+
+  if (!href || incomplete) {
+    return (
+      <span
+        className={classes}
+        data-incomplete={incomplete || undefined}
+        data-streamdown="link"
+      >
+        {children}
+      </span>
+    )
+  }
+
+  if (isInternalMarkdownLink(href)) {
+    if (href.startsWith('/') && !href.startsWith('//')) {
+      return (
+        <Link href={href} className={classes} data-streamdown="link">
+          {children}
+        </Link>
+      )
+    }
+    return (
+      <a href={href} className={classes} data-streamdown="link" {...rest}>
+        {children}
+      </a>
+    )
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className={cn(classes, 'appearance-none text-left')}
+        data-streamdown="link"
+        onClick={() => setExternalOpen(true)}
+      >
+        {children}
+      </button>
+      <LinkSafetyModal
+        url={href}
+        isOpen={externalOpen}
+        onClose={() => setExternalOpen(false)}
+        onConfirm={() => {
+          window.open(href, '_blank', 'noreferrer')
+          setExternalOpen(false)
+        }}
+      />
+    </>
+  )
+}
+
+const markdownComponents = { a: MarkdownLink }
 
 function LinkSafetyModal({
   url,
@@ -158,23 +227,7 @@ export function StreamdownRenderer({
         plugins={plugins}
         mermaid={{ config: { theme: mermaidTheme } }}
         rehypePlugins={untrusted ? undefined : rehypePlugins}
-        linkSafety={{
-          enabled: true,
-          onLinkCheck: (url) => {
-            // 内部链接和代理链接直接放行
-            if (url.startsWith('/') || url.startsWith('#')) return true
-            // 未被改写的外部链接弹窗
-            return false
-          },
-          renderModal: ({ url, isOpen, onClose, onConfirm }) => (
-            <LinkSafetyModal
-              url={url}
-              isOpen={isOpen}
-              onClose={onClose}
-              onConfirm={onConfirm}
-            />
-          ),
-        }}
+        components={markdownComponents}
       >
         {trimmedContent}
       </Streamdown>
