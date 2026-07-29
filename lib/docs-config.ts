@@ -36,6 +36,7 @@ export const docsConfig: DocGroup[] = [
       { titleKey: 'Vite+', slug: 'viteplus' },
       { titleKey: 'Codex', slug: 'codex' },
       { titleKey: 'Claude Code', slug: 'claude-code' },
+      { titleKey: 'Grok', slug: 'grok' },
       { titleKey: 'fastfetch', slug: 'fastfetch' },
       { titleKey: 'Raycast', slug: 'raycast' },
       { titleKey: 'ZeroTier', slug: 'zerotier' },
