@@ -6,6 +6,9 @@ const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
 const nextConfig: NextConfig = {
   reactCompiler: true,
   experimental: {
+    // Rust port of the React Compiler — runs natively in Turbopack instead of
+    // going through Babel, which makes it the single biggest dev/build win here.
+    turbopackRustReactCompiler: true,
     optimizePackageImports: ['lucide-react', 'simple-icons', 'streamdown'],
   },
   async headers() {
