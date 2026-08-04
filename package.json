@@ -8,7 +8,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@streamdown/cjk": "^1.0.3",
