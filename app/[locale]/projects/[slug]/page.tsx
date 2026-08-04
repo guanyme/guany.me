@@ -28,8 +28,11 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: ProjectPageProps) {
   const { locale, slug } = await params
-  const t = await getTranslations({ locale, namespace: 'projects' })
-  const repo = await getRepo(slug)
+  // 文案和仓库数据互不依赖,并发取回
+  const [t, repo] = await Promise.all([
+    getTranslations({ locale, namespace: 'projects' }),
+    getRepo(slug),
+  ])
 
   if (!repo) {
     return { title: t('notFound') }

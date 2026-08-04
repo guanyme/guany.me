@@ -43,8 +43,11 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'metadata' })
-  const user = await getUser()
+  // 文案和用户资料互不依赖,并发取回
+  const [t, user] = await Promise.all([
+    getTranslations({ locale, namespace: 'metadata' }),
+    getUser(),
+  ])
 
   const title = t('siteTitle')
   const description = user?.bio || t('siteDescription')
