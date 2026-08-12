@@ -32,7 +32,11 @@ export default async function ProjectsPage({
   const enriched = await Promise.all(
     repos.map(async (repo) => ({
       ...repo,
-      tagline: await getRepoTagline(repo.full_name, repo.default_branch, locale),
+      tagline: await getRepoTagline(
+        repo.full_name,
+        repo.default_branch,
+        locale,
+      ),
     })),
   )
 
