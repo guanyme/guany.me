@@ -47,13 +47,7 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
   // parked at the anchor. Clear the hash via replaceState so a smooth scroll
   // to top runs cleanly.
   function handleLogoClick(e: MouseEvent<HTMLAnchorElement>) {
-    if (
-      e.button !== 0 ||
-      e.metaKey ||
-      e.ctrlKey ||
-      e.shiftKey ||
-      e.altKey
-    ) {
+    if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) {
       return
     }
     if (pathname !== '/') return

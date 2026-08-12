@@ -9,10 +9,7 @@ export function ProjectsSectionSkeleton() {
         <div className="mx-auto mb-10 h-7 w-40 animate-pulse rounded bg-muted" />
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-48 animate-pulse rounded-lg bg-muted"
-            />
+            <div key={i} className="h-48 animate-pulse rounded-lg bg-muted" />
           ))}
         </div>
       </div>
@@ -30,7 +27,11 @@ export async function ProjectsSection() {
   const enriched = await Promise.all(
     featured.map(async (repo) => ({
       ...repo,
-      tagline: await getRepoTagline(repo.full_name, repo.default_branch, locale),
+      tagline: await getRepoTagline(
+        repo.full_name,
+        repo.default_branch,
+        locale,
+      ),
     })),
   )
 
