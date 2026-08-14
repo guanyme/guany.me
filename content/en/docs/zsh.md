@@ -21,10 +21,6 @@ gcl https://github.com/zsh-users/zsh-syntax-highlighting.git
 ```
 
 ```sh
-gcl https://github.com/agkozak/zsh-z.git
-```
-
-```sh
 cd ~
 ```
 
@@ -36,13 +32,15 @@ curl -sS https://starship.rs/install.sh | sh
 
 ```sh
 plugins=(
-  git
   command-not-found
   zsh-autosuggestions
   zsh-syntax-highlighting
-  zsh-z
 )
 ```
+
+The `git` plugin is left out — it defines 197 aliases in one go where only a handful ever get
+used, so those are written by hand instead, see the git page. Same for `zsh-z`: the `i`
+function covers the jumping. With the `git` plugin loaded the alias count is 246; without it, 49.
 
 ```sh
 eval "$(starship init zsh)"

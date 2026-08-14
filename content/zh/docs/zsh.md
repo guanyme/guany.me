@@ -21,10 +21,6 @@ gcl https://github.com/zsh-users/zsh-syntax-highlighting.git
 ```
 
 ```sh
-gcl https://github.com/agkozak/zsh-z.git
-```
-
-```sh
 cd ~
 ```
 
@@ -36,13 +32,14 @@ curl -sS https://starship.rs/install.sh | sh
 
 ```sh
 plugins=(
-  git
   command-not-found
   zsh-autosuggestions
   zsh-syntax-highlighting
-  zsh-z
 )
 ```
+
+不装 `git` 插件 —— 它一次性塞进 197 个别名，实际用到的只有几个，自己定义即可，见 git 文档。
+`zsh-z` 同理，跳转用 `i` 函数就够了。装了 `git` 插件时别名总数 246，去掉后是 49。
 
 ```sh
 eval "$(starship init zsh)"
