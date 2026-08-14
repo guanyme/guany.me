@@ -57,6 +57,31 @@ delivery = "system"
 同目录下还有 `session.json`（布局持久化）、`herdr.sock`（API socket）、
 `herdr-server.log`。
 
+### Windows 上要指定 pwsh
+
+pane 的 shell 默认取 `$SHELL`，Windows 上会落到**系统自带的 Windows PowerShell 5.1**
+而不是 PowerShell 7。想让 pane 里是 7，得显式配：
+
+```toml
+[terminal]
+# Executable used for new interactive panes.
+# Empty means $SHELL, then /bin/sh.
+default_shell = "pwsh.exe"
+```
+
+改完 `herdr server reload-config`，或者重开 pane 生效。确认当前 pane 里是哪个：
+
+```powershell
+$PSVersionTable.PSVersion    # 5.1.x 就是旧的
+```
+
+没装 7 的话先 `winget install --id Microsoft.PowerShell`。顺带一提，5.1 和 7 的
+`$PROFILE` 是两个文件（`WindowsPowerShell\` 与 `PowerShell\`），在旧的里配好的东西
+换过来不会自动生效。
+
+同一节还有 `shell_mode`（`"auto"` / `"login"` / `"non_login"`），控制新 pane 的 shell
+是不是以登录 shell 启动，`"auto"` 在 macOS 上用登录 shell。
+
 ## CLI
 
 `herdr` 直接运行会启动/attach TUI，**不要用它探索命令**。查用法要带子命令组：
