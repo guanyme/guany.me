@@ -27,6 +27,7 @@ export const docsConfig: DocGroup[] = [
       { titleKey: 'Ghostty', slug: 'ghostty' },
       { titleKey: 'Warp', slug: 'warp' },
       { titleKey: 'Windows Terminal', slug: 'windows-terminal' },
+      { titleKey: 'Herdr', slug: 'herdr' },
       { titleKey: 'VS Code', slug: 'vscode' },
       { titleKey: 'Git', slug: 'git' },
       { titleKey: 'SSH', slug: 'ssh' },
