@@ -59,6 +59,32 @@ delivery = "system"
 The same directory holds `session.json` (persisted layout), `herdr.sock` (API socket)
 and `herdr-server.log`.
 
+### Point it at pwsh on Windows
+
+A pane's shell defaults to `$SHELL`, which on Windows lands on the built-in **Windows
+PowerShell 5.1** rather than PowerShell 7. To get 7 inside panes you have to say so:
+
+```toml
+[terminal]
+# Executable used for new interactive panes.
+# Empty means $SHELL, then /bin/sh.
+default_shell = "pwsh.exe"
+```
+
+Run `herdr server reload-config` afterwards, or just open a new pane. To check what
+you're actually in:
+
+```powershell
+$PSVersionTable.PSVersion    # 5.1.x means it's the old one
+```
+
+Install 7 first if needed: `winget install --id Microsoft.PowerShell`. Note also that
+5.1 and 7 have separate `$PROFILE` files (`WindowsPowerShell\` vs `PowerShell\`), so
+anything configured in the old one does not carry over.
+
+The same section has `shell_mode` (`"auto"` / `"login"` / `"non_login"`), which controls
+whether a new pane's shell starts as a login shell; `"auto"` uses login shells on macOS.
+
 ## CLI
 
 Running bare `herdr` launches or attaches the TUI, so **don't use it to explore
