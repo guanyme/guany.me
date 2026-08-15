@@ -40,7 +40,7 @@ plugins=(
 
 The `git` plugin is left out — it defines 197 aliases in one go where only a handful ever get
 used, so those are written by hand instead, see the git page. Same for `zsh-z`: the `i`
-function covers the jumping. With the `git` plugin loaded the alias count is 246; without it, 49.
+function covers the jumping.
 
 ```sh
 eval "$(starship init zsh)"

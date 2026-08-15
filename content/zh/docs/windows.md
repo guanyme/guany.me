@@ -98,8 +98,8 @@ Program 'fnm.exe' failed to run: An error occurred trying to start process
 
 ### 先确认是不是这一类 {#identify}
 
-看到「不受信任的装入点」或 `untrusted mount point` 就是它，不用往别处查。三台机器对照后
-可以确定关键变量是**系统版本**，不是配置：
+看到「不受信任的装入点」或 `untrusted mount point` 就是它，不用往别处查。
+关键变量是**系统版本**，不是配置：
 
 |                                           | Windows 10 22H2 · 19045    | Windows 11 25H2 · 26200 |
 | ----------------------------------------- | -------------------------- | ----------------------- |
