@@ -9,6 +9,80 @@ Windows
 [System.Environment]::SetEnvironmentVariable("https_proxy", "http://127.0.0.1:7890", "User")
 ```
 
+## 环境变量：别用 SetEnvironmentVariable 改 PATH {#env-reg-type}
+
+环境变量存在注册表两级：
+
+```
+HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment   机器级
+HKCU\Environment                                                    用户级
+```
+
+登录时合并，**PATH 是特例：机器级在前、用户级在后**（其他变量是用户级覆盖机器级）。
+
+值类型决定 `%VAR%` 能不能展开：
+
+| 类型                                                | 行为                                             |
+| --------------------------------------------------- | ------------------------------------------------ |
+| `REG_EXPAND_SZ`（PowerShell 显示为 `ExpandString`） | `%USERPROFILE%\bin` 会展开                       |
+| `REG_SZ`（`String`）                                | `%USERPROFILE%` 被当成**字面量目录名**，等于失效 |
+
+**`[System.Environment]::SetEnvironmentVariable` 写的是 `REG_SZ`。** 用它改一次 PATH，里面所有 `%VAR%` 引用就被烤成绝对路径 —— 这就是「环境变量一改，路径全展开了」的根源。系统属性面板里那个 GUI 编辑器同样会展开。
+
+正确写法是显式指定类型：
+
+```powershell
+# ❌ 会把类型写成 REG_SZ
+[Environment]::SetEnvironmentVariable("Path", $v, "User")
+
+# ✅
+Set-ItemProperty -Path "HKCU:\Environment" -Name Path -Value $v -Type ExpandString
+```
+
+读**未展开**的原始值（否则你看到的已经是展开后的结果）：
+
+```powershell
+(Get-Item "HKCU:\Environment").GetValue("Path", "", "DoNotExpandEnvironmentNames")
+```
+
+改完广播一下，已运行的进程才会重新读取（新进程才生效，已开的终端不会变）：
+
+```powershell
+$sig = @'
+[DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
+public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam,
+    string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+'@
+$t = Add-Type -MemberDefinition $sig -Name Win32 -Namespace Env -PassThru
+[UIntPtr]$r = [UIntPtr]::Zero
+$t::SendMessageTimeout([IntPtr]0xffff, 0x1A, [UIntPtr]::Zero, "Environment", 2, 5000, [ref]$r)
+```
+
+### 该用变量的地方用变量 {#use-variables}
+
+stock Windows 的机器级 PATH 本来就是变量形式，被 GUI 展开过的机器会变成写死的绝对路径。恢复过来，换 JDK 或 CUDA 版本时只需改一个变量：
+
+```
+%SystemRoot%\system32          %SystemRoot%\System32\Wbem
+%SystemRoot%\System32\WindowsPowerShell\v1.0\
+%JAVA_HOME%\bin                %CUDA_PATH%\bin
+```
+
+用户级同理，全部走 `%USERPROFILE%\…`。
+
+**但 `Program Files` 不要换成 `%ProgramFiles%`** —— 32 位进程里它会展开成 `Program Files (x86)`，会引入很难查的问题。stock Windows 自己也只对系统目录用变量。
+
+CUDA 用 `%CUDA_PATH%` 而不是 `%CUDA_PATH_V12_9%`：前者指向当前启用的版本，后者是版本锁定的别名，用后者就失去意义了。
+
+改动前后务必比对**展开后的值**是否一致，不一致就回滚：
+
+```powershell
+$before = [Environment]::GetEnvironmentVariable("Path","Machine")
+# …修改…
+$after  = [Environment]::GetEnvironmentVariable("Path","Machine")
+if ($before.TrimEnd(";") -ne $after.TrimEnd(";")) { "不一致，回滚" }
+```
+
 ## SSH 会话里的「不受信任的装入点」 {#untrusted-mount-point}
 
 在 Windows 11 24H2 及以后的版本上，通过 SSH 登录后运行某些命令会报：
