@@ -109,7 +109,7 @@ over ssh.
 ### Confirming it is this
 
 The phrase "untrusted mount point" is the whole diagnosis — no need to look elsewhere.
-Comparing three machines shows the decisive variable is the **OS version**, not configuration:
+The decisive variable is the **OS version**, not configuration:
 
 |                                           | Windows 10 22H2 · 19045 | Windows 11 25H2 · 26200 |
 | ----------------------------------------- | ----------------------- | ----------------------- |

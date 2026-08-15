@@ -38,7 +38,7 @@ if (Test-Path $__f) { . $__f }
 #### multishell 目录会一直堆积 {#multishell-buildup}
 
 每开一个 shell，fnm 都会在 `%LOCALAPPDATA%\fnm_multishells` 下建一个目录，
-Windows 上退出时不清理。实测攒了 **2433 个**。
+Windows 上退出时不清理，会一直累积。
 
 它们是 junction，本身几乎不占空间，但目录数多了会拖慢遍历。清理陈旧的：
 
@@ -53,8 +53,8 @@ Get-ChildItem "$env:LOCALAPPDATA\fnm_multishells" -Directory |
 统计这个目录的体积时要注意：`Get-ChildItem -Recurse` 会穿透 junction，
 把同一份 node 重复计上千遍，看起来像几个 GB，实际并没有。
 
-**macOS 同样会堆积**，位置是 `~/.local/state/fnm_multishells`，实测攒到过 662 个
-（最早的横跨四个月）。那边是符号链接，`du -sh` 显示 0B。
+**macOS 同样会堆积**，位置是 `~/.local/state/fnm_multishells`。那边是符号链接，
+`du -sh` 显示 0B，所以不占空间，但条目数会无限增长。
 
 ### 按 PID 清理比按时间准 {#cleanup-by-pid}
 

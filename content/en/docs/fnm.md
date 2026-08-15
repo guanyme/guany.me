@@ -39,7 +39,7 @@ directory for the current session.
 #### multishell directories pile up
 
 Every shell fnm initialises leaves a directory under `%LOCALAPPDATA%\fnm_multishells`, and
-Windows never cleans them on exit. One machine here had accumulated **2433** of them.
+Windows never cleans them up on exit, so they accumulate indefinitely.
 
 They are junctions, so they take almost no space themselves, but the sheer count slows any
 traversal down. Clearing the stale ones:
@@ -56,8 +56,8 @@ Deleting a junction does not touch its target — the node installs under
 -Recurse` follows junctions and counts the same node install over and over, which makes it look
 like several GB when it is not.
 
-**macOS accumulates them too**, under `~/.local/state/fnm_multishells` — one machine here had
-reached 662 entries spanning four months. Those are symlinks, so `du -sh` reports 0B.
+**macOS accumulates them too**, under `~/.local/state/fnm_multishells`. Those are symlinks, so
+`du -sh` reports 0B — no disk cost, but the entry count grows without bound.
 
 ### Cleaning by PID beats cleaning by age
 
