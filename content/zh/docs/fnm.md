@@ -53,6 +53,50 @@ Get-ChildItem "$env:LOCALAPPDATA\fnm_multishells" -Directory |
 统计这个目录的体积时要注意：`Get-ChildItem -Recurse` 会穿透 junction，
 把同一份 node 重复计上千遍，看起来像几个 GB，实际并没有。
 
+**macOS 同样会堆积**，位置是 `~/.local/state/fnm_multishells`，实测攒到过 662 个
+（最早的横跨四个月）。那边是符号链接，`du -sh` 显示 0B。
+
+### 按 PID 清理比按时间准 {#cleanup-by-pid}
+
+目录名的格式是 `<PID>_<时间戳>`，所以可以直接判断创建它的 shell 还在不在，
+这样不会误删今天开着的会话：
+
+```sh
+d=~/.local/state/fnm_multishells        # Windows: $env:LOCALAPPDATA\fnm_multishells
+for e in "$d"/*; do
+  n=$(basename "$e")
+  [ -L "$e" ] || continue               # 只处理链接
+  case "$n" in [0-9]*_[0-9]*) ;; *) continue;; esac
+  [ "$e" = "$FNM_MULTISHELL_PATH" ] && continue   # 当前会话在用的绝不能删
+  kill -0 "${n%%_*}" 2>/dev/null || rm -f "$e"
+done
+```
+
+PID 可能被复用，最坏情况只是漏删一个，不会误删活着的。
+
+**但这个判据有个盲区：祖先已退出、后代还在跑。** 子进程会继承父进程的 PATH，
+所以一个「创建者已死」的目录，可能仍被某个长期运行的进程（编辑器的集成终端、
+agent 的会话、tmux/herdr 里的 pane）引用着。删掉之后那些进程里 `node` 会直接消失：
+
+```sh
+echo $PATH | tr ':' '\n' | grep fnm_multishells | while read -r p; do
+  [ -e "$p" ] || echo "已失效: $p"
+done
+```
+
+稳妥做法是**两个条件都满足才删** —— 进程已退出，且创建时间超过一天：
+
+```sh
+find "$d" -maxdepth 1 -type l -mtime +1 | while read -r e; do
+  n=$(basename "$e")
+  case "$n" in [0-9]*_[0-9]*) ;; *) continue;; esac
+  [ "$e" = "$FNM_MULTISHELL_PATH" ] && continue
+  kill -0 "${n%%_*}" 2>/dev/null || rm -f "$e"
+done
+```
+
+真误删了也不严重：新开的 shell 会重新生成，受影响的进程重启一下即可。
+
 ### MacOS/Linux
 
 ```sh

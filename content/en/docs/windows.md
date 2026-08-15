@@ -9,6 +9,89 @@ Windows
 [System.Environment]::SetEnvironmentVariable("https_proxy", "http://127.0.0.1:7890", "User")
 ```
 
+## Environment: Don't Use SetEnvironmentVariable on PATH
+
+Environment variables live in two registry scopes:
+
+```
+HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment   machine
+HKCU\Environment                                                    user
+```
+
+They merge at logon, and **PATH is the special case: machine first, user appended** (every other
+variable has the user scope override the machine one).
+
+The value type decides whether `%VAR%` expands at all:
+
+| Type                                           | Behaviour                                                         |
+| ---------------------------------------------- | ----------------------------------------------------------------- |
+| `REG_EXPAND_SZ` (`ExpandString` in PowerShell) | `%USERPROFILE%\bin` expands                                       |
+| `REG_SZ` (`String`)                            | `%USERPROFILE%` is treated as a **literal directory name** — dead |
+
+**`[System.Environment]::SetEnvironmentVariable` writes `REG_SZ`.** One call on PATH bakes every
+`%VAR%` reference into an absolute path — that is exactly why "editing an environment variable
+expanded everything". The GUI editor in System Properties does the same.
+
+Specify the type explicitly instead:
+
+```powershell
+# ❌ writes REG_SZ
+[Environment]::SetEnvironmentVariable("Path", $v, "User")
+
+# ✅
+Set-ItemProperty -Path "HKCU:\Environment" -Name Path -Value $v -Type ExpandString
+```
+
+Read the **unexpanded** value (otherwise what you see is already resolved):
+
+```powershell
+(Get-Item "HKCU:\Environment").GetValue("Path", "", "DoNotExpandEnvironmentNames")
+```
+
+Broadcast afterwards so running processes pick it up — new processes only, already-open terminals
+will not change:
+
+```powershell
+$sig = @'
+[DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
+public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam,
+    string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+'@
+$t = Add-Type -MemberDefinition $sig -Name Win32 -Namespace Env -PassThru
+[UIntPtr]$r = [UIntPtr]::Zero
+$t::SendMessageTimeout([IntPtr]0xffff, 0x1A, [UIntPtr]::Zero, "Environment", 2, 5000, [ref]$r)
+```
+
+### Use variables where variables belong
+
+The stock machine PATH is written with variables; a machine whose PATH has been through the GUI
+editor ends up with hardcoded absolute paths. Restoring them means a JDK or CUDA upgrade only
+touches one variable:
+
+```
+%SystemRoot%\system32          %SystemRoot%\System32\Wbem
+%SystemRoot%\System32\WindowsPowerShell\v1.0\
+%JAVA_HOME%\bin                %CUDA_PATH%\bin
+```
+
+Same for the user scope — everything under `%USERPROFILE%\…`.
+
+**Do not convert `Program Files` to `%ProgramFiles%`**, though: inside a 32-bit process it expands
+to `Program Files (x86)`, which causes bugs that are miserable to track down. Stock Windows only
+uses variables for system directories.
+
+Use `%CUDA_PATH%` rather than `%CUDA_PATH_V12_9%`: the former points at the active version, the
+latter is a version-pinned alias and defeats the purpose.
+
+Always compare the **expanded** value before and after, and roll back on any mismatch:
+
+```powershell
+$before = [Environment]::GetEnvironmentVariable("Path","Machine")
+# …edit…
+$after  = [Environment]::GetEnvironmentVariable("Path","Machine")
+if ($before.TrimEnd(";") -ne $after.TrimEnd(";")) { "mismatch, rolling back" }
+```
+
 ## "Untrusted mount point" in SSH Sessions
 
 On Windows 11 24H2 and later, running certain commands after logging in over SSH fails with:

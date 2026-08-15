@@ -56,6 +56,52 @@ Deleting a junction does not touch its target — the node installs under
 -Recurse` follows junctions and counts the same node install over and over, which makes it look
 like several GB when it is not.
 
+**macOS accumulates them too**, under `~/.local/state/fnm_multishells` — one machine here had
+reached 662 entries spanning four months. Those are symlinks, so `du -sh` reports 0B.
+
+### Cleaning by PID beats cleaning by age
+
+The directory name is `<PID>_<timestamp>`, so you can check whether the shell that created it is
+still alive. That way today's open sessions are never caught in the sweep:
+
+```sh
+d=~/.local/state/fnm_multishells        # Windows: $env:LOCALAPPDATA\fnm_multishells
+for e in "$d"/*; do
+  n=$(basename "$e")
+  [ -L "$e" ] || continue               # links only
+  case "$n" in [0-9]*_[0-9]*) ;; *) continue;; esac
+  [ "$e" = "$FNM_MULTISHELL_PATH" ] && continue   # never the current session's
+  kill -0 "${n%%_*}" 2>/dev/null || rm -f "$e"
+done
+```
+
+PIDs do get reused; the worst case is skipping one stale entry, never deleting a live one.
+
+**The check has one blind spot, though: the ancestor exited but a descendant is still running.**
+Child processes inherit their parent's PATH, so a directory whose creator is long gone may still
+be referenced by something long-lived — an editor's integrated terminal, an agent session, a
+tmux/herdr pane. Delete it and `node` simply vanishes inside those processes:
+
+```sh
+echo $PATH | tr ':' '\n' | grep fnm_multishells | while read -r p; do
+  [ -e "$p" ] || echo "dangling: $p"
+done
+```
+
+The safe version requires **both** conditions — process gone _and_ older than a day:
+
+```sh
+find "$d" -maxdepth 1 -type l -mtime +1 | while read -r e; do
+  n=$(basename "$e")
+  case "$n" in [0-9]*_[0-9]*) ;; *) continue;; esac
+  [ "$e" = "$FNM_MULTISHELL_PATH" ] && continue
+  kill -0 "${n%%_*}" 2>/dev/null || rm -f "$e"
+done
+```
+
+Getting it wrong is not fatal: new shells regenerate their own entry, and the affected processes
+just need a restart.
+
 ### MacOS/Linux
 
 ```sh
