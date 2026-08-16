@@ -222,6 +222,61 @@ find_pane() {  # 用法: find_pane <标签>
 
 配合 `Requires=herdr.service` + `After=herdr.service`，重启 herdr 时这个单元会跟着跑。
 
+## 通过 SSH 用 Windows 上的 herdr {#windows-over-ssh}
+
+两个限制，都出在 Windows 版本上，而且**取向相反** —— 没有哪个版本两头都好。
+
+### 鼠标需要 Win11 主机 {#mouse-needs-win11}
+
+SSH 连过去时鼠标点选、滚动不生效，不是 herdr 没启用 mouse capture，而是
+**Windows 10 的 ConPTY 在 herdr 读到之前就把鼠标报告丢掉了**。ConPTY 的鼠标事件转换
+是 Windows 11 才有的能力，没有 backport 到 10，微软那边的 Terminal issue 标了 can't fix。
+
+所以这条不是配置能绕开的，只能看主机版本：
+
+| Build   | 系统            | SSH 鼠标 |
+| ------- | --------------- | -------- |
+| ≥ 22000 | Windows 11      | 可用     |
+| 19045   | Windows 10 22H2 | 不可用   |
+
+### 但 Win11 又穿不过 junction {#junction-not-traversable}
+
+反过来，Windows 11 24H2+ 收紧了 reparse point 的遍历，**SSH 会话看不见 junction 里的内容**：
+
+```
+herdr: The term 'herdr' is not recognized as a name of a cmdlet...
+```
+
+而 `herdr` 的安装目录恰好就是个 junction：
+
+```
+%LOCALAPPDATA%\Programs\Herdr\bin  →  ~\.herdr\packages\standalone\releases\<版本>-x86_64-pc-windows-msvc
+```
+
+判据是**经链接看到的文件数少于目标本身**：
+
+```powershell
+$l = "$env:LOCALAPPDATA\Programs\Herdr\bin"
+@(cmd /c "dir /b `"$l`" 2>nul").Count                        # 0
+@(cmd /c "dir /b `"$((Get-Item $l -Force).Target)`" 2>nul").Count   # 3
+```
+
+**关键不在路径，在 junction 是谁创建的** —— 工具安装器自己建的穿不过，
+`mklink /J` 建的能穿过。（一度以为是 print name 长度的差异，后来被推翻：
+`mklink /J` 重建出来的 print name 长度 62，照样能穿。）
+
+重建即可，`rmdir` 只删链接不动目标：
+
+```powershell
+$l = "$env:LOCALAPPDATA\Programs\Herdr\bin"
+$t = (Get-Item $l -Force).Target
+cmd /c rmdir "$l"
+cmd /c mklink /J "$l" "$t"
+```
+
+**herdr 每次升级都会复发** —— 目标路径里带着版本号，新版本必然换目录，安装器重建的
+junction 又是穿不过的那种。vite-plus 的 `current` 是同一个模式。
+
 ## 注意
 
 - 只在自己创建的 pane / tab 上做关闭操作，别动用户的
