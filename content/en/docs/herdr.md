@@ -66,10 +66,12 @@ PowerShell 5.1** rather than PowerShell 7. To get 7 inside panes you have to say
 
 ```toml
 [terminal]
-# Executable used for new interactive panes.
-# Empty means $SHELL, then /bin/sh.
 default_shell = "pwsh.exe"
 ```
+
+The documented behaviour is "when unset or empty, Herdr uses `$SHELL`, then `/bin/sh` on
+Unix and PowerShell on Windows" — and that Windows fallback is the **built-in 5.1**. The
+value is an executable name or path, not a shell command line.
 
 Run `herdr server reload-config` afterwards, or just open a new pane. To check what
 you're actually in:
@@ -82,8 +84,25 @@ Install 7 first if needed: `winget install --id Microsoft.PowerShell`. Note also
 5.1 and 7 have separate `$PROFILE` files (`WindowsPowerShell\` vs `PowerShell\`), so
 anything configured in the old one does not carry over.
 
-The same section has `shell_mode` (`"auto"` / `"login"` / `"non_login"`), which controls
-whether a new pane's shell starts as a login shell; `"auto"` uses login shells on macOS.
+### The other two [terminal] options
+
+`shell_mode` — `"auto"` (default) / `"login"` / `"non_login"`, controlling whether a new
+pane's shell starts as a login shell. The documentation spells out the reason: **`"auto"`
+starts login shells on macOS so login-only PATH setup runs in new panes** — things like
+`/usr/libexec/path_helper` and Homebrew's shell initialisation.
+
+Worth remembering: on macOS `path_helper` reorders the system paths to the front, so "the
+PATH inside a pane differs from the one in my terminal" usually comes down to `shell_mode`.
+
+`new_cwd` — `"follow"` (default) / `"home"` / `"current"` / a fixed path such as
+`"~/Projects"`. `"follow"` inherits the source pane or workspace; with no source, Herdr
+starts in `$HOME`.
+
+Validate with herdr's own checker rather than by eye:
+
+```sh
+herdr config check    # only "config: ok" counts
+```
 
 ## CLI
 

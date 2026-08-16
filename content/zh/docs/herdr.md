@@ -64,10 +64,12 @@ pane 的 shell 默认取 `$SHELL`，Windows 上会落到**系统自带的 Window
 
 ```toml
 [terminal]
-# Executable used for new interactive panes.
-# Empty means $SHELL, then /bin/sh.
 default_shell = "pwsh.exe"
 ```
+
+官方对这个值的说法是「留空时用 `$SHELL`，再回落到 Unix 的 `/bin/sh`、Windows 的
+PowerShell」—— 注意那个回落**就是系统自带的 5.1**。填的是可执行文件名或路径，
+不是命令行。
 
 改完 `herdr server reload-config`，或者重开 pane 生效。确认当前 pane 里是哪个：
 
@@ -79,8 +81,24 @@ $PSVersionTable.PSVersion    # 5.1.x 就是旧的
 `$PROFILE` 是两个文件（`WindowsPowerShell\` 与 `PowerShell\`），在旧的里配好的东西
 换过来不会自动生效。
 
-同一节还有 `shell_mode`（`"auto"` / `"login"` / `"non_login"`），控制新 pane 的 shell
-是不是以登录 shell 启动，`"auto"` 在 macOS 上用登录 shell。
+### [terminal] 的另外两个选项 {#terminal-options}
+
+`shell_mode` —— `"auto"`（默认）/ `"login"` / `"non_login"`，控制新 pane 的 shell
+是不是以登录 shell 启动。官方说明点出了原因：**`"auto"` 在 macOS 上启动登录 shell，
+是为了让只在登录时跑的 PATH 设置生效** —— `/usr/libexec/path_helper` 和 Homebrew
+的初始化都属于这一类。其他平台维持非登录。
+
+这一条值得留意：macOS 上 `path_helper` 会把系统路径整体重排到最前，所以
+「pane 里的 PATH 和你终端里的不一样」多半就是 `shell_mode` 的差别造成的。
+
+`new_cwd` —— `"follow"`（默认）/ `"home"` / `"current"` / 固定路径如 `"~/Projects"`。
+`"follow"` 继承来源 pane 或 workspace；没有来源时从 `$HOME` 起。
+
+改完用 herdr 自带的校验器确认，比肉眼看可靠：
+
+```sh
+herdr config check    # 输出 config: ok 才算过
+```
 
 ## CLI
 
