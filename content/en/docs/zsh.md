@@ -138,12 +138,17 @@ typeset -U path fpath
 
 path=(
   "$HOME/.local/bin"
+  "$HOME/.local/share/mise/shims"                                # language runtime fallback
   "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/gnu-tar/libexec/gnubin"
   $path
 )
 ```
 
 To cover `zsh -c` scripts as well, add the same entries to `~/.zshenv` (`typeset -U` dedupes).
+
+The mise shims belong here for the same reason: `mise activate` lives in `.zshrc` and never runs
+non-interactively. Shims resolve the version for the current directory themselves, so per-project
+switching still works without activation. See the mise page.
 
 ## Command Shadowing
 

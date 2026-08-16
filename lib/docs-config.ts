@@ -32,6 +32,7 @@ export const docsConfig: DocGroup[] = [
       { titleKey: 'Git', slug: 'git' },
       { titleKey: 'SSH', slug: 'ssh' },
       { titleKey: 'Docker', slug: 'docker' },
+      { titleKey: 'mise', slug: 'mise' },
       { titleKey: 'fnm', slug: 'fnm' },
       { titleKey: 'ni', slug: 'ni' },
       { titleKey: 'Vite+', slug: 'viteplus' },

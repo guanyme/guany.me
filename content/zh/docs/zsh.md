@@ -127,12 +127,16 @@ typeset -U path fpath
 
 path=(
   "$HOME/.local/bin"
+  "$HOME/.local/share/mise/shims"                                # 语言运行时的兜底
   "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/gnu-tar/libexec/gnubin"
   $path
 )
 ```
 
 想连 `zsh -c` 跑的脚本也一致，再在 `~/.zshenv` 里加一份（`typeset -U` 会去重）。
+
+mise 的 shims 放这里同理 —— `mise activate` 只写在 `.zshrc`，非交互根本不执行。
+shims 会自己解析当前目录该用哪个版本，所以非交互下也能按项目切。见 mise 文档。
 
 ## 命令遮挡 {#shadowing}
 
