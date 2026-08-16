@@ -84,14 +84,16 @@ if (Test-Path $__f) { . $__f }
 **dot-source 必须写在 profile 顶层。** 把这段包进函数里，`. $__f` 只会作用于函数作用域，
 prompt 定义不到全局，表现就是「缓存跑了但提示符没变」。
 
-fnm 的补全脚本约 42 KB，可以用同样的方式缓存。
+mise 的补全脚本也用同样的方式缓存，但**必须排在 `mise activate` 之后** ——
+补全运行时要调 `usage`，而 usage 本身是 mise 管的工具，activate 之前不在 PATH 里，
+于是每开一个 shell 都会打一行 `usage CLI not found`。详见 mise 文档。
 
 ### 动不了的那部分 {#irreducible-cost}
 
 `Set-PSReadlineKeyHandler` 一行约 183 ms，实际是 **PSReadLine 模块首次加载**的代价，不是设快捷键本身。
 交互式会话里这个模块本来就会加载，把它挪走或延迟只是把耗时推到第一次按键，体感不会变快。
 
-`fnm env` 也不能缓存 —— 它必须每次执行，为当前会话创建 multishell 目录。
+`mise activate` 也不能缓存 —— 它必须每次执行，为当前会话解析版本并挂上目录切换钩子。
 
 ## powershell-profile
 

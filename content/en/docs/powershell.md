@@ -91,7 +91,10 @@ on its own — no manual clearing.
 `. $__f` only applies inside that function's scope: the prompt never reaches global scope, and
 the symptom is "the cache ran but the prompt didn't change".
 
-fnm's completion script is around 42 KB and can be cached the same way.
+mise's completion script is cached the same way, but it **must come after `mise activate`** —
+the completions shell out to `usage` at runtime, and `usage` is itself a mise-managed tool that
+is not on PATH before activation, so every new shell would print `usage CLI not found`. See the
+mise page.
 
 ### The part that cannot be reduced
 
@@ -100,8 +103,8 @@ of the PSReadLine module**, not the key binding. An interactive session loads th
 anyway, so moving or deferring the line just pushes the cost to the first keystroke — it does
 not feel faster.
 
-`fnm env` cannot be cached either: it has to run every time to create the multishell directory
-for the current session.
+`mise activate` cannot be cached either: it has to run every time to resolve versions for the
+current session and install the directory-change hook.
 
 ## powershell-profile
 
