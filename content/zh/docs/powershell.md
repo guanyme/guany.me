@@ -23,16 +23,17 @@ Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 ```
 
 ```powershell
-# 对齐 Unix 侧的约定：ll 长格式，la 长格式 + 隐藏项。
+# la —— 对齐 Unix 侧的约定：长格式 + 隐藏项。
 # 只能写成函数 —— PowerShell 的别名不能携带固定参数（这里是 -Force）。
 # 而别名的解析优先级高于函数，所以原有的 Set-Alias la 必须先移除
 Remove-Item Alias:la -Force -ErrorAction Ignore
 
-function ll { Get-ChildItem @args }
 function la { Get-ChildItem -Force @args }
 ```
 
 `-Force` 对应 Unix 的 `-A`，让 `la` 列出隐藏和系统项。
+
+不定义 `ll` —— PowerShell 侧本来就没有，跨平台统一只做真正会敲的那个。
 
 ```powershell
 function i {

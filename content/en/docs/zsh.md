@@ -54,36 +54,35 @@ i() {
 
 ## Aliases
 
-The handful kept identical across machines. Git ones live on the git page; these are the
-shell-side ones:
+`la` is the only ls alias kept identical across machines. Git ones live on the git page.
 
 ```sh
-alias ll='ls -lh'      # long format
 alias la='ls -lAh'     # long format + hidden entries
 ```
 
-**Note this is the opposite of Ubuntu's defaults.** Ubuntu's `.bashrc` ships `ll='ls -alF'`
-(everything) and `la='ls -A'` (hidden only, short format); the pair above follows the oh-my-zsh
-convention instead — `ll` does not show hidden entries, `la` is what covers them. Pick one
-convention: mixing them means guessing wrong every time you switch machines.
-
-On bash hosts, edit them **in place** — comment out the distro defaults and put the new values
-right below:
+Ubuntu's `.bashrc` ships `la='ls -A'` (hidden only, short format), which means something else.
+Edit it **in place** — comment out the distro default and put the new value right below:
 
 ```sh
 # some more ls aliases
-# alias ll='ls -alF'
-alias ll='ls -lh'
+alias ll='ls -alF'
 # alias la='ls -A'
 alias la='ls -lAh'
 alias l='ls -CF'
 ```
 
 Appending at the end of the file works too (the last definition wins), but editing in place is
-what makes the change visible — otherwise the next reader assumes the distro defaults are still
+what makes the change visible — otherwise the next reader assumes the distro default is still
 in effect.
 
-oh-my-zsh defines both already, so there is nothing to add where it is installed.
+**`ll` and `l` are deliberately left as each distro ships them.** oh-my-zsh gives
+`ll='ls -lh'` and `l='ls -lah'`; Ubuntu gives `ll='ls -alF'` and `l='ls -CF'` — genuinely
+inconsistent, but with `la` being the only one actually typed, aligning them buys nothing.
+Cross-machine consistency exists so that switching machines never surprises you, and that
+only happens on commands you reach for; aligning unused aliases helps no one and the change
+itself is noise.
+
+oh-my-zsh defines `la` already, so there is nothing to add where it is installed.
 
 ## Load Order
 

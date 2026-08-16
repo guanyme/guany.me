@@ -23,17 +23,19 @@ Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
 ```
 
 ```powershell
-# Matching the Unix convention: ll is long format, la is long format + hidden.
-# These have to be functions — a PowerShell alias cannot carry a fixed argument
+# la — matching the Unix convention: long format + hidden entries.
+# It has to be a function — a PowerShell alias cannot carry a fixed argument
 # (-Force here). And aliases outrank functions, so the existing Set-Alias la
 # has to go first
 Remove-Item Alias:la -Force -ErrorAction Ignore
 
-function ll { Get-ChildItem @args }
 function la { Get-ChildItem -Force @args }
 ```
 
 `-Force` is the counterpart to Unix `-A`: it makes `la` list hidden and system entries.
+
+No `ll` is defined — PowerShell never had one, and cross-platform alignment only covers
+the command actually typed.
 
 ```powershell
 function i {
