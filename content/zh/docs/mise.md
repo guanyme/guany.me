@@ -164,6 +164,84 @@ scp: Ensure the remote shell produces no output for non-interactive sessions.
 
 顺序修好、警告消失，scp 立刻恢复。
 
+## 装 npm 包时的三层防护 {#supply-chain}
+
+mise 的 `npm:` 后端默认用内置的 **aube** 安装，它带三层供应链检查。装某些工具会被拦下来，
+这时**不要去关全局开关**，按包开最小例外。
+
+### 拦下来的两种典型
+
+**① 信任降级（trust downgrade）**
+
+```
+trust downgrade for @smithy/core@3.33.0 (trustPolicy=no-downgrade):
+earlier published version 3.24.6 had trusted publisher but this version has no trust evidence
+```
+
+某个间接依赖的旧版本有可信发布者签名、新版本没有，aube 认为信任等级下降。常见成因是
+上游手动发布、backport 绕过了可信工作流，或者镜像源剥掉了元数据 —— 不一定是被篡改。
+AWS SDK 的 `@smithy/*` 系列就是这样，逐个版本加例外没有尽头，用**裸包名**豁免整个系列：
+
+```toml
+[tools]
+"npm:某工具" = { version = "latest", trust_policy_excludes = ["@smithy/core", "@smithy/node-http-handler"] }
+```
+
+带版本号只豁免那一个版本，裸包名豁免所有版本。
+
+**② 构建脚本被拒**
+
+aube 沿用 pnpm 的 build approval 模型：**依赖的 `preinstall` / `install` / `postinstall`
+默认不执行**（自己项目的脚本照常跑）。有些包靠 postinstall 下载平台专用二进制，被拦之后
+会装成**半成品**：
+
+```powershell
+# 装完得到的 opencode.exe 只有 479 字节
+该版本的 opencode.exe 与你运行的 Windows 版本不兼容。请查看计算机的系统信息…
+```
+
+这个报错极具误导 —— 实际不是架构不匹配，而是那 479 字节根本不是 PE 文件，
+是包作者写的"postinstall 没跑"提示脚本（文件头是 `ec` 而非 `MZ`）。放行即可：
+
+```toml
+"npm:opencode-ai" = { version = "latest", allow_builds = true }
+```
+
+`allow_builds` 也接受数组，只放行指定的依赖：`allow_builds = ["esbuild"]`。
+
+### 不要用的两个出口 {#avoid-global-switches}
+
+mise 还提供 `npm.shell_out = true`（改用 npm CLI）和 `npm.package_manager = "pnpm"`，
+两者都能绕过 trust policy —— 但代价是**为个别包的问题，把所有包的防护都撤掉**。
+官方也把 `shell_out` 标为 last resort。
+
+| 后端                 | trust policy | 构建脚本                  | 何时用     |
+| -------------------- | ------------ | ------------------------- | ---------- |
+| `auto`（默认，aube） | ✅           | 默认拒绝 + `allow_builds` | 一直用这个 |
+| `pnpm`               | ❌           | 默认拒绝 + `allow_builds` | 不需要     |
+| `npm.shell_out`      | ❌           | `--ignore-scripts`        | 不需要     |
+
+注意 `npm.shell_out` 换成 npm CLI 之后，mise 仍然会传 `--ignore-scripts`，
+所以它连"构建脚本"那个问题都解决不了。
+
+### 版本年龄闸 {#minimum-release-age}
+
+第三层是 `minimum_release_age`，默认 **24h**：只安装发布超过该时长的版本，给社区时间
+发现被投毒的发布（对应 pnpm 的 `minimumReleaseAge`、Renovate 的同名机制）。
+
+自己发 npm 包的话这条会挡路 —— 刚 publish 的版本装不上，没法立刻验证。两种改法：
+
+```toml
+# 全局关掉
+minimum_release_age = "0"
+
+# 或者只放行自己的包，其余仍有 24h 缓冲（更推荐）
+minimum_release_age = "24h"
+minimum_release_age_excludes = ["npm:@自己的scope/*"]
+```
+
+它和上面两层是**互相独立**的 —— 被 trust policy 拦下来时，调这个没有任何作用。
+
 ## 从 fnm 迁过来 {#migrate-from-fnm}
 
 | fnm                                                 | mise                                                |

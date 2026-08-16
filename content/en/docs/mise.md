@@ -188,6 +188,91 @@ scp: Ensure the remote shell produces no output for non-interactive sessions.
 
 Fix the order, the warning goes away, and scp works again immediately.
 
+## Three Layers of Supply-Chain Checks {#supply-chain}
+
+mise's `npm:` backend installs through the embedded **aube**, which brings three supply-chain
+checks. Some tools get blocked by them — when that happens, **do not reach for a global switch**;
+add the narrowest per-package exception instead.
+
+### The two ways it blocks an install
+
+**1. Trust downgrade**
+
+```
+trust downgrade for @smithy/core@3.33.0 (trustPolicy=no-downgrade):
+earlier published version 3.24.6 had trusted publisher but this version has no trust evidence
+```
+
+An indirect dependency's older release carried trusted-publisher evidence while the newer one
+does not, so aube treats it as a downgrade. Common causes are a manual publish, a backport that
+skipped the trusted workflow, or a mirror that strips metadata — not necessarily tampering. The
+AWS SDK's `@smithy/*` family behaves this way, and pinning one version at a time never ends, so
+exempt the whole family by **bare package name**:
+
+```toml
+[tools]
+"npm:some-tool" = { version = "latest", trust_policy_excludes = ["@smithy/core", "@smithy/node-http-handler"] }
+```
+
+With a version it exempts only that version; a bare name exempts every version.
+
+**2. Build scripts denied**
+
+aube follows pnpm's build approval model: a dependency's `preinstall` / `install` / `postinstall`
+**does not run** unless allowlisted (your own project's scripts still run). Packages that fetch a
+platform binary in postinstall end up **half-installed**:
+
+```powershell
+# the resulting opencode.exe is 479 bytes
+This version of opencode.exe is not compatible with the version of Windows you're running…
+```
+
+That message is badly misleading — nothing is wrong with the architecture. Those 479 bytes are
+not a PE file at all but the author's "postinstall did not run" notice (header `ec`, not `MZ`).
+Allow it:
+
+```toml
+"npm:opencode-ai" = { version = "latest", allow_builds = true }
+```
+
+`allow_builds` also takes an array to permit specific dependencies only: `allow_builds = ["esbuild"]`.
+
+### Two escape hatches to avoid {#avoid-global-switches}
+
+mise also offers `npm.shell_out = true` (use the npm CLI) and `npm.package_manager = "pnpm"`.
+Both bypass the trust policy — at the cost of **dropping the checks for every package to unblock
+one**. The docs themselves label `shell_out` a last resort.
+
+| Backend                | Trust policy | Build scripts           | When to use |
+| ---------------------- | ------------ | ----------------------- | ----------- |
+| `auto` (default, aube) | yes          | denied + `allow_builds` | always      |
+| `pnpm`                 | no           | denied + `allow_builds` | not needed  |
+| `npm.shell_out`        | no           | `--ignore-scripts`      | not needed  |
+
+Note that `npm.shell_out` still passes `--ignore-scripts` to npm, so it does not even solve the
+build-script problem.
+
+### The release-age gate {#minimum-release-age}
+
+The third layer is `minimum_release_age`, defaulting to **24h**: only versions published longer
+ago than the threshold are installed, giving the community time to catch a compromised release
+(mirroring pnpm's `minimumReleaseAge` and Renovate's equivalent).
+
+It gets in the way if you publish npm packages yourself — a version you just published cannot be
+installed for verification. Two ways around it:
+
+```toml
+# turn it off globally
+minimum_release_age = "0"
+
+# or exempt only your own packages and keep the 24h buffer for everything else (preferred)
+minimum_release_age = "24h"
+minimum_release_age_excludes = ["npm:@your-scope/*"]
+```
+
+This layer is **independent** of the other two — when a trust policy blocks an install, changing
+this setting has no effect whatsoever.
+
 ## Migrating From fnm
 
 | fnm                                                      | mise                                                        |
