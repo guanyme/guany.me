@@ -52,6 +52,39 @@ i() {
 }
 ```
 
+## Aliases
+
+The handful kept identical across machines. Git ones live on the git page; these are the
+shell-side ones:
+
+```sh
+alias ll='ls -lh'      # long format
+alias la='ls -lAh'     # long format + hidden entries
+```
+
+**Note this is the opposite of Ubuntu's defaults.** Ubuntu's `.bashrc` ships `ll='ls -alF'`
+(everything) and `la='ls -A'` (hidden only, short format); the pair above follows the oh-my-zsh
+convention instead — `ll` does not show hidden entries, `la` is what covers them. Pick one
+convention: mixing them means guessing wrong every time you switch machines.
+
+On bash hosts, edit them **in place** — comment out the distro defaults and put the new values
+right below:
+
+```sh
+# some more ls aliases
+# alias ll='ls -alF'
+alias ll='ls -lh'
+# alias la='ls -A'
+alias la='ls -lAh'
+alias l='ls -CF'
+```
+
+Appending at the end of the file works too (the last definition wins), but editing in place is
+what makes the change visible — otherwise the next reader assumes the distro defaults are still
+in effect.
+
+oh-my-zsh defines both already, so there is nothing to add where it is installed.
+
 ## Load Order
 
 ```
