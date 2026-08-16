@@ -235,6 +235,66 @@ find_pane() {  # usage: find_pane <label>
 With `Requires=herdr.service` + `After=herdr.service`, restarting herdr drags this unit
 along with it.
 
+## Using herdr on Windows over SSH {#windows-over-ssh}
+
+Two limitations, both tied to the Windows version, and they **pull in opposite directions** —
+no single version is good for both.
+
+### Mouse input requires a Win11 host {#mouse-needs-win11}
+
+When clicking and scrolling do nothing over SSH, it is not that herdr failed to enable mouse
+capture — **Windows 10's ConPTY drops the mouse reports before herdr can read them**. ConPTY's
+mouse event translation only exists on Windows 11; it was never backported to 10, and the
+corresponding Microsoft Terminal issue is marked can't fix.
+
+Nothing in the configuration works around this. It comes down to the host build:
+
+| Build    | OS              | SSH mouse     |
+| -------- | --------------- | ------------- |
+| >= 22000 | Windows 11      | works         |
+| 19045    | Windows 10 22H2 | does not work |
+
+### But Win11 cannot traverse junctions {#junction-not-traversable}
+
+Conversely, Windows 11 24H2+ tightened reparse point traversal, so **an SSH session cannot see
+through a junction**:
+
+```
+herdr: The term 'herdr' is not recognized as a name of a cmdlet...
+```
+
+And herdr's install directory is exactly that — a junction:
+
+```
+%LOCALAPPDATA%\Programs\Herdr\bin  ->  ~\.herdr\packages\standalone\releases\<version>-x86_64-pc-windows-msvc
+```
+
+The tell is that the link shows fewer files than its target:
+
+```powershell
+$l = "$env:LOCALAPPDATA\Programs\Herdr\bin"
+@(cmd /c "dir /b `"$l`" 2>nul").Count
+@(cmd /c "dir /b `"$((Get-Item $l -Force).Target)`" 2>nul").Count
+```
+
+**What matters is not the path but who created the junction** — the ones an installer creates
+cannot be traversed, the ones `mklink /J` creates can. (Print name length looked like the
+discriminator at first, but that was disproved: a `mklink /J` rebuild had a print name length
+of 62 and still traversed.)
+
+Rebuilding fixes it; `rmdir` removes only the link, never the target:
+
+```powershell
+$l = "$env:LOCALAPPDATA\Programs\Herdr\bin"
+$t = (Get-Item $l -Force).Target
+cmd /c rmdir "$l"
+cmd /c mklink /J "$l" "$t"
+```
+
+**This recurs on every herdr upgrade** — the target path carries the version number, so a new
+release always means a new directory, and the junction the installer rebuilds is the kind that
+cannot be traversed. vite-plus's `current` follows the same pattern.
+
 ## House rules
 
 - Only close panes / tabs you created yourself; leave the user's alone
