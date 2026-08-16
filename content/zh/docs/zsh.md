@@ -51,6 +51,35 @@ i() {
 }
 ```
 
+## 别名 {#aliases}
+
+跨机器统一的那几个。git 相关见 git 文档，这里是 shell 侧的：
+
+```sh
+alias ll='ls -lh'      # 长格式
+alias la='ls -lAh'     # 长格式 + 隐藏项
+```
+
+**注意这和 Ubuntu 默认的语义是反的。** Ubuntu 的 `.bashrc` 给的是 `ll='ls -alF'`（全都有）
+和 `la='ls -A'`（只列隐藏、短格式）；上面这套沿用 oh-my-zsh 的约定 —— `ll` 不显示隐藏项，
+那个职责交给 `la`。两边只能选一套，混着用会在换机器时踩空。
+
+bash 主机改在**原处** —— 把发行版默认的那两行注释掉，新值紧跟其后：
+
+```sh
+# some more ls aliases
+# alias ll='ls -alF'
+alias ll='ls -lh'
+# alias la='ls -A'
+alias la='ls -lAh'
+alias l='ls -CF'
+```
+
+堆在文件末尾也能生效（后定义的赢），但改在原处才看得出「这里换过约定」，
+不然下次读 `.bashrc` 会以为发行版默认还在起作用。
+
+oh-my-zsh 自带这两个别名，装了就有，不用重复定义。
+
 ## 加载顺序 {#load-order}
 
 ```
