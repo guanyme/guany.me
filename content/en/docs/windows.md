@@ -92,6 +92,55 @@ $after  = [Environment]::GetEnvironmentVariable("Path","Machine")
 if ($before.TrimEnd(";") -ne $after.TrimEnd(";")) { "mismatch, rolling back" }
 ```
 
+### Installers will revert it
+
+Fixing it once does not make it stick. `[Environment]::SetEnvironmentVariable` is the most
+convenient API in .NET, so third-party installers reach for it whenever they touch the user
+PATH — and even a harmless "read it, confirm we are already listed, write it back unchanged" is
+enough to drop the type to `REG_SZ` and bake every `%VAR%` into a literal.
+
+Checking the **user** scope is usually enough; machine-scope installers rarely touch it:
+
+```powershell
+$uk = "HKCU:\Environment"
+(Get-Item $uk).GetValueKind("Path")                                   # expect ExpandString
+(Get-Item $uk).GetValue("Path","","DoNotExpandEnvironmentNames")      # expect %USERPROFILE%
+```
+
+To find the culprit, line the registry key's last-write time up against recently installed
+program directories — they are usually a minute or two apart:
+
+```powershell
+Get-ChildItem "$env:LOCALAPPDATA\Programs" -Directory |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 5 LastWriteTime, Name
+```
+
+Rather than repairing it by hand every time, drop a self-heal into `$PROFILE` so a new shell
+fixes it. Only the representation changes — the expanded value stays the same, which makes it
+idempotent — and the usual cost is a single registry read:
+
+```powershell
+$__uk = "HKCU:\Environment"
+$__raw = (Get-Item $__uk -ErrorAction SilentlyContinue).GetValue("Path", "", "DoNotExpandEnvironmentNames")
+if ($__raw) {
+    $__kind = (Get-Item $__uk).GetValueKind("Path")
+    if ($__kind -ne "ExpandString" -or $__raw -like "*$env:USERPROFILE\*") {
+        $__fixed = (($__raw -split ";") | Where-Object { $_ } | ForEach-Object {
+                if ($_.StartsWith("$env:USERPROFILE\", [StringComparison]::OrdinalIgnoreCase)) {
+                    "%USERPROFILE%\" + $_.Substring($env:USERPROFILE.Length + 1)
+                } else { $_ }
+            }) -join ";"
+        if ([Environment]::ExpandEnvironmentVariables($__fixed) -eq
+            [Environment]::ExpandEnvironmentVariables($__raw).TrimEnd(";")) {
+            Set-ItemProperty -Path $__uk -Name Path -Value $__fixed -Type ExpandString
+        }
+    }
+}
+```
+
+Do not drop the "only write if the expanded value matches" guard — it is what stops the rewrite
+from touching an entry whose literal home-directory path was deliberate.
+
 ## "Untrusted mount point" in SSH Sessions
 
 On Windows 11 24H2 and later, running certain commands after logging in over SSH fails with:

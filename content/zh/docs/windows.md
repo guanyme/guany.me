@@ -83,6 +83,52 @@ $after  = [Environment]::GetEnvironmentVariable("Path","Machine")
 if ($before.TrimEnd(";") -ne $after.TrimEnd(";")) { "不一致，回滚" }
 ```
 
+### 安装器会把它改回去 {#installers-revert}
+
+改好之后不是一劳永逸的。`[Environment]::SetEnvironmentVariable` 是 .NET 里最顺手的那个
+API，第三方安装器普遍拿它往用户 PATH 里写东西 —— 哪怕只是「读一遍、确认自己已经在里面、
+再原样写回」，也足以把类型打回 `REG_SZ`、把所有 `%VAR%` 烤成字面量。
+
+判断是不是被改了，看**用户级**这几项就够（机器级安装器很少碰）：
+
+```powershell
+$uk = "HKCU:\Environment"
+(Get-Item $uk).GetValueKind("Path")                                   # 应为 ExpandString
+(Get-Item $uk).GetValue("Path","","DoNotExpandEnvironmentNames")      # 应含 %USERPROFILE%
+```
+
+想找是谁改的，对比注册表键的最后写入时间和最近安装的程序目录 —— 时间通常就差一两分钟：
+
+```powershell
+Get-ChildItem "$env:LOCALAPPDATA\Programs" -Directory |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 5 LastWriteTime, Name
+```
+
+与其反复手修，不如在 `$PROFILE` 里放一段自愈 —— 开 shell 时检测到就改回来。只改表示形式，
+展开后的值不变，所以是幂等的；平时只多一次注册表读取：
+
+```powershell
+$__uk = "HKCU:\Environment"
+$__raw = (Get-Item $__uk -ErrorAction SilentlyContinue).GetValue("Path", "", "DoNotExpandEnvironmentNames")
+if ($__raw) {
+    $__kind = (Get-Item $__uk).GetValueKind("Path")
+    if ($__kind -ne "ExpandString" -or $__raw -like "*$env:USERPROFILE\*") {
+        $__fixed = (($__raw -split ";") | Where-Object { $_ } | ForEach-Object {
+                if ($_.StartsWith("$env:USERPROFILE\", [StringComparison]::OrdinalIgnoreCase)) {
+                    "%USERPROFILE%\" + $_.Substring($env:USERPROFILE.Length + 1)
+                } else { $_ }
+            }) -join ";"
+        if ([Environment]::ExpandEnvironmentVariables($__fixed) -eq
+            [Environment]::ExpandEnvironmentVariables($__raw).TrimEnd(";")) {
+            Set-ItemProperty -Path $__uk -Name Path -Value $__fixed -Type ExpandString
+        }
+    }
+}
+```
+
+那个「展开后必须一致才写」的判断别省 —— 万一条目里有本就该保留的字面量家目录路径，
+这一步能防止误改。
+
 ## SSH 会话里的「不受信任的装入点」 {#untrusted-mount-point}
 
 在 Windows 11 24H2 及以后的版本上，通过 SSH 登录后运行某些命令会报：
