@@ -117,23 +117,30 @@ ssh-add -D
 ```sshconfig
 Host *
   IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-  IdentitiesOnly yes
 
-Host * !某个用专用密钥的主机
-  IdentityFile ~/.ssh/id_ed25519.pub
+# 只有「同一台服务器上有多个账号」时才需要下面这两行
+Host codeup-admin
+  HostName codeup.aliyun.com
+  IdentityFile ~/.ssh/id_ed25519_admin.pub
+  IdentitiesOnly yes
 ```
+
+通配段只要 `IdentityAgent` 一行。提供哪几把密钥、按什么顺序提供，由
+[agent.toml](#agent-toml) 决定 —— 官方就是用那个文件控制顺序，以免撞上服务器
+普遍的六次密钥尝试上限。
 
 三个容易错的地方：
 
 - **`IdentityFile` 指向公钥（`.pub`）而不是私钥。** ssh 用它在 agent 里查找对应私钥，
   本地不需要有私钥文件。
-- **`IdentitiesOnly yes` 必须配合 `IdentityFile`。** 只写 `IdentityAgent` 不加这条，
-  ssh 会把 agent 里所有密钥依次甩给服务器，`ssh -v` 还能看到它尝试
-  `id_rsa`、`id_ecdsa`、`id_ecdsa_sk` 这些根本不存在的文件 —— 既泄露全部公钥，
-  密钥多了还会撞 `MaxAuthTries`。
-- **专用密钥要用否定匹配隔离。** `IdentityFile` 是累积型选项，而且 ssh 实际按
-  **agent 返回的密钥顺序**尝试，不是 config 里的书写顺序。通配段无条件提供通用密钥时，
-  某个 Host 单独指定的专用密钥会排在后面轮不上，得用 `Host * !主机名` 把它排除。
+- **约束写在具体 Host 里，别写进通配段。** `IdentityFile` 是累积型选项，写进
+  `Host *` 之后，那个需要专用密钥的主机反而会先拿到通用密钥 —— 于是又得加一段
+  `Host * !主机名` 否定匹配把它排除，绕一大圈。直接写在那一个 Host 块里，
+  `IdentitiesOnly yes` 也只作用于它，其余主机照常走 agent。
+- **用错密钥不一定报错，这是最难查的一种。** 如果默认那把密钥在同一台服务器上
+  也是个有效账号，服务器会照样接受，连得通、命令跑得动，只是身份是错的那个。
+  唯一能发现的办法是看 `ssh -v` 里 `Server accepts key` 那行的指纹，
+  和 `ssh-add -l` 的输出对一遍。
 
 ### 密钥白名单 {#agent-toml}
 
@@ -144,7 +151,12 @@ Host * !某个用专用密钥的主机
 item = "Guany"
 ```
 
-不配这个文件，agent 会把保管库里所有 SSH 密钥暴露给任何请求签名的进程。
+不配这个文件，agent 只提供**默认保管库**（Personal / Private / Employee）里的 SSH 密钥，
+自定义保管库里的一把都不会提供。所以密钥一旦按项目分到自定义库里，这个文件就是必需的，
+不是可选加固。
+
+**顺序有意义。** agent 按文件里的书写顺序把密钥提供给服务器，密钥多时靠这个排序
+避免撞上六次尝试上限。
 
 **它按条目标题精确匹配。** 在 1Password 里改了条目名而没同步这里，agent 立刻变成
 `The agent has no identities`，SSH、git、签名同时失效。而报错会伪装成这样：

@@ -118,24 +118,33 @@ first matching value, so a specific `Host` must appear earlier to override the w
 ```sshconfig
 Host *
   IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-  IdentitiesOnly yes
 
-Host * !some-host-with-a-dedicated-key
-  IdentityFile ~/.ssh/id_ed25519.pub
+# The two lines below are only needed when one server hosts several accounts
+Host codeup-admin
+  HostName codeup.aliyun.com
+  IdentityFile ~/.ssh/id_ed25519_admin.pub
+  IdentitiesOnly yes
 ```
+
+The wildcard block needs `IdentityAgent` and nothing else. Which keys the agent offers,
+and in what order, is decided by [agent.toml](#agent-toml) — that is the file the official
+docs use to control ordering, so you don't run into the six-key authentication limit most
+servers impose.
 
 Three things that are easy to get wrong:
 
 - **`IdentityFile` points at the public key (`.pub`), not the private key.** ssh uses it
   to find the matching private key inside the agent; no private key file is needed locally.
-- **`IdentitiesOnly yes` only works alongside `IdentityFile`.** With `IdentityAgent` alone,
-  ssh offers every key in the agent to the server one by one — `ssh -v` even shows it
-  trying `id_rsa`, `id_ecdsa`, `id_ecdsa_sk` and other files that do not exist. That leaks
-  all your public keys, and with enough keys it hits `MaxAuthTries`.
-- **Isolate a dedicated key with a negated match.** `IdentityFile` is cumulative, and ssh
-  tries keys in the order **the agent returns them**, not the order written in the config.
-  When the wildcard block offers the general key unconditionally, a per-host dedicated key
-  ends up behind it and never gets its turn. Exclude the host with `Host * !hostname`.
+- **Keep the constraint inside the specific `Host`, not the wildcard block.**
+  `IdentityFile` is cumulative, so putting it under `Host *` means the host that needs a
+  dedicated key gets handed the general one first — which then forces a second
+  `Host * !hostname` block just to exclude it. Declare it on that one host instead;
+  `IdentitiesOnly yes` then applies only there, and every other host keeps using the agent.
+- **The wrong key doesn't necessarily fail, and that's the hard one to catch.** If your
+  default key is also a valid account on that same server, the server accepts it happily —
+  the connection works, commands run, only the identity is wrong. The only way to spot it
+  is to check the fingerprint on the `Server accepts key` line of `ssh -v` against
+  `ssh-add -l`.
 
 ### Key Allowlist
 
@@ -146,8 +155,12 @@ Three things that are easy to get wrong:
 item = "Guany"
 ```
 
-Without this file the agent exposes every SSH key in the vault to any process that asks
-for a signature.
+Without this file the agent only offers SSH keys from your **default vault**
+(Personal / Private / Employee) and none at all from custom vaults. So the moment you sort
+keys into per-project vaults, this file stops being optional hardening and becomes required.
+
+**Order matters.** The agent offers keys in the order they appear in this file, which is how
+you avoid hitting the six-attempt limit once you have several keys.
 
 **It matches on the item title, exactly.** Rename the item in 1Password without updating
 this file and the agent immediately reports `The agent has no identities` — SSH, git and
