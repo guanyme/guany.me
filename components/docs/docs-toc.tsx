@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
@@ -31,6 +31,7 @@ function getAbsoluteTop(element: HTMLElement): number {
 
 export function DocsToc({ toc, rawContent }: DocsTocProps) {
   const [activeId, setActiveId] = useState<string>(toc[0]?.id || '')
+  const navRef = useRef<HTMLElement | null>(null)
   const [copied, copy] = useCopy()
   const t = useTranslations('docs')
   const tCopy = useTranslations('copy')
@@ -100,14 +101,52 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
     }
   }, [toc])
 
+  // When the TOC is long, the highlighted item may be outside its visible area, so bring it back into view here.
+  //
+  // Intentionally no animation: this scroll is passively triggered by reading behavior, not explicitly requested by the user. Adding a smooth animation would
+  // make the page and the table of contents move at the same time, distracting from the content; the browser's native smooth scrolling takes about 500ms,
+  // which also exceeds the reasonable 150-300ms range for micro-interactions. Readers won't notice an instant jump; they'll just feel that the table of contents is
+  // "always in the right place" — that's the approach used by Tailwind Docs and MDN.
+  //
+  // Use container.scrollTop rather than scrollIntoView: in some browsers, the latter also scrolls
+  // ancestor elements (here, the entire page), pulling the reading position away.
+  useEffect(() => {
+    const container = navRef.current
+    if (!container || !activeId) return
+
+    const link = container.querySelector<HTMLElement>(
+      `a[href="#${CSS.escape(activeId)}"]`,
+    )
+    if (!link) return
+
+    const containerRect = container.getBoundingClientRect()
+    const linkRect = link.getBoundingClientRect()
+    const relativeTop = linkRect.top - containerRect.top + container.scrollTop
+    const viewTop = container.scrollTop
+    const viewBottom = viewTop + container.clientHeight
+
+    // Only move when the highlighted item has completely left the viewport. If we instead scrolled when it "neared the edge," the table of contents would
+    // jerk back and forth as readers made small adjustments around section boundaries.
+    const fullyVisible =
+      relativeTop >= viewTop && relativeTop + linkRect.height <= viewBottom
+    if (fullyVisible) return
+
+    // Position it one-third of the way down the visible area to leave room for the context below and reduce how often this is triggered again.
+    const next = relativeTop - container.clientHeight / 3
+    const max = container.scrollHeight - container.clientHeight
+    container.scrollTop = Math.max(0, Math.min(next, max))
+  }, [activeId])
+
   if (toc.length === 0 && !rawContent) {
     return null
   }
 
   return (
-    <aside className="fixed top-24 right-4 hidden max-h-[calc(100vh-6rem)] w-60 overflow-y-auto xl:block 2xl:right-[calc((100vw-80rem)/2+1rem)]">
+    <aside
+      className="fixed top-24 hidden max-h-[calc(100vh-6rem)] w-60 flex-col xl:right-4 xl:flex 2xl:right-[calc((100vw-80rem)/2+1rem)]"
+    >
       {rawContent && (
-        <div className="mb-4">
+        <div className="mb-4 shrink-0">
           <Button
             variant="outline"
             size="sm"
@@ -125,8 +164,11 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
       )}
       {toc.length > 0 && (
         <>
-          <h4 className="mb-3 font-semibold">{t('pageNav')}</h4>
-          <nav>
+          <h4 className="mb-3 shrink-0 font-semibold">{t('pageNav')}</h4>
+          {/* The scroll container is here, not aside: the copy button and heading need to stay pinned at the top.
+              min-h-0 is essential — flex children default to min-height:auto; without it, they won't
+              shrink, and overflow will never be triggered. */}
+          <nav ref={navRef} className="min-h-0 flex-1 overflow-y-auto pr-2 pb-8">
             <ul className="space-y-2 text-sm">
               {toc.map((item, index) => (
                 <li

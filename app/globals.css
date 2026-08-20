@@ -221,6 +221,16 @@ html.dark {
   padding-right: 1rem;
 }
 
+/* Inline code: allow line breaks at any character.
+   Code blocks have their own horizontal scrolling fallback, but inline code doesn't — strings like
+   C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+   with no spaces will overflow the content area, causing the entire page to scroll horizontally on narrow screens.
+   Apply this only to inline code: :not(pre code) excludes code blocks,
+   otherwise it would break their line-by-line scrolling behavior. */
+:where(article) code:not(pre code) {
+  overflow-wrap: anywhere;
+}
+
 /* Dark image container: hidden in light mode, shown in dark mode */
 .group.relative.my-4.inline-block:has(img.dark\:block) {
   @apply hidden dark:inline-block;
