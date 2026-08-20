@@ -47,6 +47,38 @@ export function rehypeCustomSlug() {
 
       node.properties = node.properties || {}
       node.properties.id = id
+      node.properties.className = [
+        ...(Array.isArray(node.properties.className)
+          ? node.properties.className
+          : []),
+        'group',
+      ]
+
+      // Append an anchor to the end of the heading. Do this at the AST layer rather than using a custom React component:
+      // streamdown's heading styles (font size, weight, spacing) are defined inside its own component,
+      // not exposed through props. Replacing the renderer with a custom component would make all of them disappear, and the heading would
+      // default to the same 16px/400 as the body text.
+      node.children.push({
+        type: 'element',
+        tagName: 'a',
+        properties: {
+          href: `#${id}`,
+          'data-heading-anchor': '',
+          'aria-label': `Link to ${id}`,
+          className: [
+            'ml-2',
+            'inline-flex',
+            'align-middle',
+            'text-sm',
+            'text-muted-foreground',
+            'opacity-0',
+            'transition-opacity',
+            'group-hover:opacity-100',
+            'focus-visible:opacity-100',
+          ],
+        },
+        children: [{ type: 'text', value: '#' }],
+      })
     })
   }
 }

@@ -54,8 +54,21 @@ function MarkdownLink({
   ...rest
 }: ComponentProps<'a'> & { node?: unknown }) {
   const [externalOpen, setExternalOpen] = useState(false)
-  const classes = cn(linkClassName, className)
+  // Heading anchors are injected by rehypeCustomSlug and should not inherit the underline and primary color used for body links.
+  const isHeadingAnchor =
+    (rest as Record<string, unknown>)['data-heading-anchor'] !== undefined
+  const classes = isHeadingAnchor
+    ? className
+    : cn(linkClassName, className)
   const incomplete = href === 'streamdown:incomplete-link'
+
+  if (isHeadingAnchor) {
+    return (
+      <a href={href} className={classes} {...rest}>
+        {children}
+      </a>
+    )
+  }
 
   if (!href || incomplete) {
     return (
@@ -196,6 +209,9 @@ export function StreamdownRenderer({
       const headings = container.querySelectorAll<HTMLElement>(
         'h2[id], h3[id], h4[id], h5[id], h6[id]',
       )
+      // Anchor offset = header height + the heading's own margin-top.
+      // This preserves the heading's margin visually, naturally leaving some space between
+      // the text and the header (currently 64 + 24 = 88px, matching VitePress's measured 24px gap).
       for (const h of headings) {
         if (h.style.scrollMarginTop) continue
         const marginTop = parseFloat(getComputedStyle(h).marginTop) || 0
