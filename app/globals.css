@@ -221,6 +221,16 @@ html.dark {
   padding-right: 1rem;
 }
 
+/* 行内代码：允许在任意字符处断行。
+   代码块有自己的横向滚动兜底，行内代码没有——像
+   C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe 这类
+   无空格长串会直接撑破版心，在窄屏上造成整页横向滚动。
+   只对行内 code 生效：:not(pre code) 把代码块排除在外，
+   否则会破坏代码块内部按行滚动的行为。 */
+:where(article) code:not(pre code) {
+  overflow-wrap: anywhere;
+}
+
 /* 深色图片容器：浅色模式下隐藏，深色模式下显示 */
 .group.relative.my-4.inline-block:has(img.dark\:block) {
   @apply hidden dark:inline-block;
