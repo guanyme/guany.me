@@ -54,8 +54,21 @@ function MarkdownLink({
   ...rest
 }: ComponentProps<'a'> & { node?: unknown }) {
   const [externalOpen, setExternalOpen] = useState(false)
-  const classes = cn(linkClassName, className)
+  // 标题锚点由 rehypeCustomSlug 注入，不该套用正文链接的下划线与主色。
+  const isHeadingAnchor =
+    (rest as Record<string, unknown>)['data-heading-anchor'] !== undefined
+  const classes = isHeadingAnchor
+    ? className
+    : cn(linkClassName, className)
   const incomplete = href === 'streamdown:incomplete-link'
+
+  if (isHeadingAnchor) {
+    return (
+      <a href={href} className={classes} {...rest}>
+        {children}
+      </a>
+    )
+  }
 
   if (!href || incomplete) {
     return (
@@ -196,6 +209,9 @@ export function StreamdownRenderer({
       const headings = container.querySelectorAll<HTMLElement>(
         'h2[id], h3[id], h4[id], h5[id], h6[id]',
       )
+      // 锚点停靠位 = header 高度 + 标题自身的 margin-top。
+      // 这样标题的外边距在视觉上被保留下来，文字与 header 之间自然留出
+      // 一段间距（当前 64 + 24 = 88px，与 VitePress 实测的 24px 间距一致）。
       for (const h of headings) {
         if (h.style.scrollMarginTop) continue
         const marginTop = parseFloat(getComputedStyle(h).marginTop) || 0
