@@ -83,3 +83,29 @@ export function HeroSection({
     </section>
   )
 }
+
+// Hero skeleton screen. Its dimensions match the real content: min-h-125 matches the main area, and each placeholder's height
+// is based on the font size/line height of its corresponding element to prevent layout shifts (CLS) when data arrives.
+export function HeroSectionSkeleton() {
+  return (
+    <section className="relative overflow-hidden">
+      <div className="relative z-10 flex min-h-125 items-center justify-center px-5 py-20">
+        <div className="flex flex-col items-center text-center">
+          <div className="mb-6 size-32 animate-pulse rounded-full bg-muted" />
+          <div className="mb-3 h-10 w-40 animate-pulse rounded bg-muted md:h-12" />
+          <div className="mb-8 h-5 w-72 animate-pulse rounded bg-muted" />
+          <div className="mb-8 flex flex-wrap items-center justify-center gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-5 w-24 animate-pulse rounded bg-muted" />
+            ))}
+          </div>
+          <div className="flex gap-3">
+            {Array.from({ length: 2 }).map((_, i) => (
+              <div key={i} className="h-10 w-28 animate-pulse rounded-md bg-muted" />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
