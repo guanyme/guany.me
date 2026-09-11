@@ -17,7 +17,9 @@ interface ProjectPageProps {
   params: Promise<{ locale: string; slug: string }>
 }
 
-export const dynamicParams = false
+// Repositories created after the build aren't in the generateStaticParams list, so allow them to be generated on demand on first access;
+// repositories that don't exist, are forks, or are private return null from getRepo and still go through notFound()
+export const dynamicParams = true
 
 export async function generateStaticParams() {
   const repos = await getRepos()
