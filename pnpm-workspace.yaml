@@ -19,3 +19,29 @@ minimumReleaseAgeExclude:
   - next@16.3.0
   - '@next/eslint-plugin-next@16.3.0'
   - eslint-config-next@16.3.0
+# Security patches (Dependabot / pnpm audit). These are all transitive dependencies whose upstream projects have not yet moved to a fixed version.
+#
+# Each is **kept within its original major version**; only the patch or minor version is bumped. Writing this as ">=fixed version" would push users on
+# older major versions straight to the latest major version, which has an incompatible API — that is what pnpm audit --fix
+# does, so don't use it. When the same package has multiple major versions in the tree (js-yaml has both 3.x and 4.x,
+# brace-expansion has both 1.x and 5.x), list each major version separately.
+#
+# Remove entries one by one as upstream catches up: remove an entry, then run pnpm audit. If no warnings appear, it's no longer needed.
+overrides:
+  # Included in production (via next, streamdown, gray-matter)
+  mermaid: ^11.16.1
+  dompurify: ^3.4.13
+  # mermaid allows uuid 12~14 starting with 11.17; this remains pinned to 11.x
+  uuid@11: ^11.1.1
+  js-yaml@3: ^3.15.2
+  browserslist: ^4.28.7
+  baseline-browser-mapping: ^2.11.0
+  '@babel/core': ^7.29.6
+  nanoid@3: ^3.3.18
+  # Used only during development / build (eslint, shadcn dependency chain)
+  brace-expansion@1: ^1.1.18
+  brace-expansion@5: ^5.0.9
+  js-yaml@4: ^4.3.2
+  fast-uri@3: ^3.1.6
+  hono: ^4.13.5
+  qs: ^6.16.0
