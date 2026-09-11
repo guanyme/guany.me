@@ -17,7 +17,9 @@ interface ProjectPageProps {
   params: Promise<{ locale: string; slug: string }>
 }
 
-export const dynamicParams = false
+// 构建之后新建的仓库不在 generateStaticParams 的列表里，允许首次访问时按需生成；
+// 不存在、fork 或私有的仓库由 getRepo 返回 null，照样走 notFound()
+export const dynamicParams = true
 
 export async function generateStaticParams() {
   const repos = await getRepos()
