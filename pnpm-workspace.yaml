@@ -19,3 +19,29 @@ minimumReleaseAgeExclude:
   - next@16.3.0
   - '@next/eslint-plugin-next@16.3.0'
   - eslint-config-next@16.3.0
+# 安全补丁（Dependabot / pnpm audit）。都是间接依赖、上游还没跟进到修复版的。
+#
+# 每条都**锁在原来的大版本内**，只抬补丁号 / 次版本号。写成「>=修复版」会把
+# 旧大版本的使用方直接顶到最新大版本，API 不兼容 —— pnpm audit --fix 就是这么
+# 写的，所以不用它。同一个包在树里有多个大版本时（js-yaml 同时有 3.x 和 4.x，
+# brace-expansion 同时有 1.x 和 5.x），按大版本分开写。
+#
+# 上游跟进后可以逐条删掉：删了再跑 pnpm audit，不报就说明不再需要。
+overrides:
+  # 会进生产的（经 next、streamdown、gray-matter）
+  mermaid: ^11.16.1
+  dompurify: ^3.4.13
+  # mermaid 11.17 起允许 uuid 12~14，这里仍锁在 11.x
+  uuid@11: ^11.1.1
+  js-yaml@3: ^3.15.2
+  browserslist: ^4.28.7
+  baseline-browser-mapping: ^2.11.0
+  '@babel/core': ^7.29.6
+  nanoid@3: ^3.3.18
+  # 只在开发 / 构建时用的（eslint、shadcn 的依赖链）
+  brace-expansion@1: ^1.1.18
+  brace-expansion@5: ^5.0.9
+  js-yaml@4: ^4.3.2
+  fast-uri@3: ^3.1.6
+  hono: ^4.13.5
+  qs: ^6.16.0
