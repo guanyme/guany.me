@@ -29,14 +29,11 @@ export async function buildLlmsContent({
     `> License: MIT`,
     `> Updated: ${today}`,
     '',
-    ...(includeFullContent
-      ? ['> Full text of all content below', '']
-      : [
-          'Every doc is also available as Markdown by appending `.md` to its URL, e.g. ' +
-            `${canonicalOrigin}/docs/zsh.md. Chinese versions live under /zh, e.g. ` +
-            `${canonicalOrigin}/zh/docs/zsh.md.`,
-          '',
-        ]),
+    ...(includeFullContent ? ['> Full text of all content below', ''] : []),
+    'Every doc is also available as Markdown by appending `.md` to its URL, e.g. ' +
+      `${canonicalOrigin}/docs/zsh.md. Chinese versions live under /zh, e.g. ` +
+      `${canonicalOrigin}/zh/docs/zsh.md.`,
+    '',
   ]
 
   // Docs
@@ -53,7 +50,21 @@ export async function buildLlmsContent({
 
       if (includeFullContent) {
         const { content: rawContent } = matter(doc.content)
-        lines.push('---', '', rawContent.trim(), '')
+        // Relative links within the site (./zsh, ./zsh#anchor) break when separated from the page, so convert them to absolute .md URLs.
+        const body = rawContent
+          .trim()
+          .replace(
+            /\]\(\.\/([a-z0-9-]+)(?:#[^)]*)?\)/g,
+            (_, slug) => `](${canonicalOrigin}/docs/${slug}.md)`,
+          )
+        lines.push(
+          '---',
+          '',
+          `Source: ${canonicalOrigin}/docs/${item.slug}.md`,
+          '',
+          body,
+          '',
+        )
       } else {
         const description = doc.meta.description || ''
         lines.push(
