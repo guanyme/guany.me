@@ -24,10 +24,10 @@ export function MobileNav({ className }: { className?: string }) {
   return (
     <div className={cn('lg:hidden', className)}>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-9">
-            <Menu className="size-5" />
-          </Button>
+        <SheetTrigger
+          render={<Button variant="ghost" size="icon" className="size-9" />}
+        >
+          <Menu className="size-5" />
         </SheetTrigger>
 
         <SheetContent side="left" className="p-0">
