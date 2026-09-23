@@ -45,13 +45,17 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
     // Start syncing only after the user has actually scrolled.
     let userHasScrolled = false
 
+    // The current page's path. If the old instance has a queued callback after navigating, it must not write the old anchor to the new page.
+    const pathname = window.location.pathname
+
     // Keep the address bar in sync with the current section, so links to specific positions can be copied and shared at any time.
     // Use replaceState rather than pushState: scrolling is a continuous action, and pushState would fill up the browser's
     // history, making the Back button effectively useless.
     // Also, don't use location.hash = x — that makes the browser jump to the anchor, forcibly jolting the page while scrolling,
     // and also triggers the hashchange listener below.
     const syncHash = (id: string) => {
-      if (!userHasScrolled || !id) return
+      if (!userHasScrolled || !id || window.location.pathname !== pathname)
+        return
       const next = `#${id}`
       if (window.location.hash === next) return
       window.history.replaceState(null, '', next)
@@ -130,10 +134,11 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
 
     // rAF throttling: scroll events fire more often than the rendering frame rate, so calculating multiple times per frame is wasted work.
     let ticking = false
+    let rafId = 0
     const onScroll = () => {
       if (ticking) return
       ticking = true
-      requestAnimationFrame(() => {
+      rafId = requestAnimationFrame(() => {
         ticking = false
         handleScroll()
       })
@@ -144,18 +149,25 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
     const ro = articleEl ? new ResizeObserver(() => measure()) : null
     ro?.observe(articleEl as Element)
 
+    // Only count deliberate user input, not scroll events themselves: when changing pages, Next scrolls the page back to the top,
+    // and rendering new content can passively change scrollY; both trigger scroll events. If syncing starts based on those, a heading will be written
+    // to the new page's address bar, and streamdown-renderer will then compensate for the hash by jumping;
+    // if both documents have an anchor with the same name, changing pages will jump straight to that heading.
+    const userInputEvents = ['wheel', 'touchmove', 'keydown', 'pointerdown']
     const markScrolled = () => {
       userHasScrolled = true
     }
-    window.addEventListener('scroll', markScrolled, {
-      passive: true,
-      once: true,
-    })
+    for (const type of userInputEvents) {
+      window.addEventListener(type, markScrolled, { passive: true, once: true })
+    }
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', measure, { passive: true })
     window.addEventListener('hashchange', handleHashChange)
     return () => {
-      window.removeEventListener('scroll', markScrolled)
+      cancelAnimationFrame(rafId)
+      for (const type of userInputEvents) {
+        window.removeEventListener(type, markScrolled)
+      }
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', measure)
       window.removeEventListener('hashchange', handleHashChange)
