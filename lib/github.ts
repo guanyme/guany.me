@@ -14,7 +14,7 @@ export const getUser = cache(async (): Promise<GitHubUser | null> => {
       timeoutMs: 5000,
     })
     if (!res.ok) return null
-    return res.json()
+    return await res.json()
   } catch {
     return null
   }
@@ -86,6 +86,15 @@ export const getRepo = cache(
     if (repo.fork || repo.private) return null
 
     return mapRepo(repo)
+  },
+)
+
+// First look up names in the repository list: it already includes full_name, avoiding two sequential requests to getUser → getRepo.
+// Look up separately only if the repository isn't in the list (repositories created after the build).
+export const getRepoByName = cache(
+  async (name: string): Promise<GitHubRepo | null> => {
+    const repos = await getRepos()
+    return repos.find((repo) => repo.name === name) ?? getRepo(name)
   },
 )
 
