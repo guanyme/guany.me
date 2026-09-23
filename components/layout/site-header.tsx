@@ -38,6 +38,8 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20)
     }
+    // 刷新或从历史返回时页面可能已经停在中间，先按当前位置同步一次
+    handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
