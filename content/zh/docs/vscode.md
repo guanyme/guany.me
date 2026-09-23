@@ -1,8 +1,18 @@
-# vscode
+---
+description: 'VS Code 用户设置：字体、主题、终端与 Git 相关的 settings.json 配置。'
+---
 
-VS Code
+# VS Code
 
-## settings.json
+VS Code 是微软推出的代码编辑器。本页给出一份用户设置 `settings.json`，以及对应的配置仓库。
+
+## 配置 {#configuration}
+
+VS Code 的用户设置保存在 `settings.json` 里。
+
+### 编辑 settings.json {#edit-settingsjson}
+
+在用户 `settings.json` 里写入：
 
 ```json
 {
@@ -40,6 +50,6 @@ VS Code
 }
 ```
 
-## vscode-profile
+## 参考 {#references}
 
-[⚙︎ Guany VS Code profile](https://github.com/guanyme/vscode-profile/)
+- [Guany VS Code profile](https://github.com/guanyme/vscode-profile/)：本页设置所在的 VS Code 配置仓库。

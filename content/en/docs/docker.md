@@ -1,10 +1,18 @@
-# docker
+---
+description: 'Install Docker Engine on Ubuntu and configure proxies for pulls, containers, and builds.'
+---
 
-Docker
+# Docker
 
-## Set Up Docker's apt Repository
+Docker is a container platform. This page covers installing Docker Engine on Ubuntu from an apt repository and configuring Docker to use a proxy.
 
-### Official
+## Installation
+
+Add one Docker apt repository, then install the Docker packages. Run the commands below in a root shell.
+
+### Add the official apt repository
+
+Add Docker's official GPG key and repository:
 
 ```sh
 # Add Docker's official GPG key:
@@ -25,7 +33,9 @@ EOF
 apt update
 ```
 
-### Alibaba Cloud Public Mirror
+### Add the Alibaba Cloud public mirror repository
+
+To use the Alibaba Cloud public mirror, run these commands instead:
 
 ```sh
 # Add Docker's official GPG key:
@@ -46,7 +56,9 @@ EOF
 apt update
 ```
 
-### Alibaba Cloud ECS VPC Mirror
+### Add the Alibaba Cloud ECS VPC mirror repository
+
+On Alibaba Cloud ECS, you can use the VPC internal mirror instead:
 
 ```sh
 # Add Docker's official GPG key:
@@ -67,61 +79,69 @@ EOF
 apt update
 ```
 
-## Install Docker Packages
+### Install Docker packages
+
+After adding a repository, install Docker Engine and its plugins:
 
 ```sh
 apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-## Configure a Pull Proxy for Docker Engine
+## Configuration
 
-If `docker pull` needs to go through a proxy, configure the Docker Engine daemon (`dockerd`) first. On Linux systems that use `systemd`, there are generally two common approaches. The host-level commands below assume you are already running in a root shell.
+Requests such as `docker pull` and `docker push` are made by Docker Engine (`dockerd`), so configure the proxy on `dockerd`. Use any one of the methods below. They apply to Docker Engine on Linux with `systemd`. Docker Desktop does not use the `daemon.json` proxy settings described here.
 
-### Option 1: `daemon.json`
+Include internal domains, private registries, `localhost`, and `127.0.0.1` in `NO_PROXY`.
 
-Docker Engine 23.0+ supports proxy configuration directly in `/etc/docker/daemon.json`:
+### Configure a pull proxy in daemon.json
 
-```json
-{
-  "proxies": {
-    "http-proxy": "http://127.0.0.1:7890",
-    "https-proxy": "http://127.0.0.1:7890",
-    "no-proxy": "localhost,127.0.0.1,.local,.corp"
-  }
-}
-```
+Docker Engine 23.0+ supports proxy settings in `daemon.json`. Proxy settings in `daemon.json` take precedence over environment variables.
 
-Restart Docker after saving the file:
+1. Add the following to `/etc/docker/daemon.json`:
 
-```sh
-systemctl restart docker
-```
+   ```json
+   {
+     "proxies": {
+       "http-proxy": "http://127.0.0.1:7890",
+       "https-proxy": "http://127.0.0.1:7890",
+       "no-proxy": "localhost,127.0.0.1,.local,.corp"
+     }
+   }
+   ```
 
-### Option 2: `systemd` Service Environment Variables
+2. Restart Docker:
 
-If you prefer service-level configuration, add proxy environment variables to `docker.service`:
+   ```sh
+   systemctl restart docker
+   ```
 
-```sh
-mkdir -p /etc/systemd/system/docker.service.d
-tee /etc/systemd/system/docker.service.d/http-proxy.conf <<'EOF'
-[Service]
-Environment="HTTP_PROXY=http://127.0.0.1:7890"
-Environment="HTTPS_PROXY=http://127.0.0.1:7890"
-Environment="NO_PROXY=localhost,127.0.0.1,.local,.corp"
-EOF
-systemctl daemon-reload
-systemctl restart docker
-```
+### Configure a pull proxy with systemd
 
-Verify that the variables were loaded:
+Add proxy environment variables to `docker.service`. If the proxy URL contains special characters such as `#?!()[]{}`, escape them as described in the Docker docs.
 
-```sh
-systemctl show --property=Environment docker
-```
+1. In a root shell, write the configuration and restart Docker:
 
-### Rootless Docker
+   ```sh
+   mkdir -p /etc/systemd/system/docker.service.d
+   tee /etc/systemd/system/docker.service.d/http-proxy.conf <<'EOF'
+   [Service]
+   Environment="HTTP_PROXY=http://127.0.0.1:7890"
+   Environment="HTTPS_PROXY=http://127.0.0.1:7890"
+   Environment="NO_PROXY=localhost,127.0.0.1,.local,.corp"
+   EOF
+   systemctl daemon-reload
+   systemctl restart docker
+   ```
 
-If you use rootless Docker, the `systemd` path moves to the current user's directory and the commands should be run as that user:
+2. Verify that the variables were loaded:
+
+   ```sh
+   systemctl show --property=Environment docker
+   ```
+
+### Configure a pull proxy for rootless Docker
+
+For rootless Docker, the `systemd` configuration lives in the current user's directory. Run as that user:
 
 ```sh
 mkdir -p ~/.config/systemd/user/docker.service.d
@@ -135,18 +155,13 @@ systemctl --user daemon-reload
 systemctl --user restart docker
 ```
 
-Notes:
+## Usage
 
-- Proxy settings in `daemon.json` take precedence over environment variable configuration.
-- `NO_PROXY` should usually include internal domains, private registries, `localhost`, and `127.0.0.1`.
-- If the proxy URL contains special characters such as `#?!()[]{}`, escape them as described in the Docker docs when using `systemd` environment variables.
-- These settings apply to Docker Engine. Docker Desktop does not use the `daemon.json` proxy configuration described here.
+The `dockerd` proxy only covers requests made by the daemon itself. For network access inside containers, or for dependencies downloaded during `docker build`, pass the proxy on the command line.
 
-## Configure Proxy for Containers and Builds
+### Run a container with a proxy
 
-Configuring `dockerd` only covers requests made by the daemon itself, such as `docker pull` and `docker push`. If processes inside containers need proxy access, or if `docker build` needs proxy access to download dependencies, configure client-side proxy settings as well.
-
-### Set Proxy for a Single Container
+Pass the proxy variables with `-e`:
 
 ```sh
 docker run --rm \
@@ -156,7 +171,9 @@ docker run --rm \
   alpine env | grep -i _PROXY
 ```
 
-### Set Proxy for a Single Build
+### Build an image with a proxy
+
+Pass the proxy with `--build-arg`. Do not put proxy settings in `ENV` instructions in the Dockerfile:
 
 ```sh
 docker build \
@@ -166,11 +183,8 @@ docker build \
   .
 ```
 
-Notes:
+Proxy URLs may contain credentials. Do not commit them to a repository.
 
-- For builds, prefer `--build-arg` instead of baking proxy settings into `ENV` instructions in the Dockerfile.
-- Proxy URLs may contain sensitive information. Avoid committing authenticated proxy addresses to the repository.
+## References
 
-## Configure Alibaba Cloud Mirror Accelerator
-
-[Container Registry Console](https://cr.console.aliyun.com/)
+- [Alibaba Cloud Container Registry console](https://cr.console.aliyun.com/): get and configure an Alibaba Cloud registry mirror accelerator.

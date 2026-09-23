@@ -1,24 +1,34 @@
+---
+description: 'fastfetch 系统信息工具：在 macOS、Windows、Ubuntu 上安装并运行。'
+---
+
 # fastfetch
 
-Fastfetch 是一个类似 neofetch 的系统信息获取工具，但速度更快。
+fastfetch 是一个类似 neofetch 的系统信息工具，速度更快。本页介绍它在 macOS、Windows、Ubuntu 上的安装方法和基本用法。
 
 ## 安装 {#installation}
 
-### macOS (Homebrew)
+按所用系统选择一种安装方式。
+
+### 在 macOS 上安装 {#install-on-macos}
+
+用 Homebrew 安装：
 
 ```sh
 brew install fastfetch
 ```
 
-### Windows (winget)
+### 在 Windows 上安装 {#install-on-windows}
 
-```sh
+用 winget 安装：
+
+```powershell
 winget install fastfetch
 ```
 
-### Ubuntu (PPA)
+### 在 Ubuntu 上安装 {#install-on-ubuntu}
 
-以下命令默认在 root shell 下执行。
+在 root shell 里添加 Fastfetch PPA，更新软件包列表，然后安装：
 
 ```sh
 # 添加 Fastfetch PPA
@@ -32,6 +42,12 @@ apt install fastfetch
 ```
 
 ## 使用 {#usage}
+
+fastfetch 不带参数即可运行。
+
+### 显示系统信息 {#show-system-information}
+
+运行：
 
 ```sh
 fastfetch

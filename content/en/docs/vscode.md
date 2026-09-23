@@ -1,8 +1,18 @@
-# vscode
+---
+description: 'VS Code user settings: a settings.json for fonts, themes, the terminal and Git.'
+---
 
-VS Code
+# VS Code
 
-## settings.json
+VS Code is a code editor from Microsoft. This page provides a user `settings.json` and the profile repository it comes from.
+
+## Configuration
+
+VS Code stores user settings in `settings.json`.
+
+### Edit settings.json
+
+Add the following to your user `settings.json`:
 
 ```json
 {
@@ -40,6 +50,6 @@ VS Code
 }
 ```
 
-## vscode-profile
+## References
 
-[⚙︎ Guany VS Code profile](https://github.com/guanyme/vscode-profile/)
+- [Guany VS Code profile](https://github.com/guanyme/vscode-profile/): the VS Code profile repository these settings come from.

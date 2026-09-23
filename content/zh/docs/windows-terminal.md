@@ -1,8 +1,18 @@
-# windows-terminal
+---
+description: 'Windows Terminal 的 settings.json 配置：默认值、PowerShell 7 和 Vitesse Dark 配色'
+---
 
-Windows Terminal
+# Windows Terminal
 
-## profiles.defaults
+本页给出 Windows Terminal 的 `settings.json` 配置：profile 默认值、PowerShell 7 启动命令和 Vitesse Dark 配色。
+
+## 配置 {#configuration}
+
+以下片段分别写进 `settings.json` 的对应字段。
+
+### 设置 profile 默认值 {#set-profile-defaults}
+
+在 `profiles.defaults` 里关闭提示音，设置配色和字体：
 
 ```json
 {
@@ -14,7 +24,9 @@ Windows Terminal
 }
 ```
 
-## profiles.list
+### 启动 PowerShell 7 {#launch-powershell-7}
+
+在 `profiles.list` 的 profile 里把命令行设为 PowerShell 7，`-NoLogo` 去掉启动横幅：
 
 ```json
 [
@@ -24,7 +36,9 @@ Windows Terminal
 ]
 ```
 
-## schemes
+### 添加 Vitesse Dark 配色 {#add-the-vitesse-dark-color-scheme}
+
+在 `schemes` 数组里加上：
 
 ```json
 {

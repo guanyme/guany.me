@@ -1,14 +1,21 @@
-# ubuntu
+---
+description: 'Switch Ubuntu apt sources to the Alibaba Cloud public or ECS VPC mirror.'
+---
 
-Ubuntu
+# Ubuntu
 
-## Configure Alibaba Cloud Mirror
+Ubuntu is a Debian-based Linux distribution. This page covers switching apt sources to an Alibaba Cloud mirror.
 
-The commands below assume you are already running in a root shell.
+## Configuration
 
-### Back Up Configuration File
+The location of the apt source file depends on the release:
 
-Ubuntu 24.04 LTS uses the deb822-style `/etc/apt/sources.list.d/ubuntu.sources` by default. Ubuntu 22.04 LTS and older releases usually still use `/etc/apt/sources.list`.
+- Ubuntu 24.04 LTS uses the deb822-style `/etc/apt/sources.list.d/ubuntu.sources` by default.
+- Ubuntu 22.04 LTS and older usually use `/etc/apt/sources.list`.
+
+Run the commands below in a root shell. Back up the file first, then pick one mirror.
+
+### Back up the apt source file
 
 Ubuntu 24.04 LTS:
 
@@ -22,9 +29,9 @@ Ubuntu 22.04 LTS and older:
 cp -a /etc/apt/sources.list /etc/apt/sources.list.bak
 ```
 
-### Alibaba Cloud Public Mirror
+### Use the Alibaba Cloud public mirror
 
-Ubuntu 24.04 LTS:
+On Ubuntu 24.04 LTS, overwrite `ubuntu.sources` and update the index:
 
 ```sh
 cat > /etc/apt/sources.list.d/ubuntu.sources <<'EOF'
@@ -44,7 +51,7 @@ EOF
 apt update
 ```
 
-Ubuntu 22.04 LTS and older:
+On Ubuntu 22.04 LTS and older, replace the URLs in `sources.list` and update the index:
 
 ```sh
 sed -i "s@http://.*archive.ubuntu.com@https://mirrors.aliyun.com@g" /etc/apt/sources.list
@@ -52,7 +59,9 @@ sed -i "s@http://.*security.ubuntu.com@https://mirrors.aliyun.com@g" /etc/apt/so
 apt update
 ```
 
-### Alibaba Cloud ECS VPC Mirror
+### Use the Alibaba Cloud ECS VPC mirror
+
+On Alibaba Cloud ECS, you can use the VPC internal mirror instead.
 
 Ubuntu 24.04 LTS:
 

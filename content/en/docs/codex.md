@@ -1,10 +1,26 @@
+---
+description: 'OpenAI Codex CLI global instructions, MCP servers, shell functions and resume commands.'
+---
+
 # Codex
 
-OpenAI Codex CLI
+Codex is OpenAI's command-line coding tool (Codex CLI). This page covers its global instructions, MCP servers, shell functions and common commands.
 
-## MCP Servers
+## Configuration
 
-Config file location: `~/.codex/config.toml`
+Codex keeps its config files in the `~/.codex` directory.
+
+### Global instructions
+
+Put the following in `~/.codex/AGENTS.md`:
+
+```markdown
+- Always respond in Chinese-simplified
+```
+
+### MCP servers
+
+Add the following to `~/.codex/config.toml`:
 
 ```toml
 [mcp_servers.claude-code]
@@ -20,25 +36,15 @@ command = "npx"
 args = ["shadcn@latest", "mcp"]
 ```
 
-## Command
+### Shell function
 
-```sh
-# Continue the most recent interactive session for the current directory
-codex resume --last
+Wrap `codex` in a shell function of the same name so every launch gets the base arguments. Add the function to `~/.zshrc` or your PowerShell `$PROFILE`. Pick one of the two variants below.
 
-# Skip approvals and sandbox entirely, extremely dangerous
-codex --dangerously-bypass-approvals-and-sandbox
-```
+#### Always start a new session
 
-`codex resume --last` filters by the current working directory by default, so running it inside a project will try to continue the latest session for that project. Codex does not automatically resume when you `cd` into a directory, but you can wrap that behavior in a shell function.
+Start a fresh session every time, with only the base arguments.
 
-### Shell Function
-
-#### No auto-resume
-
-Always start a fresh session with just the base arguments:
-
-**Zsh**
+Zsh:
 
 ```zsh
 codex() {
@@ -48,7 +54,7 @@ codex() {
 }
 ```
 
-**PowerShell**
+PowerShell:
 
 ```powershell
 function codex {
@@ -59,11 +65,11 @@ function codex {
 }
 ```
 
-#### Auto-resume
+#### Resume the current directory's session automatically
 
-Try to continue the latest session for the current directory first; if it fails, start a new one:
+Try to continue the latest session for the current directory first. If that fails, start a new one.
 
-**Zsh**
+Zsh:
 
 ```zsh
 codex() {
@@ -73,7 +79,7 @@ codex() {
 }
 ```
 
-**PowerShell**
+PowerShell:
 
 ```powershell
 function codex {
@@ -87,3 +93,17 @@ function codex {
     }
 }
 ```
+
+## Usage
+
+Common commands:
+
+```sh
+# Continue the most recent interactive session for the current directory
+codex resume --last
+
+# Skip approvals and sandbox entirely, extremely dangerous
+codex --dangerously-bypass-approvals-and-sandbox
+```
+
+`codex resume --last` filters sessions by the current working directory by default. Run it inside a project to continue that project's latest session. Codex does not resume automatically when you `cd` into a directory. To resume first and fall back to a new session, use a [shell function](#shell-function).

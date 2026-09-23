@@ -1,41 +1,93 @@
-# powershell
+---
+description: 'Install PowerShell 7 and set up completion, prompt, aliases and functions'
+---
 
-PowerShell
+# PowerShell
+
+This page covers installing PowerShell 7 and related tools, configuring completion, the prompt, aliases and functions in `$PROFILE`, and fixing scp failures caused by the profile.
 
 ## Installation
+
+Install the following tools with winget.
+
+Install PowerShell 7:
 
 ```powershell
 winget install --id Microsoft.PowerShell
 ```
 
+Install Starship:
+
 ```powershell
 winget install --id Starship.Starship
 ```
+
+Install gsudo:
 
 ```powershell
 winget install gerardog.gsudo
 ```
 
-## Usage
+## Configuration
+
+All of the following goes in `$PROFILE`.
+
+### Set up completion and the prompt
+
+Add Tab menu completion and the Starship prompt to `$PROFILE`:
 
 ```powershell
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+
+Invoke-Expression (&starship init powershell)
 ```
 
+### Define aliases as functions
+
+PowerShell aliases cannot take arguments, so `la`, the git shortcuts and the `nr` shortcuts are all functions. Built-in aliases take precedence over functions, so remove `la`, `gp` (Get-ItemProperty), `gl` (Get-Location) and `ni` (New-Item) first, or the functions of the same name are never reached:
+
 ```powershell
-# la — matching the Unix convention: long format + hidden entries.
-# It has to be a function — a PowerShell alias cannot carry a fixed argument
-# (-Force here). And aliases outrank functions, so the existing Set-Alias la
-# has to go first
-Remove-Item Alias:la -Force -ErrorAction Ignore
+foreach ($a in "la", "gp", "gl", "ni") { Remove-Item "Alias:$a" -Force -ErrorAction Ignore }
 
 function la { Get-ChildItem -Force @args }
 ```
 
-`-Force` is the counterpart to Unix `-A`: it makes `la` list hidden and system entries.
+`-Force` also lists hidden and system files.
 
-No `ll` is defined — PowerShell never had one, and cross-platform alignment only covers
-the command actually typed.
+Add the git and `nr` functions to `$PROFILE`:
+
+```powershell
+function g { git @args }
+function gaa { git add --all @args }
+function gcmsg { git commit --message @args }
+function gp { git push @args }
+function gl { git pull @args }
+function gcl { git clone --recurse-submodules @args }
+function grt {
+    $root = git rev-parse --show-toplevel 2>$null
+    if ($root) { Set-Location $root } else { Write-Warning "Not inside a git repository" }
+}
+
+function nio { ni --prefer-offline }
+function s { nr start }
+function d { nr dev }
+function b { nr build }
+function bw { nr build --watch }
+function t { nr test }
+function tu { nr test -u }
+function tw { nr test --watch }
+function w { nr watch }
+function p { nr play }
+function c { nr typecheck }
+function lint { nr lint }
+function lintf { nr lint --fix }
+function release { nr release }
+function re { nr release }
+```
+
+### Functions
+
+Define the `i` function in `$PROFILE` to jump to a directory under `$HOME\i`:
 
 ```powershell
 function i {
@@ -47,65 +99,27 @@ function i {
 }
 ```
 
-Git no longer goes through the `posh-git` / `git-aliases` modules — the functions are defined
-by hand instead, see the git page.
+### Runtimes
 
-## Speeding Up Startup
-
-Nearly all of the profile's cost is spawning subprocesses. Measured medians of
-`pwsh -Command "exit"`:
-
-|                              | Time   |
-| ---------------------------- | ------ |
-| `pwsh -NoProfile` (baseline) | 151 ms |
-| Before                       | 630 ms |
-| After                        | 524 ms |
-
-### starship gets launched twice
-
-`starship init powershell` prints exactly one line:
+Activate mise in `$PROFILE`:
 
 ```powershell
-Invoke-Expression (& 'C:\Program Files\starship\bin\starship.exe' init powershell --print-full-init | Out-String)
+(&mise activate pwsh) | Out-String | Invoke-Expression
 ```
 
-So running it launches **starship a second time**. Ask for the full script directly and cache
-it to a file, which removes that whole round trip:
+## Troubleshooting
 
-```powershell
-$__cacheDir = "$HOME\.cache\pwsh"
-if (-not (Test-Path $__cacheDir)) { New-Item -ItemType Directory $__cacheDir -Force | Out-Null }
+### Profile output breaks scp
 
-$__f = "$__cacheDir\starship.ps1"
-$__src = (Get-Command starship -ErrorAction SilentlyContinue).Source
-if ($__src -and ((-not (Test-Path $__f)) -or (Get-Item $__src).LastWriteTime -gt (Get-Item $__f).LastWriteTime)) {
-    starship init powershell --print-full-init | Out-String | Set-Content $__f -Encoding utf8
-}
-if (Test-Path $__f) { . $__f }
+When PowerShell is the OpenSSH `DefaultShell`, scp and sftp fail with:
+
+```text
+scp: Received message too long 458961715
+scp: Ensure the remote shell produces no output for non-interactive sessions.
 ```
 
-Regeneration keys off the binary's `LastWriteTime`, so a `winget upgrade` refreshes the cache
-on its own — no manual clearing.
+The profile is writing to stdout. Check the profile for `echo`, `Write-Output` and commands that print warnings, and remove or change them. For example, loading mise completions before `activate` prints `usage CLI not found`.
 
-**The dot-source has to sit at the top level of the profile.** Wrap this in a function and
-`. $__f` only applies inside that function's scope: the prompt never reaches global scope, and
-the symptom is "the cache ran but the prompt didn't change".
+## References
 
-mise's completion script is cached the same way, but it **must come after `mise activate`** —
-the completions shell out to `usage` at runtime, and `usage` is itself a mise-managed tool that
-is not on PATH before activation, so every new shell would print `usage CLI not found`. See the
-mise page.
-
-### The part that cannot be reduced
-
-The single `Set-PSReadlineKeyHandler` line costs about 183 ms, which is really the **first load
-of the PSReadLine module**, not the key binding. An interactive session loads that module
-anyway, so moving or deferring the line just pushes the cost to the first keystroke — it does
-not feel faster.
-
-`mise activate` cannot be cached either: it has to run every time to resolve versions for the
-current session and install the directory-change hook.
-
-## powershell-profile
-
-[⚙︎ Guany Powershell profile](https://github.com/guanyme/powershell-profile/)
+- [Guany PowerShell profile](https://github.com/guanyme/powershell-profile/): Guany's PowerShell profile repository.

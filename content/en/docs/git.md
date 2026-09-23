@@ -1,34 +1,18 @@
-# git
+---
+description: 'Global Git settings for identity, default branch, line endings, credentials, LFS, and aliases'
+---
 
-Git
+# Git
 
-## Disable Automatic CRLF Line Ending Conversion
+Git is a distributed version control system. This page covers common global settings and aliases shared by zsh and PowerShell.
 
-```sh
-git config --global core.autocrlf false
-```
+## Configuration
 
-## Configure credential helper
+The commands below write to the global config `~/.gitconfig`. Use the ones you need.
 
-### WSL
+### Set your name and email
 
-```sh
-git config --global credential.helper "/mnt/c/Program\ Files/Git/mingw64/bin/git-credential-manager.exe"
-```
-
-### Linux
-
-```sh
-git config --global credential.helper store
-```
-
-## Set Default Branch to main
-
-```sh
-git config --global init.defaultBranch main
-```
-
-## Configure User Name and Email
+Replace `Your Name` and `youremail@domain.com` with your own details:
 
 ```sh
 git config --global user.name "Your Name"
@@ -38,19 +22,75 @@ git config --global user.name "Your Name"
 git config --global user.email "youremail@domain.com"
 ```
 
-## Configure lfs
+### Set the default branch to main
+
+Name the default branch `main` in new repositories:
+
+```sh
+git config --global init.defaultBranch main
+```
+
+### Disable automatic CRLF conversion
+
+Turn off line-ending conversion on commit and checkout:
+
+```sh
+git config --global core.autocrlf false
+```
+
+### Configure a credential helper
+
+Choose the credential helper for your system.
+
+#### WSL
+
+Use the Git Credential Manager bundled with Git for Windows:
+
+```sh
+git config --global credential.helper "/mnt/c/Program\ Files/Git/mingw64/bin/git-credential-manager.exe"
+```
+
+#### Linux
+
+Store credentials in a local file:
+
+```sh
+git config --global credential.helper store
+```
+
+### Enable Git LFS
+
+Enable Git LFS for the current user:
 
 ```sh
 git lfs install
 ```
 
-## Aliases
+### Optional settings
 
-Neither oh-my-zsh's `git` plugin nor PowerShell's `git-aliases` module — the former defines 197
-aliases at once where only these few get used. Both sides keep identical semantics so the
-muscle memory carries across platforms.
+Enable as needed:
 
-### zsh
+```sh
+git config --global push.autoSetupRemote true   # first push of a new branch without -u
+git config --global pull.rebase true            # pull rebases instead of creating merge commits
+git config --global rebase.autostash true       # stash uncommitted changes before a rebase
+git config --global diff.algorithm histogram    # easier-to-read diffs for larger changes
+git config --global help.autocorrect prompt     # offer a fix for mistyped subcommands
+```
+
+Rewrite HTTPS URLs to SSH when cloning:
+
+```sh
+git config --global url."git@github.com:".insteadOf https://github.com/
+```
+
+### Aliases
+
+zsh and PowerShell use the same set of aliases with the same meaning.
+
+#### zsh
+
+Add this to `~/.zshrc`:
 
 ```sh
 alias g="git"
@@ -61,10 +101,9 @@ alias gl="git pull"
 alias gcl="git clone --recurse-submodules"
 ```
 
-### PowerShell
+#### PowerShell
 
-These have to be **functions** rather than `Set-Alias`, since an alias cannot carry fixed
-arguments.
+Add this to `$PROFILE`. PowerShell aliases cannot carry fixed arguments, so use functions instead of `Set-Alias`:
 
 ```powershell
 # gp / gl are built-in read-only aliases (Get-ItemProperty / Get-Location).
@@ -80,15 +119,12 @@ function gl { git pull @args }
 function gcl { git clone --recurse-submodules @args }
 ```
 
-`Import-Module git-aliases -DisableNameChecking` is exactly what the module was doing about
-this; defining the functions by hand means taking that step over yourself.
-
-Both sides chain the same way:
+Both shells chain the same way:
 
 ```sh
 g init && gaa && gcmsg "feat: initial"
 ```
 
-## config
+## References
 
-[⚙︎ Guany Git config](https://github.com/guanyme/config/blob/main/.gitconfig)
+- [Guany Git config](https://github.com/guanyme/config/blob/main/.gitconfig): the author's `.gitconfig`.

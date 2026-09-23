@@ -1,60 +1,270 @@
-# ssh
+---
+description: 'OpenSSH keys, ssh-agent, the 1Password SSH agent, and Windows as an SSH server'
+---
 
-SSH
+# SSH
 
-## Generate a New SSH Key
+SSH is the encrypted protocol for remote login and Git transport. This page covers key generation, ssh-agent, the 1Password SSH agent, commit signing, and setting up Windows as an SSH server.
+
+## Configuration
+
+The settings below are independent. Use the ones you need.
+
+### Generate an SSH key
+
+Generate an Ed25519 key. Replace `your_email@example.com` with your email address:
 
 ```sh
 ssh-keygen -t ed25519 -C "your_email@example.com"
 ```
 
-## View SSH Key
+### Start ssh-agent on Windows
 
-### macOS / Linux
-
-```sh
-cat ~/.ssh/id_ed25519.pub
-```
-
-### Windows (PowerShell)
-
-```powershell
-cat $HOME\.ssh\id_ed25519.pub
-```
-
-## Configure GitHub to Use SSH over the HTTPS Port
-
-```
-Host github.com
-  HostName ssh.github.com
-  Port 443
-  User git
-```
-
-## Test SSH Connection
-
-```sh
-ssh -T git@github.com
-```
-
-## Configure Proxy
-
-```
-ProxyCommand nc -X 5 -x 127.0.0.1:7890 %h %p
-```
-
-## SSH Agent Key Management
-
-### Start ssh-agent Service on Windows
-
-On Windows, you need to start the ssh-agent service before using it:
+On Windows, start the ssh-agent service before adding keys:
 
 ```powershell
 Set-Service -Name ssh-agent -StartupType Automatic
 Start-Service ssh-agent
 ```
 
-### Add Key to SSH Agent
+### Connect to GitHub over the HTTPS port
+
+Add this to `~/.ssh/config`:
+
+```sshconfig
+Host github.com
+  HostName ssh.github.com
+  Port 443
+  User git
+```
+
+### Configure a proxy
+
+Add this to a `Host` block in `~/.ssh/config`:
+
+```sshconfig
+ProxyCommand nc -X 5 -x 127.0.0.1:6153 %h %p
+```
+
+### Use the 1Password SSH agent
+
+The private key stays in 1Password and never touches disk. The 1Password agent handles both SSH authentication and commit signing, and each use requires biometric approval:
+
+```text
+1Password (sole copy of the private key)
+    │  agent.sock
+    ├──→ ssh           authentication
+    └──→ op-ssh-sign   commit signing
+```
+
+Only public keys stay on disk. ssh uses them to locate the matching private key in the agent.
+
+Add this to `~/.ssh/config`:
+
+```sshconfig
+# The two lines below are only needed when one server hosts several accounts
+Host codeup-admin
+  HostName codeup.aliyun.com
+  IdentityFile ~/.ssh/id_ed25519_admin.pub
+  IdentitiesOnly yes
+
+Host *
+  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+```
+
+Key points:
+
+- **Put the wildcard block at the end of the file.** Most ssh_config options take the first matching value, so a specific `Host` must come first to override the wildcard.
+- **Put only `IdentityAgent` in the wildcard block.** [agent.toml](#configure-the-1password-key-allowlist) decides which keys the agent offers and in what order.
+- **Point `IdentityFile` at the public key (`.pub`).** ssh uses it to find the matching private key in the agent. No private key file is needed locally.
+- **Put `IdentityFile` and `IdentitiesOnly` in the specific `Host`.** `IdentityFile` is cumulative. Under `Host *`, the host that needs a dedicated key gets the general key first. In the specific `Host`, `IdentitiesOnly yes` applies only to that host, and every other host keeps using the agent.
+
+### Configure the 1Password key allowlist
+
+List the keys to offer in `~/.config/1Password/ssh/agent.toml`. Set `item` to the 1Password item title:
+
+```toml
+[[ssh-keys]]
+item = "Guany"
+```
+
+- Without this file, the agent only offers SSH keys from the default vault (Personal / Private / Employee). If your keys are in custom vaults, this file is required.
+- The agent offers keys in the order they appear in the file. With several keys, use the order to stay under the six-attempt limit most servers impose.
+- Item titles must match exactly. If you rename an item in 1Password, update this file too. See [Troubleshooting](#load-key-reports-invalid-format).
+
+### Sign commits with 1Password
+
+1. Add this to `~/.gitconfig`. Set `signingkey` to the full public key:
+
+   ```gitconfig
+   [gpg]
+   	format = ssh
+   [gpg "ssh"]
+   	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+   	allowedSignersFile = ~/.config/git/allowed_signers
+   [user]
+   	signingkey = ssh-ed25519 AAAA…
+   [commit]
+   	gpgSign = true
+   ```
+
+2. Create `~/.config/git/allowed_signers` with one signer per line:
+
+   ```text
+   email ssh-ed25519 AAAA…
+   ```
+
+   Without this file, local `git log --show-signature` fails to find a trusted signer.
+
+3. Add the public key to GitHub a second time, with key type **Signing Key**. Authentication keys and signing keys are added separately.
+
+### Name keys consistently
+
+The comment at the end of a public key plays no part in authentication. It only identifies the key. Use the same value in these three places, and use the item title rather than an email address:
+
+| Location                                 | Value   |
+| ---------------------------------------- | ------- |
+| 1Password item title                     | `Guany` |
+| 1Password comment field                  | `Guany` |
+| Local `.pub` and every `authorized_keys` | `Guany` |
+
+Do not blank the comment. With several entries in `authorized_keys` and no comments, you have to compare fingerprints line by line with `ssh-keygen -lf`.
+
+Browser autofill inserts the public key without a comment. If the target platform writes the key verbatim into `authorized_keys`, use `ssh-copy-id` instead. It carries the comment from the local `.pub`.
+
+### Remove Git identity from servers
+
+If you do not commit on a server, remove the Git identity settings:
+
+```sh
+for k in user.email user.name user.signingkey gpg.format \
+         gpg.ssh.allowedSignersFile commit.gpgSign tag.gpgSign; do
+  git config --global --unset "$k"
+done
+rm -f ~/.config/git/allowed_signers
+```
+
+Without `user.email`, `git commit` fails with `*** Please tell me who you are.`, which prevents accidental commits on the server. Options without personal data, such as `insteadOf`, can stay for clone and pull.
+
+For a one-off commit, pass the identity on the command line:
+
+```sh
+git -c user.name=… -c user.email=… commit -m "…"
+```
+
+### Keep a fallback login path
+
+If the only copy of the private key is in 1Password and password login is disabled, there is a single way in. A locked account, a service outage, or a lost device without a saved Emergency Kit locks you out.
+
+Use the cloud console's VNC or serial console as a fallback. It bypasses SSH and adds no attack surface. Verify once that it works.
+
+### Install a public key on a Windows server
+
+Administrator accounts on Windows do not read `~/.ssh/authorized_keys`. The Windows `sshd_config` ends with this block:
+
+```sshconfig
+Match Group administrators
+    AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys
+```
+
+For any account in the Administrators group, the key must go into `C:\ProgramData\ssh\administrators_authorized_keys`. A key in the home directory is ignored without an error.
+
+1. On the macOS client, run this command. Replace `<user>` and `<host>` with the server's user name and address. The first run asks for a password:
+
+   ```sh
+   ssh <user>@<host> "powershell -c \"[IO.File]::WriteAllText('C:\ProgramData\ssh\administrators_authorized_keys', (Get-Content -Raw C:\ProgramData\ssh\administrators_authorized_keys -ErrorAction SilentlyContinue) + '$(cat ~/.ssh/id_ed25519.pub)' + [char]10); icacls C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r /grant Administrators:F /grant SYSTEM:F; Restart-Service sshd\""
+   ```
+
+   All three parts are required:
+
+   - `[IO.File]::WriteAllText`: writes no BOM, and the trailing `[char]10` makes the line ending LF. With a BOM or CRLF, sshd treats the key as malformed.
+   - `icacls /inheritance:r`: tightens permissions. With looser permissions, sshd silently ignores the whole file.
+   - `Restart-Service sshd`: restarts sshd.
+
+2. Verify on the server:
+
+   ```powershell
+   # Should contain only the key itself — no BOM, no wrapped lines
+   Get-Content C:\ProgramData\ssh\administrators_authorized_keys
+
+   # Only Administrators and SYSTEM should remain
+   icacls C:\ProgramData\ssh\administrators_authorized_keys
+   ```
+
+### Set PowerShell 7 as the default shell on Windows
+
+An SSH session into Windows starts in `cmd.exe` by default. Switching to PowerShell 7 takes three registry values:
+
+| Value                       | Purpose                                                                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `DefaultShell`              | The shell an interactive login starts                                                                       |
+| `DefaultShellCommandOption` | The switch used to pass `ssh host 'command'`. If unset, sshd keeps using cmd's `/c` and command mode breaks |
+| `DefaultShellArguments`     | Extra startup arguments. `-NoLogo` suppresses the banner                                                    |
+
+Write them in two stages. A wrong `DefaultShell` breaks `ssh host 'command'`, and the registry then has to be fixed at the machine itself.
+
+1. Optional: install PowerShell 7 if it is missing:
+
+   ```powershell
+   winget install --id Microsoft.PowerShell
+   ```
+
+2. Write the first two values:
+
+   ```powershell
+   $p = "HKLM:\SOFTWARE\OpenSSH"
+   if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
+
+   New-ItemProperty -Path $p -Name DefaultShell `
+     -Value "C:\Program Files\PowerShell\7\pwsh.exe" -PropertyType String -Force
+   New-ItemProperty -Path $p -Name DefaultShellCommandOption `
+     -Value "-Command" -PropertyType String -Force
+   ```
+
+3. From the client, confirm that command mode works:
+
+   ```sh
+   ssh <host> '$PSVersionTable.PSVersion'   # should print 7.x
+   ```
+
+4. Write the third value:
+
+   ```powershell
+   New-ItemProperty -Path $p -Name DefaultShellArguments `
+     -Value "-NoLogo" -PropertyType String -Force
+   ```
+
+No sshd restart is needed. New sessions pick up the change.
+
+On a machine with only Windows PowerShell 5.1, use `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe` as the path. 5.1 and 7 have separate `$PROFILE` files (`WindowsPowerShell\` and `PowerShell\`), so settings in one do not apply to the other.
+
+## Usage
+
+Everyday commands for keys and connections.
+
+### View a public key
+
+macOS / Linux:
+
+```sh
+cat ~/.ssh/id_ed25519.pub
+```
+
+Windows (PowerShell):
+
+```powershell
+cat $HOME\.ssh\id_ed25519.pub
+```
+
+### Test the SSH connection
+
+Test the connection to GitHub:
+
+```sh
+ssh -T git@github.com
+```
+
+### Add a key to ssh-agent
 
 macOS / Linux:
 
@@ -68,17 +278,17 @@ Windows (PowerShell):
 ssh-add $HOME\.ssh\id_ed25519
 ```
 
-### List Added Keys
+### List keys in ssh-agent
+
+List the keys that have been added:
 
 ```sh
 ssh-add -l
 ```
 
-### Remove Key from SSH Agent
+### Remove a key from ssh-agent
 
-Remove a specific key:
-
-macOS / Linux:
+Remove a specific key on macOS / Linux:
 
 ```sh
 ssh-add -d ~/.ssh/id_ed25519
@@ -96,170 +306,18 @@ Remove all keys:
 ssh-add -D
 ```
 
-## Delegating Keys to 1Password
+### Agent forwarding
 
-The private key never touches disk. Both authentication and commit signing go through
-1Password's agent, and each use requires biometric approval.
+Before you enable agent forwarding, note:
 
-```
-1Password (sole copy of the private key)
-    │  agent.sock
-    ├──→ ssh           authentication
-    └──→ op-ssh-sign   commit signing
-```
+- Root on the remote host can read the agent socket under `/tmp` and use your key to reach any machine that trusts you. Enable forwarding only for machines whose ownership is clear.
+- Forwarding is per session. Long-lived sessions (tmux, multiplexer panes) inherit the socket path of the connection that created them, and it stops working when that connection closes. Pinning the path with a symlink does not help.
+- Do not set `commit.gpgSign = true` on remote hosts, or `git commit` fails in any session without an agent.
+- For automation, use a dedicated deploy key instead of a forwarded personal key.
 
-Only public keys stay on disk — ssh uses them to locate the matching private key in the agent.
+### Verify the 1Password setup
 
-### ssh Configuration
-
-The wildcard block belongs at the **end of the file**. Most ssh_config options take the
-first matching value, so a specific `Host` must appear earlier to override the wildcard.
-
-```sshconfig
-Host *
-  IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-
-# The two lines below are only needed when one server hosts several accounts
-Host codeup-admin
-  HostName codeup.aliyun.com
-  IdentityFile ~/.ssh/id_ed25519_admin.pub
-  IdentitiesOnly yes
-```
-
-The wildcard block needs `IdentityAgent` and nothing else. Which keys the agent offers,
-and in what order, is decided by [agent.toml](#agent-toml) — that is the file the official
-docs use to control ordering, so you don't run into the six-key authentication limit most
-servers impose.
-
-Three things that are easy to get wrong:
-
-- **`IdentityFile` points at the public key (`.pub`), not the private key.** ssh uses it
-  to find the matching private key inside the agent; no private key file is needed locally.
-- **Keep the constraint inside the specific `Host`, not the wildcard block.**
-  `IdentityFile` is cumulative, so putting it under `Host *` means the host that needs a
-  dedicated key gets handed the general one first — which then forces a second
-  `Host * !hostname` block just to exclude it. Declare it on that one host instead;
-  `IdentitiesOnly yes` then applies only there, and every other host keeps using the agent.
-- **The wrong key doesn't necessarily fail, and that's the hard one to catch.** If your
-  default key is also a valid account on that same server, the server accepts it happily —
-  the connection works, commands run, only the identity is wrong. The only way to spot it
-  is to check the fingerprint on the `Server accepts key` line of `ssh -v` against
-  `ssh-add -l`.
-
-### Key Allowlist
-
-`~/.config/1Password/ssh/agent.toml`:
-
-```toml
-[[ssh-keys]]
-item = "Guany"
-```
-
-Without this file the agent only offers SSH keys from your **default vault**
-(Personal / Private / Employee) and none at all from custom vaults. So the moment you sort
-keys into per-project vaults, this file stops being optional hardening and becomes required.
-
-**Order matters.** The agent offers keys in the order they appear in this file, which is how
-you avoid hitting the six-attempt limit once you have several keys.
-
-**It matches on the item title, exactly.** Rename the item in 1Password without updating
-this file and the agent immediately reports `The agent has no identities` — SSH, git and
-signing all break at once. The error disguises itself as:
-
-```
-Load key "~/.ssh/id_ed25519.pub": invalid format
-```
-
-That reads like a corrupted public key file. What actually happened is that the agent
-offered nothing, so ssh fell back to reading the public key as if it were private.
-Without knowing that connection, this sends you down the wrong path.
-
-### Commit Signing
-
-```gitconfig
-[gpg]
-	format = ssh
-[gpg "ssh"]
-	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
-	allowedSignersFile = ~/.config/git/allowed_signers
-[user]
-	signingkey = ssh-ed25519 AAAA…
-[commit]
-	gpgSign = true
-```
-
-`allowedSignersFile` is the commonly missed one. Without it, local
-`git log --show-signature` fails to find a trusted signer and only the remote platform can
-verify anything. One signer per line:
-
-```
-email ssh-ed25519 AAAA…
-```
-
-The public key also has to be added to GitHub a **second time**, with key type
-**Signing Key**. Authentication and signing are separate purposes — with only the
-authentication key registered, local signing succeeds while the web UI still says Unverified.
-
-### Naming Keys
-
-The comment at the end of a public key plays no part in authentication; it exists purely
-for identification. Keep it consistent in three places, using the item title rather than
-an email address:
-
-| Location | Value |
-|---|---|
-| 1Password item title | `Guany` |
-| 1Password comment field | `Guany` |
-| Local `.pub` and every `authorized_keys` | `Guany` |
-
-**Do not blank the comment.** With several entries in `authorized_keys`, telling which key
-is yours and which one to ask about then requires comparing fingerprints line by line with
-`ssh-keygen -lf`.
-
-Browser autofill inserts the public key without a comment (the site's name field gets the
-item title instead). If the target platform writes the key verbatim into `authorized_keys`,
-what lands there is bare base64 with no comment — use `ssh-copy-id` for those, since it
-carries the comment from the local `.pub`.
-
-### Agent Forwarding
-
-Root on the remote host can read the agent socket under `/tmp` and borrow your key to reach
-any machine that trusts you. Whether to enable it depends on how well you know who owns
-that machine, and whether you keep long-lived connections open.
-
-**Forwarding is per-session, so long-lived sessions (tmux, multiplexer panes) cannot use
-it.** Such a session inherits the socket path from the connection that created it, and that
-path dies with the connection. Pinning it behind a symlink does not help — the socket
-itself is gone. Therefore:
-
-- Do **not** set `commit.gpgSign = true` on remote hosts, or `git commit` fails outright in
-  any session without an agent
-- Automation should use a dedicated deploy key rather than a forwarded personal key
-
-### Keeping Identity off Servers
-
-If you never commit on a server, strip the git identity:
-
-```sh
-for k in user.email user.name user.signingkey gpg.format \
-         gpg.ssh.allowedSignersFile commit.gpgSign tag.gpgSign; do
-  git config --global --unset "$k"
-done
-rm -f ~/.config/git/allowed_signers
-```
-
-The side effect is a welcome one: with no `user.email`, `git commit` refuses outright with
-`*** Please tell me who you are.` — turning "don't commit on servers" from a habit into
-something the tooling enforces. Options that carry no personal data, such as `insteadOf`,
-are worth keeping for clone/pull.
-
-When a one-off commit really is necessary, pass the identity inline instead:
-
-```sh
-git -c user.name=… -c user.email=… commit -m "…"
-```
-
-### Verification
+Check the agent, authentication, and signing. Replace `host`, `FILE`, and `OWNER/REPO` with real values:
 
 ```sh
 ssh-add -l                          # does the agent offer any keys
@@ -277,117 +335,51 @@ gh api "/repos/OWNER/REPO/commits?per_page=5" \
                                     # does the remote platform accept it
 ```
 
-`verification.reason` is worth reading: `unsigned` means no signature at all,
-`unknown_key` means the platform does not recognise the key (not added, or added as an
-Authentication key), and `bad_email` means the signing key's address does not match the
-commit author.
+Before you delete a local private key, run `ssh-keygen -Y sign`. `ssh-add -l` only proves that the agent knows about the key. A successful signature proves that it holds a usable private key.
 
-**Always run `ssh-keygen -Y sign` before deleting a local private key.** `ssh-add -l` only
-proves the agent knows about the key; a successful signature proves it actually holds a
-usable private key.
+## Troubleshooting
 
-### Break-Glass Access
+The problems below are listed by symptom.
 
-With the only copy of the private key in 1Password and password login disabled, there is a
-single way in. A locked account, a service outage, or a lost device with no saved Emergency
-Kit leaves you shut out.
+### Connection succeeds with the wrong identity
 
-Prefer the cloud console's VNC or serial console as a fallback: it bypasses SSH entirely and
-adds no attack surface. Verifying once that it works is enough.
+If your default key is also a valid account on the same server, the server accepts it. The connection and commands work, but the identity is wrong.
 
-## Windows as the Server
+Compare the fingerprint on the `Server accepts key` line of `ssh -v` with the output of `ssh-add -l`. Then set `IdentityFile` and `IdentitiesOnly yes` in that host's `Host` block. See [Use the 1Password SSH agent](#use-the-1password-ssh-agent).
 
-### Installing a Public Key for Passwordless Login
+### Load key reports invalid format
 
-**Administrator accounts do not read `~/.ssh/authorized_keys`.** The Windows `sshd_config`
-ends with this block:
-
-```
-Match Group administrators
-    AuthorizedKeysFile __PROGRAMDATA__/ssh/administrators_authorized_keys
+```text
+Load key "~/.ssh/id_ed25519.pub": invalid format
 ```
 
-So for any account in the Administrators group the key must go into
-`C:\ProgramData\ssh\administrators_authorized_keys`. Writing it to the home directory does
-nothing — and reports no error either.
+Cause: the 1Password item was renamed but `item` in `agent.toml` was not updated, so the agent offers no keys (`The agent has no identities`). ssh then reads the public key as if it were private. SSH, Git, and signing all fail at once.
 
-One command from the mac side (a password is needed the first time):
+1. Change `item` in `~/.config/1Password/ssh/agent.toml` to the current item title.
+2. Run `ssh-add -l` and confirm that the agent lists the key.
 
-```sh
-ssh <user>@<host> "powershell -c \"[IO.File]::WriteAllText('C:\ProgramData\ssh\administrators_authorized_keys', (Get-Content -Raw C:\ProgramData\ssh\administrators_authorized_keys -ErrorAction SilentlyContinue) + '$(cat ~/.ssh/id_ed25519.pub)' + [char]10); icacls C:\ProgramData\ssh\administrators_authorized_keys /inheritance:r /grant Administrators:F /grant SYSTEM:F; Restart-Service sshd\""
-```
+### GitHub shows commits as Unverified
 
-All three parts matter:
+Cause: the public key was added only as an authentication key, not as a signing key.
 
-- `[IO.File]::WriteAllText` — used instead of `Add-Content` to **avoid a BOM**; the trailing
-  `[char]10` keeps the line ending as LF rather than CRLF. Either one going wrong makes sshd
-  treat the key line as malformed
-- `icacls /inheritance:r` — **the step everyone forgets**. Without tightened permissions sshd
-  **silently ignores the whole file**; the symptom is "the key is installed but it still asks
-  for a password", with nothing useful in the log
-- `Restart-Service sshd`
+1. Add the public key to GitHub again, with key type **Signing Key**.
+2. Check `verification.reason` with the `gh api` command in [Verify the 1Password setup](#verify-the-1password-setup):
+   - `unsigned`: the commit has no signature.
+   - `unknown_key`: the platform does not recognize the key (not added, or added as an Authentication key).
+   - `bad_email`: the email linked to the signing key does not match the commit author.
 
-Verify:
+### Windows server still asks for a password
 
-```powershell
-# Should contain only the key itself — no BOM, no wrapped lines
-Get-Content C:\ProgramData\ssh\administrators_authorized_keys
+The cause is usually one of the following, and the log gives no clear hint:
 
-# Only Administrators and SYSTEM should remain
-icacls C:\ProgramData\ssh\administrators_authorized_keys
-```
+- The account is in the Administrators group, and the key was written to `authorized_keys` in the home directory.
+- Permissions on `administrators_authorized_keys` were not tightened, so sshd ignores the whole file.
+- The file has a BOM or CRLF line endings, so sshd treats the key as malformed.
 
-### Switching the Default Shell to PowerShell 7
+Write the key again as described in [Install a public key on a Windows server](#install-a-public-key-on-a-windows-server), and run the verification commands there.
 
-An ssh session into Windows lands in `cmd.exe` by default. Switching to pwsh 7 takes three
-registry values:
+### SSH sessions show errors after switching to PowerShell
 
-```powershell
-$p = "HKLM:\SOFTWARE\OpenSSH"
-if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
+While the default shell is `cmd.exe`, the profile never loads. After switching to PowerShell, existing problems in the profile show up for the first time.
 
-New-ItemProperty -Path $p -Name DefaultShell `
-  -Value "C:\Program Files\PowerShell\7\pwsh.exe" -PropertyType String -Force
-New-ItemProperty -Path $p -Name DefaultShellCommandOption `
-  -Value "-Command" -PropertyType String -Force
-New-ItemProperty -Path $p -Name DefaultShellArguments `
-  -Value "-NoLogo" -PropertyType String -Force
-```
-
-| Value                       | Purpose                                                                                                                              |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `DefaultShell`              | The shell an interactive login drops into                                                                                            |
-| `DefaultShellCommandOption` | The switch used to pass `ssh host 'command'`. **Leave it unset and sshd keeps using cmd's `/c`, which breaks command mode outright** |
-| `DefaultShellArguments`     | Extra startup arguments; `-NoLogo` suppresses the banner                                                                             |
-
-No sshd restart is needed — new sessions pick it up immediately.
-
-**Do it in two steps, not one.** A wrong `DefaultShell` breaks `ssh host 'command'`, which is
-the only channel left for fixing it remotely; once it is gone the registry has to be edited at
-the machine itself. Set the first two values, confirm command mode still works, then add
-`DefaultShellArguments`:
-
-```sh
-ssh <host> '$PSVersionTable.PSVersion'   # should print 7.x
-```
-
-If pwsh 7 is not installed yet:
-
-```powershell
-winget install --id Microsoft.PowerShell
-```
-
-On a machine that only has Windows PowerShell 5.1, use
-`C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe` instead. Note that 5.1 and 7 have
-separate `$PROFILE` files (`WindowsPowerShell\` vs `PowerShell\`), so anything configured in
-the old one does not carry over.
-
-### Errors that surface after the switch
-
-While the default shell is still `cmd.exe` the profile never loads, so switching to PowerShell
-is the moment any pre-existing problem in it shows up for the first time.
-
-On Windows 11 24H2 and later the usual one is "untrusted mount point": an SSH session cannot
-read symbolic links or junctions, so every tool that relies on them for version switching —
-fnm, the WinGet shims, pnpm, vite-plus — trips over it here. See the windows page for the
-diagnosis and the fixes.
+On Windows 11 24H2 and later, the most common one is "untrusted mount point": SSH sessions cannot read some symbolic links and junctions, so tools that rely on them (fnm, the WinGet shims, pnpm, vite-plus) fail. To fix it, recreate blocked junctions with `mklink /J`, put `%LOCALAPPDATA%\Microsoft\WinGet\Packages\<package ID>` at the front of the user PATH to bypass the WinGet shims, and install or upgrade locally or over Remote Desktop.

@@ -1,8 +1,14 @@
+---
+description: 'Install the ni package manager CLI and set up common aliases.'
+---
+
 # ni
 
-ni
+ni (`@antfu/ni`) runs package manager operations through one set of commands, and `nr` runs scripts. This page covers installation and common command aliases.
 
 ## Installation
+
+Install globally with npm:
 
 ```sh
 npm i -g @antfu/ni
@@ -10,75 +16,85 @@ npm i -g @antfu/ni
 
 ## Configuration
 
-### Windows
+Use the section for your platform.
 
-```powershell
-Remove-Item Alias:ni -Force -ErrorAction Ignore
-```
+### Add aliases in PowerShell
 
-```powershell
-function nio {
-    ni --prefer-offline
-}
+Add the aliases to your PowerShell profile:
 
-function s {
-    nr start
-}
+1. Remove PowerShell's built-in `ni` alias, which otherwise shadows the ni command:
 
-function d {
-    nr dev
-}
+   ```powershell
+   Remove-Item Alias:ni -Force -ErrorAction Ignore
+   ```
 
-function b {
-    nr build
-}
+2. Define the alias functions:
 
-function bw {
-    nr build --watch
-}
+   ```powershell
+   function nio {
+       ni --prefer-offline
+   }
 
-function t {
-    nr test
-}
+   function s {
+       nr start
+   }
 
-function tu {
-    nr test -u
-}
+   function d {
+       nr dev
+   }
 
-function tw {
-    nr test --watch
-}
+   function b {
+       nr build
+   }
 
-function w {
-    nr watch
-}
+   function bw {
+       nr build --watch
+   }
 
-function p {
-    nr play
-}
+   function t {
+       nr test
+   }
 
-function c {
-    nr typecheck
-}
+   function tu {
+       nr test -u
+   }
 
-function lint {
-    nr lint
-}
+   function tw {
+       nr test --watch
+   }
 
-function lintf {
-    nr lint --fix
-}
+   function w {
+       nr watch
+   }
 
-function release {
-    nr release
-}
+   function p {
+       nr play
+   }
 
-function re {
-    nr release
-}
-```
+   function c {
+       nr typecheck
+   }
 
-### MacOS/Linux
+   function lint {
+       nr lint
+   }
+
+   function lintf {
+       nr lint --fix
+   }
+
+   function release {
+       nr release
+   }
+
+   function re {
+       nr release
+   }
+   ```
+
+### Add aliases on macOS and Linux
+
+Add to your shell config file, such as `~/.zshrc`:
 
 ```sh
 alias nio="ni --prefer-offline"
@@ -97,3 +113,25 @@ alias lintf="nr lint --fix"
 alias release="nr release"
 alias re="nr release"
 ```
+
+## Usage
+
+With the aliases in place, use these short commands:
+
+| Alias     | Equivalent command    |
+| --------- | --------------------- |
+| `nio`     | `ni --prefer-offline` |
+| `s`       | `nr start`            |
+| `d`       | `nr dev`              |
+| `b`       | `nr build`            |
+| `bw`      | `nr build --watch`    |
+| `t`       | `nr test`             |
+| `tu`      | `nr test -u`          |
+| `tw`      | `nr test --watch`     |
+| `w`       | `nr watch`            |
+| `p`       | `nr play`             |
+| `c`       | `nr typecheck`        |
+| `lint`    | `nr lint`             |
+| `lintf`   | `nr lint --fix`       |
+| `release` | `nr release`          |
+| `re`      | `nr release`          |
