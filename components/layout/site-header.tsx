@@ -122,11 +122,11 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
               <ChevronDown className="size-3.5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem asChild>
-                <NextLink href="/llms.txt">llms.txt</NextLink>
+              <DropdownMenuItem render={<NextLink href="/llms.txt" />}>
+                llms.txt
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <NextLink href="/llms-full.txt">llms-full.txt</NextLink>
+              <DropdownMenuItem render={<NextLink href="/llms-full.txt" />}>
+                llms-full.txt
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -160,22 +160,24 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
               <Wrench className="size-4.5" />
             </Button>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-8 sm:hidden"
-                  aria-label={t('nav.llm')}
-                >
-                  <Bot className="size-4.5" />
-                </Button>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 sm:hidden"
+                    aria-label={t('nav.llm')}
+                  />
+                }
+              >
+                <Bot className="size-4.5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <NextLink href="/llms.txt">llms.txt</NextLink>
+                <DropdownMenuItem render={<NextLink href="/llms.txt" />}>
+                  llms.txt
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <NextLink href="/llms-full.txt">llms-full.txt</NextLink>
+                <DropdownMenuItem render={<NextLink href="/llms-full.txt" />}>
+                  llms-full.txt
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
