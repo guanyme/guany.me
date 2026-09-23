@@ -122,5 +122,15 @@ export async function buildLlmsContent({
     }
   }
 
+  // Optional sections in the spec: secondary links that can be skipped when context is limited. List them only in the index in the full version.
+  if (!includeFullContent) {
+    lines.push(
+      '',
+      '## Optional',
+      '',
+      `- [Full text](${canonicalOrigin}/llms-full.txt): All docs, projects and uses in a single file`,
+    )
+  }
+
   return lines.join('\n')
 }
