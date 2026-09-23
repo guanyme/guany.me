@@ -85,16 +85,26 @@ function MarkdownLink({
     )
   }
 
+  // Use <a> instead of <button>: links may contain images, and Streamdown adds a download
+  // button to images. Nesting buttons is invalid HTML and causes hydration errors.
   return (
     <>
-      <button
-        type="button"
-        className={cn(classes, 'appearance-none text-left')}
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className={classes}
         data-streamdown="link"
-        onClick={() => setExternalOpen(true)}
+        onClick={(e) => {
+          // Never navigate directly: show a confirmation dialog for external links first
+          e.preventDefault()
+          // If the click is on a button nested inside a link (such as an image download), let the button handle it
+          if ((e.target as Element).closest('button')) return
+          setExternalOpen(true)
+        }}
       >
         {children}
-      </button>
+      </a>
       <LinkSafetyModal
         url={href}
         isOpen={externalOpen}
