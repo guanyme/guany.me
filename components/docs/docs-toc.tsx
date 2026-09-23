@@ -45,13 +45,17 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
     // 只有用户真正滚动过之后才开始同步。
     let userHasScrolled = false
 
+    // 本页的路径。切页后旧实例若还有排队的回调，不能把旧锚点写到新页面上。
+    const pathname = window.location.pathname
+
     // 让地址栏跟上当前章节，随时可复制链接分享到具体位置。
     // 用 replaceState 而非 pushState：滚动是连续动作，pushState 会把浏览
     // 历史塞满，后退键实际失效。
     // 也不用 location.hash = x —— 那会让浏览器跳转到锚点，正在滚动时被硬
     // 拽一下，还会触发下面自己的 hashchange 监听。
     const syncHash = (id: string) => {
-      if (!userHasScrolled || !id) return
+      if (!userHasScrolled || !id || window.location.pathname !== pathname)
+        return
       const next = `#${id}`
       if (window.location.hash === next) return
       window.history.replaceState(null, '', next)
@@ -130,10 +134,11 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
 
     // rAF 节流：scroll 的触发频率高于渲染帧率，一帧内算多次是白费。
     let ticking = false
+    let rafId = 0
     const onScroll = () => {
       if (ticking) return
       ticking = true
-      requestAnimationFrame(() => {
+      rafId = requestAnimationFrame(() => {
         ticking = false
         handleScroll()
       })
@@ -144,18 +149,25 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
     const ro = articleEl ? new ResizeObserver(() => measure()) : null
     ro?.observe(articleEl as Element)
 
+    // 只认用户主动的输入，不认 scroll 事件本身：切页时 Next 把页面滚回顶部、
+    // 新内容渲染让 scrollY 被动变化，都会触发 scroll。若据此开始同步，会把
+    // 某个标题写进新页面的地址栏，streamdown-renderer 随后按 hash 补偿跳转，
+    // 两篇文档有同名锚点时，切页就直接滚到了那个标题。
+    const userInputEvents = ['wheel', 'touchmove', 'keydown', 'pointerdown']
     const markScrolled = () => {
       userHasScrolled = true
     }
-    window.addEventListener('scroll', markScrolled, {
-      passive: true,
-      once: true,
-    })
+    for (const type of userInputEvents) {
+      window.addEventListener(type, markScrolled, { passive: true, once: true })
+    }
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', measure, { passive: true })
     window.addEventListener('hashchange', handleHashChange)
     return () => {
-      window.removeEventListener('scroll', markScrolled)
+      cancelAnimationFrame(rafId)
+      for (const type of userInputEvents) {
+        window.removeEventListener(type, markScrolled)
+      }
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', measure)
       window.removeEventListener('hashchange', handleHashChange)
