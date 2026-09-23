@@ -14,7 +14,7 @@ export const getUser = cache(async (): Promise<GitHubUser | null> => {
       timeoutMs: 5000,
     })
     if (!res.ok) return null
-    return res.json()
+    return await res.json()
   } catch {
     return null
   }
@@ -86,6 +86,15 @@ export const getRepo = cache(
     if (repo.fork || repo.private) return null
 
     return mapRepo(repo)
+  },
+)
+
+// 先在仓库列表里按名字找：列表已带 full_name，省掉 getUser → getRepo 两次串行请求。
+// 列表里没有的（构建后新建的仓库）再单独查。
+export const getRepoByName = cache(
+  async (name: string): Promise<GitHubRepo | null> => {
+    const repos = await getRepos()
+    return repos.find((repo) => repo.name === name) ?? getRepo(name)
   },
 )
 

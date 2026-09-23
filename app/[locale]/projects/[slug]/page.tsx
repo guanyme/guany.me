@@ -3,7 +3,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { siGithub } from 'simple-icons'
 import { SimpleIcon } from '@/components/simple-icon'
 import { setRequestLocale, getTranslations } from 'next-intl/server'
-import { getRepos, getRepo, getRepoReadme } from '@/lib/github'
+import { getRepos, getRepoByName, getRepoReadme } from '@/lib/github'
 import { StreamdownRenderer } from '@/components/markdown/streamdown-renderer'
 import { CopyCloneButton } from '@/components/copy-clone-button'
 import { CopyMarkdownButton } from '@/components/copy-markdown-button'
@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: ProjectPageProps) {
   // 文案和仓库数据互不依赖,并发取回
   const [t, repo] = await Promise.all([
     getTranslations({ locale, namespace: 'projects' }),
-    getRepo(slug),
+    getRepoByName(slug),
   ])
 
   if (!repo) {
@@ -57,21 +57,23 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   const { locale, slug } = await params
   setRequestLocale(locale)
 
-  const t = await getTranslations('projects')
-  const repo = await getRepo(slug)
+  // 文案、仓库列表、当前仓库互不依赖，并发取回；getRepoByName 和这里的
+  // getRepos() 共用同一次缓存的列表请求
+  const [t, repos, repo] = await Promise.all([
+    getTranslations('projects'),
+    getRepos(),
+    getRepoByName(slug),
+  ])
 
   if (!repo) {
     notFound()
   }
 
-  // Once we have the repo, fetch the README and the prev/next repo list in
-  // parallel — getRepos() hits the React cache populated by getRepo() and
-  // returns synchronously, so this collapses into a single round-trip for
-  // the README.
-  const [repos, readme] = await Promise.all([
-    getRepos(),
-    getRepoReadme(repo.full_name, repo.default_branch, locale),
-  ])
+  const readme = await getRepoReadme(
+    repo.full_name,
+    repo.default_branch,
+    locale,
+  )
 
   const index = repos.findIndex((r) => r.name === slug)
   const prevRepo = index > 0 ? repos[index - 1] : null
