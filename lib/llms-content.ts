@@ -122,5 +122,15 @@ export async function buildLlmsContent({
     }
   }
 
+  // 规范里的 Optional 节：上下文紧张时可以跳过的次要链接。全文版只在索引里列出
+  if (!includeFullContent) {
+    lines.push(
+      '',
+      '## Optional',
+      '',
+      `- [Full text](${canonicalOrigin}/llms-full.txt): All docs, projects and uses in a single file`,
+    )
+  }
+
   return lines.join('\n')
 }
