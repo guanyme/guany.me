@@ -1,4 +1,5 @@
 import matter from 'gray-matter'
+import { getTranslations } from 'next-intl/server'
 import { getDocBySlug } from '@/lib/mdx'
 import { docsConfig } from '@/lib/docs-config'
 import { getRepos, getRepoReadme } from '@/lib/github'
@@ -14,6 +15,9 @@ export async function buildLlmsContent({
   origin,
 }: LlmsOptions): Promise<string> {
   const canonicalOrigin = origin ?? siteUrl
+  const t = await getTranslations({ locale: 'en', namespace: 'docs' })
+  // 分组和入口页的 titleKey 是 i18n key，其余条目的 titleKey 本身就是显示名
+  const label = (key: string) => (t.has(key) ? t(key) : key)
   const today = new Date().toISOString().split('T')[0]
   const lines: string[] = [
     "# Guany's website",
@@ -25,7 +29,14 @@ export async function buildLlmsContent({
     `> License: MIT`,
     `> Updated: ${today}`,
     '',
-    ...(includeFullContent ? ['> Full text of all content below', ''] : []),
+    ...(includeFullContent
+      ? ['> Full text of all content below', '']
+      : [
+          'Every doc is also available as Markdown by appending `.md` to its URL, e.g. ' +
+            `${canonicalOrigin}/docs/zsh.md. Chinese versions live under /zh, e.g. ` +
+            `${canonicalOrigin}/zh/docs/zsh.md.`,
+          '',
+        ]),
   ]
 
   // Docs
@@ -33,7 +44,7 @@ export async function buildLlmsContent({
 
   for (const group of docsConfig) {
     if (!includeFullContent) {
-      lines.push(`### ${group.titleKey}`, '')
+      lines.push(`### ${label(group.titleKey)}`, '')
     }
 
     for (const item of group.items) {
@@ -46,7 +57,7 @@ export async function buildLlmsContent({
       } else {
         const description = doc.meta.description || ''
         lines.push(
-          `- [${item.titleKey}](${canonicalOrigin}/docs/${item.slug})${description ? `: ${description}` : ''}`,
+          `- [${label(item.titleKey)}](${canonicalOrigin}/docs/${item.slug}.md)${description ? `: ${description}` : ''}`,
         )
       }
     }
