@@ -85,16 +85,26 @@ function MarkdownLink({
     )
   }
 
+  // 用 <a> 而不是 <button>：链接里可能包着图片，Streamdown 会给图片加一个下载
+  // 按钮，按钮套按钮是非法 HTML，会导致 hydration 报错。
   return (
     <>
-      <button
-        type="button"
-        className={cn(classes, 'appearance-none text-left')}
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className={classes}
         data-streamdown="link"
-        onClick={() => setExternalOpen(true)}
+        onClick={(e) => {
+          // 一律不直接跳转：外链先弹确认框
+          e.preventDefault()
+          // 点的是链接里嵌套的按钮（如图片下载），交给按钮自己处理
+          if ((e.target as Element).closest('button')) return
+          setExternalOpen(true)
+        }}
       >
         {children}
-      </button>
+      </a>
       <LinkSafetyModal
         url={href}
         isOpen={externalOpen}
