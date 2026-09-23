@@ -231,6 +231,10 @@ export function StreamdownView({
         key={mermaidTheme}
         plugins={plugins}
         mermaid={{ config: { theme: mermaidTheme } }}
+        // streamdown 2.6 起默认把表格限高 300px、代码块限高 400px，超出部分要在
+        // 框内滚动。README 里用表格排版的统计卡片会被截断，这里恢复为完整展开。
+        tableMaxHeight={0}
+        codeBlockMaxHeight={0}
         rehypePlugins={untrusted ? undefined : rehypePlugins}
         components={markdownComponents}
       >
