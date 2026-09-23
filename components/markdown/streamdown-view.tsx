@@ -231,6 +231,10 @@ export function StreamdownView({
         key={mermaidTheme}
         plugins={plugins}
         mermaid={{ config: { theme: mermaidTheme } }}
+        // Since streamdown 2.6, tables are limited to 300px in height and code blocks to 400px by default; content beyond that scrolls
+        // within the container. The statistics cards laid out in tables in the README get clipped, so restore full expansion here.
+        tableMaxHeight={0}
+        codeBlockMaxHeight={0}
         rehypePlugins={untrusted ? undefined : rehypePlugins}
         components={markdownComponents}
       >
