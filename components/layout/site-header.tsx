@@ -38,6 +38,8 @@ export function SiteHeader({ avatar, name }: SiteHeaderProps) {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20)
     }
+    // When refreshing or returning from history, the page may already be midway through; first sync once to the current position.
+    handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
