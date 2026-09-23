@@ -1,13 +1,16 @@
+---
+description: 'Install, configure and use Herdr, run it under systemd, and fix common issues'
+---
+
 # Herdr
 
-A terminal multiplexer built for coding agents. It organises terminals into
-workspaces, tabs and panes, recognises the agent running inside a pane, and exposes
-the live session through the `herdr` CLI — that last part is the real difference from
-tmux: an agent can open its own pane, dispatch a command, and read the output back.
+Herdr is a terminal multiplexer built for coding agents. It organizes terminals into workspaces, tabs and panes, and recognizes the agent running in each pane. Through the `herdr` CLI, an agent can open its own pane, dispatch a command and read the output back. This page covers installation, configuration, CLI usage and common issues.
 
-Website: [herdr.dev](https://herdr.dev)
+## Installation
 
-## Install
+Run the install script for your platform, then switch the update channel if needed.
+
+### Install Herdr
 
 macOS / Linux:
 
@@ -21,16 +24,11 @@ Windows:
 powershell -ExecutionPolicy Bypass -c "irm https://herdr.dev/install.ps1 | iex"
 ```
 
-The binary lands in `~/.local/bin/herdr`. Note that **a non-login shell usually does
-not have that directory on `PATH`** — `command -v herdr` over ssh will come back empty
-even when it is installed. Don't read that as "not installed":
+The binary is installed to `~/.local/bin/herdr`.
 
-```sh
-ssh myhost 'command -v herdr'                                  # may be empty
-ssh myhost 'export PATH=$PATH:~/.local/bin; herdr --version'   # this is the real check
-```
+### Update and switch channels
 
-Updates and channels:
+There are two channels, `stable` and `preview`:
 
 ```sh
 herdr update
@@ -38,9 +36,13 @@ herdr channel show          # stable / preview
 herdr channel set preview
 ```
 
-## Config
+## Configuration
 
-`~/.config/herdr/config.toml`:
+The config file is `~/.config/herdr/config.toml`. The same directory holds `session.json` (persisted layout), `herdr.sock` (API socket) and `herdr-server.log`.
+
+### Set basic options
+
+Add to `~/.config/herdr/config.toml`:
 
 ```toml
 onboarding = false
@@ -56,58 +58,107 @@ auto_switch = false
 delivery = "system"
 ```
 
-The same directory holds `session.json` (persisted layout), `herdr.sock` (API socket)
-and `herdr-server.log`.
+### Use PowerShell 7 on Windows
 
-### Point it at pwsh on Windows
+A pane's shell defaults to `$SHELL`. When that is unset, Herdr falls back to `/bin/sh` on Unix and to the built-in Windows PowerShell 5.1 on Windows. To use PowerShell 7 in panes:
 
-A pane's shell defaults to `$SHELL`, which on Windows lands on the built-in **Windows
-PowerShell 5.1** rather than PowerShell 7. To get 7 inside panes you have to say so:
+1. Optional: Install PowerShell 7: `winget install --id Microsoft.PowerShell`.
+2. Set `default_shell` in `config.toml`. The value is an executable name or path, not a command line:
 
-```toml
-[terminal]
-default_shell = "pwsh.exe"
-```
+   ```toml
+   [terminal]
+   default_shell = "pwsh.exe"
+   ```
 
-The documented behaviour is "when unset or empty, Herdr uses `$SHELL`, then `/bin/sh` on
-Unix and PowerShell on Windows" — and that Windows fallback is the **built-in 5.1**. The
-value is an executable name or path, not a shell command line.
+3. Run `herdr server reload-config`, or open a new pane.
+4. Check the version inside a pane. `5.1.x` means you are still in Windows PowerShell 5.1:
 
-Run `herdr server reload-config` afterwards, or just open a new pane. To check what
-you're actually in:
+   ```powershell
+   $PSVersionTable.PSVersion    # 5.1.x means it's the old one
+   ```
 
-```powershell
-$PSVersionTable.PSVersion    # 5.1.x means it's the old one
-```
+5.1 and 7 use separate `$PROFILE` files (`WindowsPowerShell\` vs `PowerShell\`). Settings in the 5.1 profile do not apply in 7.
 
-Install 7 first if needed: `winget install --id Microsoft.PowerShell`. Note also that
-5.1 and 7 have separate `$PROFILE` files (`WindowsPowerShell\` vs `PowerShell\`), so
-anything configured in the old one does not carry over.
+### Set the shell mode
 
-### The other two [terminal] options
+`shell_mode` under `[terminal]` controls whether a new pane's shell starts as a login shell. Values:
 
-`shell_mode` — `"auto"` (default) / `"login"` / `"non_login"`, controlling whether a new
-pane's shell starts as a login shell. The documentation spells out the reason: **`"auto"`
-starts login shells on macOS so login-only PATH setup runs in new panes** — things like
-`/usr/libexec/path_helper` and Homebrew's shell initialisation.
+- `"auto"` (default): starts a login shell on macOS, so login-only PATH setup such as `/usr/libexec/path_helper` and Homebrew's shell initialization runs; starts a non-login shell on other platforms.
+- `"login"`: always starts a login shell.
+- `"non_login"`: always starts a non-login shell.
 
-Worth remembering: on macOS `path_helper` reorders the system paths to the front, so "the
-PATH inside a pane differs from the one in my terminal" usually comes down to `shell_mode`.
+### Set the working directory for new panes
 
-`new_cwd` — `"follow"` (default) / `"home"` / `"current"` / a fixed path such as
-`"~/Projects"`. `"follow"` inherits the source pane or workspace; with no source, Herdr
-starts in `$HOME`.
+`new_cwd` under `[terminal]` sets the directory a new pane starts in. Values:
 
-Validate with herdr's own checker rather than by eye:
+- `"follow"` (default): inherits the directory of the source pane or workspace; with no source, starts in `$HOME`.
+- `"home"`
+- `"current"`
+- A fixed path, such as `"~/Projects"`.
+
+### Validate the configuration
+
+After editing the config, check it with Herdr's built-in validator. `config: ok` means it passed:
 
 ```sh
 herdr config check    # only "config: ok" counts
 ```
 
-## CLI
+### Run Herdr under systemd
 
-Running bare `herdr` launches or attaches the TUI, so **don't use it to explore
-commands**. Print a command group instead:
+`session.json` restores the layout, cwds and pane labels, but does not rerun the commands in those panes; each pane comes back as a clean shell. To start everything at boot on a server, use two units: one starts the server, the other launches services into their panes.
+
+1. Create `/etc/systemd/system/herdr.service`. `herdr server` is the headless server and needs no TTY:
+
+   ```ini
+   [Unit]
+   Description=Herdr headless server
+   After=network-online.target
+   Wants=network-online.target
+
+   [Service]
+   Type=simple
+   User=root
+   Environment=HOME=/root
+   Environment=PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+   Environment=TERM=xterm-256color
+   # Must be set explicitly: systemd does not take the login shell from passwd and
+   # falls back to bash, so panes end up without zsh and without the starship prompt
+   # configured in .zshrc
+   Environment=SHELL=/usr/bin/zsh
+   Environment=LANG=en_US.UTF-8
+   ExecStart=/root/.local/bin/herdr server
+   ExecStop=/root/.local/bin/herdr server stop
+   Restart=on-failure
+   RestartSec=3
+   TimeoutStopSec=60
+   KillMode=mixed
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+2. Create a oneshot unit that launches the services into panes after the server is up. Locate panes by label, not by pane id; ids change across restarts, labels do not:
+
+   ```sh
+   find_pane() {  # usage: find_pane <label>
+     for pid in $(herdr pane list | jq -r '.result.panes[].pane_id'); do
+       label=$(herdr pane get "$pid" | jq -r '.result.pane.label // ""')
+       [ "$label" = "$1" ] && { echo "$pid"; return 0; }
+     done
+     return 1
+   }
+   ```
+
+3. Add `Requires=herdr.service` and `After=herdr.service` to the oneshot unit. Restarting Herdr then reruns this unit.
+
+## Usage
+
+Use the `herdr` CLI to query and control the current session. Most commands return JSON. Read pane, tab and workspace ids from the response instead of guessing them.
+
+### Explore commands
+
+Running bare `herdr` launches or attaches the TUI, so do not use it to explore commands. Print a command group instead:
 
 ```sh
 herdr --help
@@ -117,10 +168,9 @@ herdr workspace
 herdr agent
 ```
 
-Most commands return JSON. Read pane / tab / workspace ids out of the response rather
-than guessing them.
+### Run a command in a pane
 
-### Running a command in a pane
+Split a pane, dispatch a command, then wait for and read the output:
 
 ```sh
 # split to the right without stealing focus
@@ -133,32 +183,64 @@ herdr pane wait-output <pane_id> --regex "<marker>" --source visible --timeout 6
 herdr pane read <pane_id> --source visible --lines 40
 ```
 
+`<pane_id>` comes from `.result.pane.pane_id` in the `split` response. `<marker>` is a unique string the command prints when it finishes. A pane returns no exit code, so the command itself must print success or failure.
+
+### Read the pane context
+
 Herdr injects the caller's context into every managed pane:
 
 ```sh
 printf '%s\n' "$HERDR_WORKSPACE_ID" "$HERDR_TAB_ID" "$HERDR_PANE_ID"
 ```
 
-`HERDR_ENV=1` means you are currently inside a herdr pane.
+`HERDR_ENV=1` means you are inside a Herdr pane.
 
-## Three gotchas found the hard way
+### Pane conventions
 
-### The pane is an interactive TTY, so pagers kick in
+Follow these conventions when working in a user's session:
 
-`git log`, `git diff`, `systemctl status` and friends drop into `less` and sit there.
-The trailing `&& echo DONE` never runs, so `wait-output` just times out.
+- Close only the panes and tabs you created. Leave the user's alone.
+- Always use `--no-focus` for background work.
+- Reuse one pane for sequential commands. When you need parallelism, split down from the right-hand pane and stack at most 3–4 panes. Splitting right repeatedly keeps narrowing the panes.
+- Do not run `herdr server stop` in an active session. It stops every process in the panes.
+
+## Troubleshooting
+
+### herdr not found in SSH commands
+
+A non-login shell usually does not have `~/.local/bin` on `PATH`. `ssh <host> 'command -v herdr'` can come back empty even when Herdr is installed.
+
+Add the directory to `PATH` when checking:
+
+```sh
+ssh myhost 'command -v herdr'                                  # may be empty
+ssh myhost 'export PATH=$PATH:~/.local/bin; herdr --version'   # this is the real check
+```
+
+Replace `myhost` with your host name.
+
+### PATH in a pane differs from the terminal
+
+This usually comes from a different `shell_mode`. On macOS, a login shell runs `path_helper`, which moves the system paths to the front.
+
+Adjust [`shell_mode`](#set-the-shell-mode) as needed.
+
+### Commands hang in a pager
+
+A pane is an interactive TTY, so `git log`, `git diff`, `systemctl status` and similar commands open `less` and wait there. The trailing `&& echo DONE` never runs, and `wait-output` times out.
+
+Turn off the pager, for example with `--no-pager` or a `PAGER=cat` prefix:
 
 ```sh
 herdr pane run <pane_id> "git --no-pager log --oneline -3 && echo DONE"
 # or prefix with PAGER=cat
 ```
 
-### Completion markers must be unique per invocation
+### wait-output matches before the command finishes
 
-`wait-output` **searches the existing snapshot immediately**, so a fixed marker matches
-leftover output from the previous command and reports a hit straight away. That is
-worse than a timeout: a timeout at least raises an error, a false positive convinces
-you the command finished.
+`wait-output` searches the existing snapshot immediately. A fixed completion marker matches leftover output from the previous command and reports a hit before the command finishes.
+
+Generate a unique marker for each run, and mark success and failure separately:
 
 ```sh
 TAG="DONE_$$_$RANDOM"
@@ -166,140 +248,66 @@ herdr pane run <pane_id> "pnpm test && echo ${TAG}_OK || echo ${TAG}_FAIL"
 herdr pane wait-output <pane_id> --regex "${TAG}_(OK|FAIL)" --source visible --timeout 120000
 ```
 
-There is also no exit code coming back from a pane — success and failure have to be
-printed by the command itself.
+### pane read returns no output
 
-### Read output with `--source visible`
+`--source recent` and `--source recent-unwrapped` often return zero bytes even when the pane has output:
 
-`recent` / `recent-unwrapped` frequently come back with zero bytes. Don't use them to
-decide whether a command produced output:
-
-```
+```text
 --source visible            99 bytes
 --source recent              0 bytes
 --source recent-unwrapped    0 bytes
 ```
 
-## Running it under systemd (servers)
+Always use `--source visible` to read output or to check whether a command produced any.
 
-Herdr's `session.json` restores **the layout, cwds and pane labels — but not the
-commands that were running in those panes**; what comes back is a clean shell. So
-autostart needs two layers: one to bring up the server, one to launch the services
-into their panes.
+### Mouse does not work over SSH on Windows
 
-`/etc/systemd/system/herdr.service`:
+Over SSH to a Windows 10 host, clicking and scrolling do nothing. Windows 10's ConPTY drops the mouse reports before Herdr can read them. ConPTY's mouse event translation exists only on Windows 11; it was never backported to Windows 10, and the corresponding Microsoft Terminal issue is marked can't fix.
 
-```ini
-[Unit]
-Description=Herdr headless server
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=root
-Environment=HOME=/root
-Environment=PATH=/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-Environment=TERM=xterm-256color
-# Must be set explicitly: systemd does not take the login shell from passwd and
-# falls back to bash, so panes end up without zsh and without the starship prompt
-# configured in .zshrc
-Environment=SHELL=/usr/bin/zsh
-Environment=LANG=en_US.UTF-8
-ExecStart=/root/.local/bin/herdr server
-ExecStop=/root/.local/bin/herdr server stop
-Restart=on-failure
-RestartSec=3
-TimeoutStopSec=60
-KillMode=mixed
-
-[Install]
-WantedBy=multi-user.target
-```
-
-`herdr server` is described upstream as the headless server; it needs no TTY.
-
-Then a oneshot unit that launches the services once the server is up. **Locate panes by
-label, not by pane id** — ids change across restarts, labels don't:
-
-```sh
-find_pane() {  # usage: find_pane <label>
-  for pid in $(herdr pane list | jq -r '.result.panes[].pane_id'); do
-    label=$(herdr pane get "$pid" | jq -r '.result.pane.label // ""')
-    [ "$label" = "$1" ] && { echo "$pid"; return 0; }
-  done
-  return 1
-}
-```
-
-With `Requires=herdr.service` + `After=herdr.service`, restarting herdr drags this unit
-along with it.
-
-## Using herdr on Windows over SSH {#windows-over-ssh}
-
-Two limitations, both tied to the Windows version, and they **pull in opposite directions** —
-no single version is good for both.
-
-### Mouse input requires a Win11 host {#mouse-needs-win11}
-
-When clicking and scrolling do nothing over SSH, it is not that herdr failed to enable mouse
-capture — **Windows 10's ConPTY drops the mouse reports before herdr can read them**. ConPTY's
-mouse event translation only exists on Windows 11; it was never backported to 10, and the
-corresponding Microsoft Terminal issue is marked can't fix.
-
-Nothing in the configuration works around this. It comes down to the host build:
+No configuration works around this. Use a Windows 11 host:
 
 | Build    | OS              | SSH mouse     |
 | -------- | --------------- | ------------- |
 | >= 22000 | Windows 11      | works         |
 | 19045    | Windows 10 22H2 | does not work |
 
-### But Win11 cannot traverse junctions {#junction-not-traversable}
+Windows 11 24H2+ has a separate issue; see [the next section](#herdr-is-not-recognized-over-ssh-on-windows).
 
-Conversely, Windows 11 24H2+ tightened reparse point traversal, so **an SSH session cannot see
-through a junction**:
+### herdr is not recognized over SSH on Windows
 
-```
+Over SSH to a Windows 11 24H2+ host, running `herdr` fails with:
+
+```text
 herdr: The term 'herdr' is not recognized as a name of a cmdlet...
 ```
 
-And herdr's install directory is exactly that — a junction:
+Windows 11 24H2+ tightened reparse point traversal, so an SSH session cannot see through a junction. Herdr's install directory is a junction:
 
-```
+```text
 %LOCALAPPDATA%\Programs\Herdr\bin  ->  ~\.herdr\packages\standalone\releases\<version>-x86_64-pc-windows-msvc
 ```
 
-The tell is that the link shows fewer files than its target:
+Whether it can be traversed depends on who created it: junctions created by the installer cannot be traversed, junctions created by `mklink /J` can.
 
-```powershell
-$l = "$env:LOCALAPPDATA\Programs\Herdr\bin"
-@(cmd /c "dir /b `"$l`" 2>nul").Count
-@(cmd /c "dir /b `"$((Get-Item $l -Force).Target)`" 2>nul").Count
-```
+1. Confirm the issue. If the link shows fewer files than its target (for example 0 vs 3), this is the cause:
 
-**What matters is not the path but who created the junction** — the ones an installer creates
-cannot be traversed, the ones `mklink /J` creates can. (Print name length looked like the
-discriminator at first, but that was disproved: a `mklink /J` rebuild had a print name length
-of 62 and still traversed.)
+   ```powershell
+   $l = "$env:LOCALAPPDATA\Programs\Herdr\bin"
+   @(cmd /c "dir /b `"$l`" 2>nul").Count
+   @(cmd /c "dir /b `"$((Get-Item $l -Force).Target)`" 2>nul").Count
+   ```
 
-Rebuilding fixes it; `rmdir` removes only the link, never the target:
+2. Rebuild the junction with `mklink /J`. `rmdir` removes only the link, not the target:
 
-```powershell
-$l = "$env:LOCALAPPDATA\Programs\Herdr\bin"
-$t = (Get-Item $l -Force).Target
-cmd /c rmdir "$l"
-cmd /c mklink /J "$l" "$t"
-```
+   ```powershell
+   $l = "$env:LOCALAPPDATA\Programs\Herdr\bin"
+   $t = (Get-Item $l -Force).Target
+   cmd /c rmdir "$l"
+   cmd /c mklink /J "$l" "$t"
+   ```
 
-**This recurs on every herdr upgrade** — the target path carries the version number, so a new
-release always means a new directory, and the junction the installer rebuilds is the kind that
-cannot be traversed. vite-plus's `current` follows the same pattern.
+Repeat step 2 after every Herdr upgrade. The target path includes the version number, so each release uses a new directory, and the installer recreates a junction that cannot be traversed. The `current` directory of vite-plus follows the same pattern.
 
-## House rules
+## References
 
-- Only close panes / tabs you created yourself; leave the user's alone
-- Always `--no-focus` for background work
-- Sequential commands reuse one pane. When you genuinely need parallelism, split
-  **down** from the right-hand pane and cap the column at 3-4. Splitting right over
-  and over just keeps halving the width
-- Never `herdr server stop` from an active session — it takes the pane processes with it
+- [herdr.dev](https://herdr.dev): the official Herdr website.

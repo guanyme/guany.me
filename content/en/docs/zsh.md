@@ -1,34 +1,41 @@
-# zsh
+---
+description: 'Configure Zsh with oh-my-zsh, plugins and Starship, and fix PATH issues'
+---
 
-Zsh
+# Zsh
+
+This page covers configuring the Zsh shell with oh-my-zsh, plugins and Starship, and fixing common PATH issues.
 
 ## Installation
 
-```sh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-```
+Install oh-my-zsh, the plugins and Starship in order:
 
-```sh
-cd ~/.oh-my-zsh/plugins
-```
+1. Install oh-my-zsh:
 
-```sh
-gcl https://github.com/zsh-users/zsh-autosuggestions.git
-```
+   ```sh
+   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+   ```
 
-```sh
-gcl https://github.com/zsh-users/zsh-syntax-highlighting.git
-```
+2. Clone zsh-autosuggestions and zsh-syntax-highlighting into the oh-my-zsh plugin directory:
 
-```sh
-cd ~
-```
+   ```sh
+   git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.oh-my-zsh/plugins/zsh-autosuggestions
+   git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
+   ```
 
-```sh
-curl -sS https://starship.rs/install.sh | sh
-```
+3. Install Starship:
 
-## Usage
+   ```sh
+   curl -sS https://starship.rs/install.sh | sh
+   ```
+
+## Configuration
+
+The configuration lives in `~/.zshrc`. The plugin list goes before `source $ZSH/oh-my-zsh.sh`; everything else goes after it.
+
+### Plugins
+
+Enable the plugins in `~/.zshrc`:
 
 ```sh
 plugins=(
@@ -38,13 +45,19 @@ plugins=(
 )
 ```
 
-The `git` plugin is left out — it defines 197 aliases in one go where only a handful ever get
-used, so those are written by hand instead, see the git page. Same for `zsh-z`: the `i`
-function covers the jumping.
+The `git` and `zsh-z` plugins are not enabled. Git aliases are defined separately below; use the `i` function below to jump between directories.
+
+### Prompt
+
+Enable Starship in `~/.zshrc`:
 
 ```sh
 eval "$(starship init zsh)"
 ```
+
+### Functions
+
+Define the `i` function in `~/.zshrc`:
 
 ```sh
 i() {
@@ -52,108 +65,130 @@ i() {
 }
 ```
 
-## Aliases
+`i <dir>` jumps to that directory under `~/i`.
 
-`la` is the only ls alias kept identical across machines. Git ones live on the git page.
+### Aliases
 
-```sh
-alias la='ls -lAh'     # long format + hidden entries
-```
+oh-my-zsh ships `la='ls -lAh'`, which lists all entries, hidden ones included, in long format.
 
-Ubuntu's `.bashrc` ships `la='ls -A'` (hidden only, short format), which means something else.
-Edit it **in place** — comment out the distro default and put the new value right below:
+Ubuntu's `.bashrc` ships `la='ls -A'`. To get the same behavior, change it in `~/.bashrc` to:
 
 ```sh
-# some more ls aliases
-alias ll='ls -alF'
 # alias la='ls -A'
 alias la='ls -lAh'
-alias l='ls -CF'
 ```
 
-Appending at the end of the file works too (the last definition wins), but editing in place is
-what makes the change visible — otherwise the next reader assumes the distro default is still
-in effect.
-
-**`ll` and `l` are deliberately left as each distro ships them.** oh-my-zsh gives
-`ll='ls -lh'` and `l='ls -lah'`; Ubuntu gives `ll='ls -alF'` and `l='ls -CF'` — genuinely
-inconsistent, but with `la` being the only one actually typed, aligning them buys nothing.
-Cross-machine consistency exists so that switching machines never surprises you, and that
-only happens on commands you reach for; aligning unused aliases helps no one and the change
-itself is noise.
-
-oh-my-zsh defines `la` already, so there is nothing to add where it is installed.
-
-## Load Order
-
-```
-①  ~/.zshenv       every zsh, including scripts, cron and LaunchAgents
-②  /etc/zprofile   ← macOS runs path_helper here
-③  ~/.zprofile     login shells
-④  /etc/zshrc
-⑤  ~/.zshrc        interactive only
-```
-
-### path_helper reorders PATH
-
-macOS ships this in `/etc/zprofile`:
+Add the git and `nr` aliases to `~/.zshrc`:
 
 ```sh
-if [ -x /usr/libexec/path_helper ]; then
-	eval `/usr/libexec/path_helper -s`
-fi
+alias g="git"
+alias gaa="git add --all"
+alias gcmsg="git commit --message"
+alias gp="git push"
+alias gl="git pull"
+alias gcl="git clone --recurse-submodules"
+alias grt='cd "$(git rev-parse --show-toplevel)"'
+
+alias nio="ni --prefer-offline"
+alias s="nr start"
+alias d="nr dev"
+alias b="nr build"
+alias bw="nr build --watch"
+alias t="nr test"
+alias tu="nr test -u"
+alias tw="nr test --watch"
+alias w="nr watch"
+alias p="nr play"
+alias c="nr typecheck"
+alias lint="nr lint"
+alias lintf="nr lint --fix"
+alias release="nr release"
+alias re="nr release"
 ```
 
-It moves everything from `/etc/paths` and `/etc/paths.d/*` **to the front**, pushing the user
-directories set in `~/.zshenv` behind `/usr/bin`:
+### Environment variables
 
-```
-~/.zshenv only:      ~/.local/bin  ~/.cargo/bin  /opt/homebrew/bin  …
-after .zprofile:     /opt/homebrew/bin  /usr/local/bin  /usr/bin  …  ~/.local/bin
-```
-
-**So on macOS, relying on `~/.zshenv` for PATH priority does not hold.** `.zshenv` only
-guarantees that scripts can find things; the actual priority has to be re-established after
-`path_helper` runs.
-
-### Non-interactive login shells degrade silently
-
-If the priority lives only in `.zshrc`, the same command resolves differently depending on the
-shell — because `.zshrc` is never read non-interactively:
+Set the editor and PATH in `~/.zshrc`:
 
 ```sh
-zsh -lic 'command -v python3; command -v tar'   # interactive: uv's python, GNU tar
-zsh -lc  'command -v python3; command -v tar'   # non-interactive: homebrew python, bsdtar
+export EDITOR='code'
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-`ssh host 'command'`, LaunchAgents and CI all take the latter path. GNU tar and bsdtar differ on
-`--wildcards` and `--transform`, so a command that works interactively can fail once it lands in
-a script.
+The official installers of uv, claude, codex and mise all install into `~/.local/bin`.
 
-**The fix is to put the priority block in `~/.zprofile`** — it runs after `path_helper`, and both
-interactive and non-interactive login shells read it:
+### Runtimes
+
+node, pnpm, java and similar runtimes are managed by mise. Activate mise in `~/.zshrc`:
 
 ```sh
-typeset -U path fpath
-
-path=(
-  "$HOME/.local/bin"
-  "$HOME/.local/share/mise/shims"                                # language runtime fallback
-  "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/gnu-tar/libexec/gnubin"
-  $path
-)
+eval "$($HOME/.local/bin/mise activate zsh)"
 ```
 
-To cover `zsh -c` scripts as well, add the same entries to `~/.zshenv` (`typeset -U` dedupes).
+Settings for bun and Maven:
 
-The mise shims belong here for the same reason: `mise activate` lives in `.zshrc` and never runs
-non-interactively. Shims resolve the version for the current directory themselves, so per-project
-switching still works without activation. See the mise page.
+```sh
+export MAVEN_HOME="/usr/local/maven"
+export PATH="$MAVEN_HOME/bin:$PATH"
 
-## Command Shadowing
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+```
 
-When the same executable name exists in several PATH directories, only the first one wins. To
-list every duplicate:
+### Other startup files
+
+Homebrew goes in `~/.zprofile`:
+
+```sh
+eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+```
+
+### Pass secrets to a single command
+
+A key `export`ed in `.zshrc` is readable by every child process. Inject it only into the one command that needs it:
+
+```sh
+TAURI_SIGNING_PRIVATE_KEY="$(<~/.tauri/tauri.key)" nr build
+```
+
+## Troubleshooting
+
+### PATH differs in scripts
+
+zsh reads its startup files in this order:
+
+```text
+~/.zshenv      every zsh, including scripts, cron, LaunchAgents
+/etc/zprofile  macOS runs path_helper here
+~/.zprofile    login shells
+~/.zshrc       interactive only
+```
+
+PATH changes and `mise activate` in `.zshrc` never reach `ssh <host> '<command>'`, LaunchAgents or CI. On macOS, `path_helper` also moves the system paths to the front, which breaks the order set in `.zshenv`.
+
+1. Put the PATH priority in `~/.zprofile`, which runs after `path_helper`:
+
+   ```sh
+   typeset -U path fpath
+
+   path=(
+     "$HOME/.local/bin"
+     "$HOME/.local/share/mise/shims"
+     $path
+   )
+   ```
+
+2. Check that interactive and non-interactive shells give the same result:
+
+   ```sh
+   zsh -lic 'command -v python3'   # interactive
+   zsh -lc  'command -v python3'   # non-interactive, should print the same
+   ```
+
+### A command runs the wrong executable
+
+The directory that comes first in PATH wins. List every executable that exists in more than one directory:
 
 ```sh
 echo $PATH | tr ':' '\n' | while read -r d; do
@@ -163,60 +198,11 @@ echo $PATH | tr ':' '\n' | while read -r d; do
 done | sort -t'|' -k1,1 | awk -F'|' '$1==p{print $1" <- "$2} {p=$1}'
 ```
 
-Count **executable files only** — directory symlinks (such as gnu-tar's `gnuman`) also carry the
-execute bit and produce false positives.
+Two common cases:
 
-### uv's python and pip must be linked together
+- **uv's python and Homebrew's pip come from different places.** If `~/.local/bin` only links `python3`, `pip3` falls through to Homebrew, and packages it installs cannot be imported by `python3`. Use `python3 -m pip`, or also link the `pip` from uv's python directory into `~/.local/bin`.
+- **Two tools claim the same name.** Both the Cursor CLI and Grok install an `agent`; whichever comes first in PATH wins.
 
-If `~/.local/bin` holds only `python`/`python3`, then `pip3` falls through to Homebrew, and
-packages installed by `pip3 install` are invisible to `python3`:
+## References
 
-```sh
-python3 -m pip --version   # ~/.local/share/uv/python/.../site-packages/pip
-pip3 --version             # /opt/homebrew/lib/python3.14/site-packages/pip   ← different
-```
-
-uv's python directory already ships pip; just add the links:
-
-```sh
-base="$HOME/.local/share/uv/python/cpython-3.14-macos-aarch64-none/bin"
-for f in pip pip3 pip3.14; do ln -s "$base/$f" ~/.local/bin/$f; done
-```
-
-### Upstreams compete for the same command name
-
-Cursor's CLI binary is literally called `agent` and installs into `~/.local/bin`; the Grok
-installer creates both `grok` and `agent` in `~/.grok/bin` as symlinks to the same binary. Both
-claim `agent`, and whichever comes first on PATH wins.
-
-Prefer keeping the one that **has only that name** — Cursor's `agent` is gone if shadowed, while
-Grok's `agent` is merely an alias for `grok` and costs nothing to lose.
-
-## Keep Secrets Out of the Environment
-
-`export`ing a private key from `.zshrc` makes it readable by **every child process** — npm
-postinstall scripts, CLI crash reporters and agent env dumps all carry it along. Inject it on
-demand instead, so the key only exists for the duration of the wrapped command:
-
-```sh
-tauri-sign() {
-  local k="$HOME/.tauri/tauri.key" p="$HOME/.tauri/tauri.pass"
-  [ -r "$k" ] || { print -u2 "tauri-sign: missing $k"; return 1 }
-  [ -r "$p" ] || { print -u2 "tauri-sign: missing $p"; return 1 }
-  [ $# -gt 0 ] || { print -u2 "usage: tauri-sign <command> [args...]"; return 2 }
-  TAURI_SIGNING_PRIVATE_KEY="$(<"$k")" \
-  TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(<"$p")" \
-    "$@"
-}
-```
-
-```sh
-tauri-sign nr build
-env | grep -c '^TAURI_SIGNING'   # 0 the rest of the time
-```
-
-Keep the key files at `chmod 600` and the directory at `chmod 700`.
-
-## config
-
-[⚙︎ Guany config](https://github.com/guanyme/config)
+- [Guany config](https://github.com/guanyme/config): Guany's configuration repository.

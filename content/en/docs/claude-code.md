@@ -1,13 +1,23 @@
-# claude-code
+---
+description: 'Claude Code settings, MCP servers, common commands and shell functions.'
+---
 
-Claude Code
+# Claude Code
 
-## Settings
+Claude Code is Anthropic's command-line coding tool. This page covers its settings file, MCP servers, common commands and shell functions.
 
-Config file location:
+## Configuration
+
+Claude Code is configured through a settings file, MCP servers and optional shell functions.
+
+### Settings
+
+Settings file location:
 
 - macOS / Linux: `~/.claude/settings.json`
 - Windows: `$HOME\.claude\settings.json`
+
+Put the following in the settings file:
 
 ```json
 {
@@ -15,13 +25,14 @@ Config file location:
     "commit": "",
     "pr": ""
   },
+  "language": "chinese",
   "skipDangerousModePermissionPrompt": true
 }
 ```
 
-## MCP Servers
+### MCP servers
 
-Config file location: `~/.claude.json`
+Add the following to `~/.claude.json`:
 
 ```json
 {
@@ -44,23 +55,15 @@ Config file location: `~/.claude.json`
 }
 ```
 
-## Command
+### Shell function
 
-```sh
-# Continue the last conversation
-claude -c
+Wrap `claude` in a shell function of the same name so every launch gets the base arguments. Add the function to `~/.zshrc` or your PowerShell `$PROFILE`. Pick one of the two variants below.
 
-# Skip permission confirmation
-claude --dangerously-skip-permissions
-```
+#### Always start a new conversation
 
-### Shell Function
+Start a fresh conversation every time, with only the base arguments.
 
-#### No auto-resume
-
-Always start a fresh conversation with just the base arguments:
-
-**Zsh**
+Zsh:
 
 ```zsh
 claude() {
@@ -70,7 +73,7 @@ claude() {
 }
 ```
 
-**PowerShell**
+PowerShell:
 
 ```powershell
 function claude {
@@ -81,11 +84,11 @@ function claude {
 }
 ```
 
-#### Auto-resume
+#### Resume the last conversation automatically
 
-Try to continue the last conversation first; if it fails, start a new one:
+Try to continue the last conversation first. If that fails, start a new one.
 
-**Zsh**
+Zsh:
 
 ```zsh
 claude() {
@@ -95,7 +98,7 @@ claude() {
 }
 ```
 
-**PowerShell**
+PowerShell:
 
 ```powershell
 function claude {
@@ -108,4 +111,16 @@ function claude {
         & $claudePath @baseArgs @args
     }
 }
+```
+
+## Usage
+
+Common commands:
+
+```sh
+# Continue the last conversation
+claude -c
+
+# Skip permission confirmation
+claude --dangerously-skip-permissions
 ```

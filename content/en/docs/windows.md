@@ -1,205 +1,76 @@
-# windows
+---
+description: 'Proxy settings on Windows, plus fixes for PATH variables and SSH session errors'
+---
 
-Windows
+# Windows
 
-## Configure Proxy
+This page covers proxy environment variables on Windows, and how to fix PATH variables that stop expanding and "untrusted mount point" errors in SSH sessions.
+
+## Configuration
+
+Set the proxy with user-level environment variables.
+
+### Configure a proxy
+
+Set the proxy environment variables for the current user:
 
 ```powershell
 [System.Environment]::SetEnvironmentVariable("http_proxy", "http://127.0.0.1:7890", "User")
 [System.Environment]::SetEnvironmentVariable("https_proxy", "http://127.0.0.1:7890", "User")
 ```
 
-## Environment: Don't Use SetEnvironmentVariable on PATH
+## Troubleshooting
 
-Environment variables live in two registry scopes:
+These problems commonly appear after editing PATH and in SSH sessions.
 
-```
+### PATH variables stop expanding
+
+Cause: the PATH value type was changed to `REG_SZ`. References like `%USERPROFILE%` only expand when the value type is `REG_EXPAND_SZ`. `[Environment]::SetEnvironmentVariable` writes `REG_SZ`, so changing PATH with it once turns every `%VAR%` into a literal. The editor in System Properties also expands them into absolute paths.
+
+PATH lives in two registry keys, merged at logon with the machine scope first and the user scope after it:
+
+```text
 HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment   machine
 HKCU\Environment                                                    user
 ```
 
-They merge at logon, and **PATH is the special case: machine first, user appended** (every other
-variable has the user scope override the machine one).
-
-The value type decides whether `%VAR%` expands at all:
-
-| Type                                           | Behaviour                                                         |
-| ---------------------------------------------- | ----------------------------------------------------------------- |
-| `REG_EXPAND_SZ` (`ExpandString` in PowerShell) | `%USERPROFILE%\bin` expands                                       |
-| `REG_SZ` (`String`)                            | `%USERPROFILE%` is treated as a **literal directory name** — dead |
-
-**`[System.Environment]::SetEnvironmentVariable` writes `REG_SZ`.** One call on PATH bakes every
-`%VAR%` reference into an absolute path — that is exactly why "editing an environment variable
-expanded everything". The GUI editor in System Properties does the same.
-
-Specify the type explicitly instead:
+Set the type explicitly when you change PATH. `$v` is the new PATH value:
 
 ```powershell
-# ❌ writes REG_SZ
-[Environment]::SetEnvironmentVariable("Path", $v, "User")
-
-# ✅
 Set-ItemProperty -Path "HKCU:\Environment" -Name Path -Value $v -Type ExpandString
 ```
 
-Read the **unexpanded** value (otherwise what you see is already resolved):
-
-```powershell
-(Get-Item "HKCU:\Environment").GetValue("Path", "", "DoNotExpandEnvironmentNames")
-```
-
-Broadcast afterwards so running processes pick it up — new processes only, already-open terminals
-will not change:
-
-```powershell
-$sig = @'
-[DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
-public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam,
-    string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
-'@
-$t = Add-Type -MemberDefinition $sig -Name Win32 -Namespace Env -PassThru
-[UIntPtr]$r = [UIntPtr]::Zero
-$t::SendMessageTimeout([IntPtr]0xffff, 0x1A, [UIntPtr]::Zero, "Environment", 2, 5000, [ref]$r)
-```
-
-### Use variables where variables belong
-
-The stock machine PATH is written with variables; a machine whose PATH has been through the GUI
-editor ends up with hardcoded absolute paths. Restoring them means a JDK or CUDA upgrade only
-touches one variable:
-
-```
-%SystemRoot%\system32          %SystemRoot%\System32\Wbem
-%SystemRoot%\System32\WindowsPowerShell\v1.0\
-%JAVA_HOME%\bin                %CUDA_PATH%\bin
-```
-
-Same for the user scope — everything under `%USERPROFILE%\…`.
-
-**Do not convert `Program Files` to `%ProgramFiles%`**, though: inside a 32-bit process it expands
-to `Program Files (x86)`, which causes bugs that are miserable to track down. Stock Windows only
-uses variables for system directories.
-
-Use `%CUDA_PATH%` rather than `%CUDA_PATH_V12_9%`: the former points at the active version, the
-latter is a version-pinned alias and defeats the purpose.
-
-Always compare the **expanded** value before and after, and roll back on any mismatch:
-
-```powershell
-$before = [Environment]::GetEnvironmentVariable("Path","Machine")
-# …edit…
-$after  = [Environment]::GetEnvironmentVariable("Path","Machine")
-if ($before.TrimEnd(";") -ne $after.TrimEnd(";")) { "mismatch, rolling back" }
-```
-
-### Installers will revert it
-
-Fixing it once does not make it stick. `[Environment]::SetEnvironmentVariable` is the most
-convenient API in .NET, so third-party installers reach for it whenever they touch the user
-PATH — and even a harmless "read it, confirm we are already listed, write it back unchanged" is
-enough to drop the type to `REG_SZ` and bake every `%VAR%` into a literal.
-
-Checking the **user** scope is usually enough; machine-scope installers rarely touch it:
+Check the type and the raw value:
 
 ```powershell
 $uk = "HKCU:\Environment"
-(Get-Item $uk).GetValueKind("Path")                                   # expect ExpandString
-(Get-Item $uk).GetValue("Path","","DoNotExpandEnvironmentNames")      # expect %USERPROFILE%
+(Get-Item $uk).GetValueKind("Path")                                 # should be ExpandString
+(Get-Item $uk).GetValue("Path", "", "DoNotExpandEnvironmentNames")  # should contain %USERPROFILE%
 ```
 
-To find the culprit, line the registry key's last-write time up against recently installed
-program directories — they are usually a minute or two apart:
+Notes:
 
-```powershell
-Get-ChildItem "$env:LOCALAPPDATA\Programs" -Directory |
-    Sort-Object LastWriteTime -Descending | Select-Object -First 5 LastWriteTime, Name
+- Changes only apply to terminals opened afterwards.
+- Third-party installers often write PATH with `SetEnvironmentVariable`, so installing a program can flip the type back to `REG_SZ`. Check again after installs.
+- Use `%SystemRoot%` for system directories and `%JAVA_HOME%`, `%CUDA_PATH%` for the JDK and CUDA, so switching versions means changing one variable. `%CUDA_PATH%` follows the active version. Avoid version-pinned variables like `%CUDA_PATH_V12_9%`.
+- Do not write `Program Files` as `%ProgramFiles%`. In 32-bit processes it expands to `Program Files (x86)`.
+
+### SSH sessions report an untrusted mount point
+
+```text
+The path cannot be traversed because it contains an untrusted mount point.
 ```
 
-Rather than repairing it by hand every time, drop a self-heal into `$PROFILE` so a new shell
-fixes it. Only the representation changes — the expanded value stays the same, which makes it
-idempotent — and the usual cost is a single registry read:
+Cause: since Windows 11 24H2, SSH sessions no longer follow some symbolic links and junctions. Local terminals are unaffected. The same configuration works on Windows 10 22H2, so nothing is misconfigured, and `fsutil behavior set SymlinkEvaluation` does not help.
 
-```powershell
-$__uk = "HKCU:\Environment"
-$__raw = (Get-Item $__uk -ErrorAction SilentlyContinue).GetValue("Path", "", "DoNotExpandEnvironmentNames")
-if ($__raw) {
-    $__kind = (Get-Item $__uk).GetValueKind("Path")
-    if ($__kind -ne "ExpandString" -or $__raw -like "*$env:USERPROFILE\*") {
-        $__fixed = (($__raw -split ";") | Where-Object { $_ } | ForEach-Object {
-                if ($_.StartsWith("$env:USERPROFILE\", [StringComparison]::OrdinalIgnoreCase)) {
-                    "%USERPROFILE%\" + $_.Substring($env:USERPROFILE.Length + 1)
-                } else { $_ }
-            }) -join ";"
-        if ([Environment]::ExpandEnvironmentVariables($__fixed) -eq
-            [Environment]::ExpandEnvironmentVariables($__raw).TrimEnd(";")) {
-            Set-ItemProperty -Path $__uk -Name Path -Value $__fixed -Type ExpandString
-        }
-    }
-}
-```
+Choose the fix by what is blocked:
 
-Do not drop the "only write if the expanded value matches" guard — it is what stops the rewrite
-from touching an entry whose literal home-directory path was deliberate.
+- **A junction is blocked**: recreate it with `mklink /J`. Junctions made by the native API are followed:
 
-## "Untrusted mount point" in SSH Sessions
+  ```powershell
+  cmd /c rmdir "<link path>"
+  cmd /c mklink /J "<link path>" "<real target>"
+  ```
 
-On Windows 11 24H2 and later, running certain commands after logging in over SSH fails with:
-
-```
-Cannot traverse the path because it contains an untrusted mount point.
-Program 'fnm.exe' failed to run: An error occurred trying to start process
-'C:\Users\<user>\AppData\Local\Microsoft\WinGet\Links\fnm.exe'
-```
-
-This generation of Windows **tightened how SSH sessions traverse reparse points** (symbolic
-links and junctions). A terminal opened locally is unaffected, so the problem only shows up
-over ssh.
-
-### Confirming it is this
-
-The phrase "untrusted mount point" is the whole diagnosis — no need to look elsewhere.
-The decisive variable is the **OS version**, not configuration:
-
-|                                           | Windows 10 22H2 · 19045 | Windows 11 25H2 · 26200 |
-| ----------------------------------------- | ----------------------- | ----------------------- |
-| SSH logon token                           | NETWORK                 | NETWORK                 |
-| `fsutil behavior query SymlinkEvaluation` | L2L/L2R on, R2L/R2R off | identical               |
-| Developer Mode                            | on                      | on                      |
-| WinGet symlinks traversable               | **yes**                 | **no**                  |
-
-Three settings identical, only the OS differs — so nothing is misconfigured.
-
-**Two dead ends worth skipping**: `fsutil behavior set SymlinkEvaluation R2L:1` does nothing
-here (L2L/R2L describe whether the link and its target are local or remote paths; with both on
-C: it is L2L, which is already enabled). The logon token type is not the cause either — the
-Win10 box hands out a NETWORK token too and works fine.
-
-### Three fixes
-
-**1. Junction blocked → rebuild it with the native API.** Junctions made by `mklink /J`
-traverse fine; ones written by a language runtime's own reparse-data code may not:
-
-```powershell
-cmd /c rmdir "<link path>"          # no /s — removes the link, not the target
-cmd /c mklink /J "<link path>" "<real target>"
-```
-
-**2. WinGet shim blocked → put the real package directory ahead on PATH.** Everything under
-`WinGet\Links` is a symlink; point at `WinGet\Packages\<package id>` instead:
-
-```powershell
-$base = "$env:LOCALAPPDATA\Microsoft\WinGet\Packages"
-$real = "$base\Schniz.fnm_Microsoft.Winget.Source_8wekyb3d8bbwe"
-
-# Read the User scope, never $env:Path — that is Machine + User already merged,
-# and writing it back copies the machine PATH into the user one, growing it every time
-$u = [Environment]::GetEnvironmentVariable("Path", "User")
-[Environment]::SetEnvironmentVariable("Path", "$real;$u", "User")
-```
-
-**3. Do installs and upgrades locally or over RDP.** pnpm builds `node_modules` out of a large
-number of junctions, and in an SSH session it cannot read back the links it just created, so
-the install is bound to fail. Running already-installed software is unaffected.
-
-Switching to password authentication is not worth it — it does yield a full token, but at the
-cost of passwordless login.
+- **A command installed by WinGet is blocked**: everything under `WinGet\Links` is a symbolic link. Put the real directory `%LOCALAPPDATA%\Microsoft\WinGet\Packages\<package ID>` at the front of the user PATH. To write PATH, see [PATH variables stop expanding](#path-variables-stop-expanding).
+- **pnpm install fails**: pnpm's `node_modules` is built from junctions, so installing over SSH always fails. Install and upgrade locally or over Remote Desktop. Using what is already installed over SSH works.

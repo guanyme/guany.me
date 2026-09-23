@@ -1,8 +1,18 @@
-# windows-terminal
+---
+description: 'Windows Terminal settings.json for defaults, PowerShell 7 and Vitesse Dark'
+---
 
-Windows Terminal
+# Windows Terminal
 
-## profiles.defaults
+This page gives a Windows Terminal `settings.json` configuration: profile defaults, a PowerShell 7 command line and the Vitesse Dark color scheme.
+
+## Configuration
+
+Put each of the following snippets in the matching field of `settings.json`.
+
+### Set profile defaults
+
+In `profiles.defaults`, turn off the bell and set the color scheme and font:
 
 ```json
 {
@@ -14,7 +24,9 @@ Windows Terminal
 }
 ```
 
-## profiles.list
+### Launch PowerShell 7
+
+In a profile in `profiles.list`, set the command line to PowerShell 7. `-NoLogo` hides the startup banner:
 
 ```json
 [
@@ -24,7 +36,9 @@ Windows Terminal
 ]
 ```
 
-## schemes
+### Add the Vitesse Dark color scheme
+
+Add to the `schemes` array:
 
 ```json
 {

@@ -1,50 +1,62 @@
+---
+description: 'mise 多语言运行时与工具版本管理器的安装、配置、从 fnm 迁移和故障排查。'
+---
+
 # mise
 
-mise
+mise 管理 Node.js、pnpm、Java 等运行时和命令行工具的版本。本页介绍安装、shell 集成、全局配置、供应链检查、从 fnm 迁移和常见问题。
 
 ## 安装 {#installation}
 
-官方安装器装的是优化过的单文件二进制，且**只有它支持 `mise self-update`**：
+推荐用官方安装器。它装的是单文件二进制，支持 `mise self-update`。mise 发版频繁，官方建议保持较新版本。
+
+### 在 macOS 和 Linux 上安装 {#install-on-macos-and-linux}
+
+用官方安装器安装，macOS 和 Linux 命令相同：
 
 ```sh
 curl https://mise.run | sh
 ```
 
-装到 `~/.local/bin/mise`。macOS 和 Linux 是同一条命令。
+mise 装到 `~/.local/bin/mise`。
 
-Windows：
+### 在 Windows 上安装 {#install-on-windows}
+
+用 winget 安装：
 
 ```powershell
 winget install --id jdx.mise
 ```
 
-**包管理器装的版本会滞后，而且不能自更新。** Homebrew 版跑 `mise self-update` 会直接拒绝：
+winget 版支持 `mise self-update`。
 
-```
-mise ERROR mise is installed via a package manager, cannot update
-```
+## 配置 {#configuration}
 
-mise 发版很密（几乎每天），而它要对接 aqua、GitHub releases、各语言的 registry，这些上游一直在变，所以官方明确建议保持在较新版本。把更新权交给 formula 维护者不划算。winget 版倒是允许 `self-update`。
+以下配置互相独立，按需选用。
 
-## Shell 集成 {#shell-integration}
+### 在 shell 中激活 mise {#activate-mise-in-the-shell}
+
+在 `~/.zshrc` 里加上：
 
 ```sh
-eval "$(mise activate zsh)"
+eval "$($HOME/.local/bin/mise activate zsh)"
 ```
+
+在 PowerShell profile 里加上：
 
 ```powershell
 (&mise activate pwsh) | Out-String | Invoke-Expression
 ```
 
-PowerShell 的 `mise activate` 和 `chpwd` 钩子都是支持的。官方 FAQ 里那段「native Windows 只能用 shims，因为没人实现 powershell 支持」是**过时内容** —— 同一份文档的 shell 兼容性表格写着 PowerShell 的 `mise activate` 是 Yes。只有 `[shell_alias]` 确实不支持。
+PowerShell 支持 `mise activate` 和 `chpwd` 钩子，只有 `[shell_alias]` 不支持。官方 FAQ 中「native Windows 只能用 shims」的说法已过时，以文档里的 shell 兼容性表格为准。
 
-### 非交互 shell 要用 shims 兜底 {#shims-fallback}
+### 为非交互 shell 添加 shims {#add-shims-for-non-interactive-shells}
 
-`mise activate` 只能写在 `.zshrc` 里，而 `.zshrc` 非交互不读。`ssh 主机 '命令'`、LaunchAgent、cron、CI 走的都是非交互路径，拿不到 mise 管的任何工具。
-
-补法是把 shims 目录放进 `.zshenv`：
+`mise activate` 只在交互式 shell 里生效。脚本、`ssh 主机 '命令'`、LaunchAgent、CI 都拿不到 mise 管理的工具。需要时把 shims 加进 `~/.zprofile`。它在 macOS 的 `path_helper` 之后执行，登录 shell 都会读取：
 
 ```sh
+typeset -U path fpath
+
 path=(
   "$HOME/.local/bin"
   "$HOME/.local/share/mise/shims"
@@ -52,156 +64,211 @@ path=(
 )
 ```
 
-shims 会自己解析当前目录该用哪个版本，所以非交互下**也能按项目切**：
+shims 按当前目录解析版本，非交互 shell 里也能按项目切换：
 
 ```sh
-zsh -lc 'cd ~/i/some-project && pnpm -v'   # 拿到项目锁定的版本，不是全局兜底值
+zsh -lc 'cd ~/i/some-project && pnpm -v'   # 拿到项目锁定的版本
 ```
 
-这比 fnm 的 `aliases/default/bin` 兜底强 —— 那个是钉死的固定版本。
+shims 在 PATH 中的位置要满足两点：
 
-### PATH 顺序：installs 在前，shims 在后 {#path-order}
+- 排在 `mise activate` 插入的 installs 目录后面，只做兜底。
+- 排在 Homebrew 前面。否则 `brew install node` 会压过 mise 选中的版本。
 
-交互式下 `mise activate` 会把 `~/.local/share/mise/installs/*` 插到 PATH 前面，shims 只是兜底，必须排在它后面。
+### 全局配置文件 {#global-config-file}
 
-macOS 上还要注意 `path_helper`：它在 `/etc/zprofile` 里把系统路径整体提前，`.zshenv` 里设的 shims 会被压到 `/usr/bin` 甚至 `/opt/homebrew/bin` 之后。所以 shims 也要在 `.zprofile` 里重新前置一次：
-
-```sh
-path=(
-  "$HOME/.local/bin"
-  "$HOME/.local/share/mise/shims"     # 必须排在 homebrew 之前
-  $path
-)
-```
-
-不这么做的话，哪天 `brew install node` 就会静默压过 mise 选中的版本。
-
-## 版本从哪来 {#version-sources}
-
-全局配置在 `~/.config/mise/config.toml`（Windows 也是 `~\.config\mise\`，路径一致）：
+全局配置在 `~/.config/mise/config.toml`。Windows 上路径相同，为 `~\.config\mise\`。示例：
 
 ```toml
+[settings]
+idiomatic_version_file_enable_tools = ["pnpm", "yarn", "npm", "node"]
+minimum_release_age = "0"
+
 [tools]
-node = "24"
-pnpm = "11.21.0"
-"npm:@antfu/ni" = "latest"
+java = "lts"
+ni = "latest"
+node = "lts"
+opencode = "latest"
+pi = "latest"
+pnpm = "latest"
+vercel = { version = "latest", allow_builds = ["esbuild"], trust_policy_excludes = ["undici"] }
+yarn = "latest"
 ```
 
-项目里的 `mise.toml` / `.tool-versions` 会就近覆盖。
+全局值只是兜底。项目里的 `mise.toml`、`.node-version` 和 `package.json` 的 `packageManager` 会就近覆盖它。
 
-### package.json 的字段默认不读 {#idiomatic-version-files}
+- 需要 JDK 8 或 17 的 Java 项目，在项目的 `mise.toml` 里声明。
+- Yarn 1 仓库要在 `packageManager` 里声明版本。否则用 Yarn 4 运行会把 lockfile 迁成 Berry 格式。
+- `minimum_release_age` 和 `vercel` 一行的例外，见[供应链检查](#supply-chain-checks)。
 
-`.nvmrc`、`.node-version` 和 package.json 里的字段，mise 统称 idiomatic version files，**默认全部关闭**，必须显式打开：
+### 从 package.json 读取版本 {#read-versions-from-packagejson}
+
+mise 把 `.nvmrc`、`.node-version` 和 `package.json` 里的版本字段统称为 idiomatic version files。它们默认全部关闭，要显式打开：
 
 ```toml
 [settings]
 idiomatic_version_file_enable_tools = ["node", "pnpm", "npm", "yarn"]
 ```
 
-打开后 mise 会读 `packageManager` 和 `devEngines` 两个字段（[jdx/mise#8059](https://github.com/jdx/mise/pull/8059)），足以替代 corepack 按项目切 pnpm 版本。
+打开后，mise 会读 `packageManager` 和 `devEngines` 两个字段（[jdx/mise#8059](https://github.com/jdx/mise/pull/8059)）。这足以替代 corepack 按项目切换 pnpm 版本。
 
-**但它不认传统的 `engines.node`。** 那个 PR（[#2288](https://github.com/jdx/mise/pull/2288)）没有合并。fnm 的 `--resolve-engines` 读的正是这个字段，迁过来就没了 —— 如果项目靠 `engines.node` 指定版本，得改写成 `devEngines.runtime` 或补一个 `.node-version`。
+mise 不读传统的 `engines.node`，相关 PR（[#2288](https://github.com/jdx/mise/pull/2288)）没有合并。靠 `engines.node` 指定版本的项目，要改用 `devEngines.runtime` 或补一个 `.node-version`。
 
-## GitHub API 会限流 {#github-rate-limit}
+### 启用补全 {#enable-completions}
 
-mise 查版本要打 GitHub Releases API，匿名配额只有 **60 次/小时**，用完了装什么都失败：
+按以下步骤加载 mise 补全：
 
+1. 声明 `usage` 工具。补全运行时要调用 `usage` CLI。Homebrew 装 mise 时会自动带上，官方安装器和 winget 不会：
+
+   ```toml
+   [tools]
+   usage = "latest"
+   ```
+
+2. 把补全放在 `activate` 后面。`usage` 也由 mise 管理，`activate` 之前不在 PATH 里，否则每开一个 shell 都会打印 `usage CLI not found`：
+
+   ```powershell
+   (&mise activate pwsh) | Out-String | Invoke-Expression
+   mise completion powershell | Out-String | Invoke-Expression
+   ```
+
+在 Windows 上，PowerShell 作为 OpenSSH 的默认 shell 时，这行警告会导致 scp 失败。
+
+### 供应链检查 {#supply-chain-checks}
+
+mise 的 `npm:` 后端默认用内置的 aube 安装。aube 有三层供应链检查：
+
+- **信任降级检查**：依赖的新版本失去可信发布者签名时拦截。
+- **构建脚本审批**：沿用 pnpm 的 build approval 模型。依赖的 `preinstall`、`install`、`postinstall` 默认不执行，自己项目的脚本照常执行。
+- **版本年龄闸**：`minimum_release_age`，默认 24h。只安装发布超过该时长的版本，给社区时间发现被投毒的发布。对应 pnpm 的 `minimumReleaseAge` 和 Renovate 的同名机制。
+
+三层互相独立。被 trust policy 拦下时，调整 `minimum_release_age` 没有作用。
+
+安装被拦时，按包添加最小例外，不要关全局开关。具体做法见[故障排查](#troubleshooting)。
+
+`npm.shell_out = true`（改用 npm CLI）和 `npm.package_manager = "pnpm"` 都会对所有包绕过 trust policy。官方把 `shell_out` 标为 last resort。`npm.shell_out` 仍会给 npm 传 `--ignore-scripts`，所以也不能解决构建脚本问题。
+
+| 后端                 | trust policy | 构建脚本                  |
+| -------------------- | ------------ | ------------------------- |
+| `auto`（默认，aube） | ✅           | 默认拒绝 + `allow_builds` |
+| `pnpm`               | ❌           | 默认拒绝 + `allow_builds` |
+| `npm.shell_out`      | ❌           | `--ignore-scripts`        |
+
+## 使用 {#usage}
+
+### 从 fnm 迁移 {#migrate-from-fnm}
+
+fnm 的选项与 mise 的对应关系：
+
+| fnm                                                 | mise                                                                        |
+| --------------------------------------------------- | --------------------------------------------------------------------------- |
+| `fnm env --use-on-cd`                               | `mise activate`（chpwd 钩子内置）                                           |
+| `--version-file-strategy=recursive`                 | 默认就向上查找                                                              |
+| `--corepack-enabled` + corepack 读 `packageManager` | mise 直接读 `packageManager`，corepack 这层可以去掉                         |
+| `--resolve-engines`（读 `engines.node`）            | 没有对应功能，见[从 package.json 读取版本](#read-versions-from-packagejson) |
+| `aliases/default/bin` 兜底                          | `shims`，而且能按项目切换                                                   |
+
+卸载 fnm 并清理数据：
+
+1. 确认没有进程在用 fnm 的 node：
+
+   ```powershell
+   Get-Process node -EA SilentlyContinue | Where-Object { $_.Path -like "*fnm*" }
+   ```
+
+   运行中的 node 会占用 `node-versions` 里的 exe。`Remove-Item` 会静默跳过这些文件，目录删不干净。
+
+2. 删除数据目录。node 安装在 `%APPDATA%\fnm`（Windows）或 `~/.local/share/fnm`。multishell 在 `%LOCALAPPDATA%\fnm_multishells` 或 `~/.local/state/fnm_multishells`。
+
+   multishell 是 junction。删掉链接不影响已在运行的进程，但这些进程之后再启动子进程会失败。
+
+3. Windows 上单独卸载 winget 装的 fnm。在本地打开普通权限的 PowerShell，运行：
+
+   ```powershell
+   winget uninstall --id Schniz.fnm --exact
+   ```
+
+   不能在管理员会话里卸载，否则会报错：
+
+   ```text
+   The package installed for user scope cannot be uninstalled when running with administrator privileges.
+   ```
+
+   SSH 会话默认是管理员权限，所以要在本地执行。
+
+## 故障排查 {#troubleshooting}
+
+### Homebrew 版 self-update 失败 {#self-update-fails-on-a-homebrew-install}
+
+在 Homebrew 装的 mise 上运行 `mise self-update`，会报错：
+
+```text
+mise ERROR mise is installed via a package manager, cannot update
 ```
+
+原因：Homebrew 等包管理器装的版本不能自更新，而且版本滞后。
+
+解决：卸载包管理器版本，改用[官方安装器](#install-on-macos-and-linux)安装。
+
+### 安装时提示 GitHub rate limit exceeded {#installs-fail-with-github-rate-limit-exceeded}
+
+安装任何工具都失败，并输出：
+
+```text
 mise WARN  GitHub rate limit exceeded
 mise WARN  [pnpm/pnpm] failed to fetch version tags: HTTP status client error (403 Forbidden)
 ```
 
-mise 默认会从 gh CLI 的 `hosts.yml` 里读 token（`github.gh_cli_tokens` 默认 true）。**但 gh 用系统钥匙串存 token 时，`hosts.yml` 里是空的**，这条路走不通：
+原因：mise 查版本要调用 GitHub Releases API，匿名配额只有每小时 60 次。mise 默认从 gh CLI 的 `hosts.yml` 读 token（`github.gh_cli_tokens` 默认为 true）。gh 用系统钥匙串存 token 时，`hosts.yml` 里没有 token。
+
+确认 token 存在钥匙串里：
 
 ```sh
 gh auth status     # ✓ Logged in ... (keyring)
 grep token ~/.config/gh/hosts.yml    # 什么都没有
 ```
 
-改成按需调命令取，token 不落盘也不进环境变量：
+解决：在 `~/.config/mise/config.toml` 里改为按需调用命令取 token：
 
 ```toml
 [settings.github]
 credential_command = "gh auth token"
 ```
 
-只在 mise 真要用的那一刻才存在，和把密钥 `export` 到环境里是两回事。
+token 只在 mise 需要时取出，不落盘，也不进环境变量。
 
-## 补全依赖 usage，且顺序不能反 {#usage-cli}
+### 安装时提示 trust downgrade {#install-fails-with-trust-downgrade}
 
-mise 的补全脚本运行时要调 `usage` 这个 CLI。Homebrew 装 mise 时它是自动带的依赖，换成官方安装器或 winget 后就得自己声明：
+安装 npm 工具时报错：
 
-```toml
-[tools]
-usage = "latest"
-```
-
-装完还有个坑：**`activate` 必须排在补全之前**。usage 本身也是 mise 管的工具，`activate` 之前它不在 PATH 里，于是每开一个 shell 都会打一行：
-
-```
-WARNING: Error: usage CLI not found. This is required for completions to work in mise.
-```
-
-正确顺序：
-
-```powershell
-(&mise activate pwsh) | Out-String | Invoke-Expression   # 先 activate
-
-$__f = "$__cacheDir\mise-completions.ps1"                 # 补全在后，走缓存
-$__src = (Get-Command mise -ErrorAction SilentlyContinue).Source
-if ($__src -and ((-not (Test-Path $__f)) -or (Get-Item $__src).LastWriteTime -gt (Get-Item $__f).LastWriteTime)) {
-    mise completion powershell | Out-String | Set-Content $__f -Encoding utf8
-}
-if (Test-Path $__f) { . $__f }
-```
-
-这个警告在 Windows 上不只是难看 —— PowerShell 作为 `DefaultShell` 时，**profile 往 stdout 写任何东西都会破坏 scp/sftp**：
-
-```
-scp: Received message too long 458961715
-scp: Ensure the remote shell produces no output for non-interactive sessions.
-```
-
-顺序修好、警告消失，scp 立刻恢复。
-
-## 装 npm 包时的三层防护 {#supply-chain}
-
-mise 的 `npm:` 后端默认用内置的 **aube** 安装，它带三层供应链检查。装某些工具会被拦下来，
-这时**不要去关全局开关**，按包开最小例外。
-
-### 拦下来的两种典型
-
-**① 信任降级（trust downgrade）**
-
-```
+```text
 trust downgrade for @smithy/core@3.33.0 (trustPolicy=no-downgrade):
 earlier published version 3.24.6 had trusted publisher but this version has no trust evidence
 ```
 
-某个间接依赖的旧版本有可信发布者签名、新版本没有，aube 认为信任等级下降。常见成因是
-上游手动发布、backport 绕过了可信工作流，或者镜像源剥掉了元数据 —— 不一定是被篡改。
-AWS SDK 的 `@smithy/*` 系列就是这样，逐个版本加例外没有尽头，用**裸包名**豁免整个系列：
+原因：某个间接依赖的旧版本有可信发布者签名，新版本没有。常见成因是上游手动发布、backport 绕过了可信工作流，或镜像源剥掉了元数据，不一定是被篡改。AWS SDK 的 `@smithy/*` 系列就是这种情况。
+
+解决：用 `trust_policy_excludes` 按包豁免。把 `某工具` 换成要安装的包名：
 
 ```toml
 [tools]
 "npm:某工具" = { version = "latest", trust_policy_excludes = ["@smithy/core", "@smithy/node-http-handler"] }
 ```
 
-带版本号只豁免那一个版本，裸包名豁免所有版本。
+带版本号只豁免那一个版本，裸包名豁免该包所有版本。对 `@smithy/*` 这类频繁发版的系列，用裸包名。
 
-**② 构建脚本被拒**
+### 装好的工具在 Windows 上提示版本不兼容 {#installed-tool-reports-it-is-not-compatible-with-windows}
 
-aube 沿用 pnpm 的 build approval 模型：**依赖的 `preinstall` / `install` / `postinstall`
-默认不执行**（自己项目的脚本照常跑）。有些包靠 postinstall 下载平台专用二进制，被拦之后
-会装成**半成品**：
+用 `npm:` 后端装好工具后，运行时报错：
 
 ```powershell
 # 装完得到的 opencode.exe 只有 479 字节
 该版本的 opencode.exe 与你运行的 Windows 版本不兼容。请查看计算机的系统信息…
 ```
 
-这个报错极具误导 —— 实际不是架构不匹配，而是那 479 字节根本不是 PE 文件，
-是包作者写的"postinstall 没跑"提示脚本（文件头是 `ec` 而非 `MZ`）。放行即可：
+原因：这个包靠 postinstall 下载平台专用二进制，而 aube 默认不执行依赖的构建脚本。装出来的 479 字节文件不是 PE 文件（文件头是 `ec` 而非 `MZ`），而是包作者写的「postinstall 没跑」提示脚本。报错与架构无关。
+
+解决：用 `allow_builds` 放行该包的构建脚本：
 
 ```toml
 "npm:opencode-ai" = { version = "latest", allow_builds = true }
@@ -209,27 +276,13 @@ aube 沿用 pnpm 的 build approval 模型：**依赖的 `preinstall` / `install
 
 `allow_builds` 也接受数组，只放行指定的依赖：`allow_builds = ["esbuild"]`。
 
-### 不要用的两个出口 {#avoid-global-switches}
+### 刚发布的版本装不上 {#newly-published-version-fails-to-install}
 
-mise 还提供 `npm.shell_out = true`（改用 npm CLI）和 `npm.package_manager = "pnpm"`，
-两者都能绕过 trust policy —— 但代价是**为个别包的问题，把所有包的防护都撤掉**。
-官方也把 `shell_out` 标为 last resort。
+刚 publish 的 npm 包无法立即安装验证。
 
-| 后端                 | trust policy | 构建脚本                  | 何时用     |
-| -------------------- | ------------ | ------------------------- | ---------- |
-| `auto`（默认，aube） | ✅           | 默认拒绝 + `allow_builds` | 一直用这个 |
-| `pnpm`               | ❌           | 默认拒绝 + `allow_builds` | 不需要     |
-| `npm.shell_out`      | ❌           | `--ignore-scripts`        | 不需要     |
+原因：`minimum_release_age` 默认为 24h，只安装发布超过 24 小时的版本。
 
-注意 `npm.shell_out` 换成 npm CLI 之后，mise 仍然会传 `--ignore-scripts`，
-所以它连"构建脚本"那个问题都解决不了。
-
-### 版本年龄闸 {#minimum-release-age}
-
-第三层是 `minimum_release_age`，默认 **24h**：只安装发布超过该时长的版本，给社区时间
-发现被投毒的发布（对应 pnpm 的 `minimumReleaseAge`、Renovate 的同名机制）。
-
-自己发 npm 包的话这条会挡路 —— 刚 publish 的版本装不上，没法立刻验证。两种改法：
+解决：任选一种。把 `@自己的scope` 换成自己的 npm scope：
 
 ```toml
 # 全局关掉
@@ -240,36 +293,18 @@ minimum_release_age = "24h"
 minimum_release_age_excludes = ["npm:@自己的scope/*"]
 ```
 
-它和上面两层是**互相独立**的 —— 被 trust policy 拦下来时，调这个没有任何作用。
+### 在配置仓库目录里提示 not trusted {#mise-reports-not-trusted-inside-a-config-repository}
 
-## 从 fnm 迁过来 {#migrate-from-fnm}
+进入备份配置用的仓库后，mise 报 `not trusted`，该目录下的 node、pnpm 都无法使用。
 
-| fnm                                                 | mise                                                |
-| --------------------------------------------------- | --------------------------------------------------- |
-| `fnm env --use-on-cd`                               | `mise activate`（chpwd 钩子内置）                   |
-| `--version-file-strategy=recursive`                 | 默认就向上查找                                      |
-| `--corepack-enabled` + corepack 读 `packageManager` | mise 直接读 `packageManager`，corepack 这层可以去掉 |
-| `--resolve-engines`（读 `engines.node`）            | **没有对应物**，见上文                              |
-| `aliases/default/bin` 兜底                          | `shims`，而且能按项目切                             |
+原因：仓库里也有一份 `.config/mise/config.toml`，mise 把它当作项目配置加载。
 
-卸载后记得清数据目录，fnm 的 node 安装在 `%APPDATA%\fnm`（Windows）或 `~/.local/share/fnm`，multishell 在 `%LOCALAPPDATA%\fnm_multishells` / `~/.local/state/fnm_multishells`。
+解决：用环境变量忽略这份配置。这是启动早期的设置，写在 `mise.toml` 里无效。在 `~/.zshenv` 里加上，并把路径换成你的仓库位置：
 
-**删之前先确认没有进程在用**：
-
-```powershell
-Get-Process node -EA SilentlyContinue | Where-Object { $_.Path -like "*fnm*" }
+```sh
+export MISE_IGNORED_CONFIG_PATHS="$HOME/i/guanyme/config/.config/mise/config.toml"
 ```
 
-正在运行的 node 会占着 `node-versions` 里的 exe，`Remove-Item` 会静默跳过那些文件，留下一个删不干净的目录。multishell 那边则是 junction，删掉链接不影响已经跑起来的进程（文件句柄仍有效），但那些进程之后再 spawn 子进程就会失败。
+## 参考 {#references}
 
-Windows 上 winget 装的 fnm 还得单独卸，而且**不能在管理员会话里卸**：
-
-```
-The package installed for user scope cannot be uninstalled when running with administrator privileges.
-```
-
-SSH 过去默认就是管理员权限，只能在本地开普通权限的 PowerShell 执行 `winget uninstall --id Schniz.fnm --exact`。
-
-## config
-
-[⚙︎ Guany config](https://github.com/guanyme/config)
+- [Guany config](https://github.com/guanyme/config)：包含本页 mise 配置的配置仓库。

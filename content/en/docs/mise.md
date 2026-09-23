@@ -1,57 +1,62 @@
+---
+description: 'Install and configure mise, migrate from fnm, and fix common mise errors.'
+---
+
 # mise
 
-mise
+mise manages versions of runtimes such as Node.js, pnpm and Java, and of command-line tools. This page covers installation, shell integration, global config, supply-chain checks, migrating from fnm, and common problems.
 
 ## Installation
 
-The official installer ships an optimized single binary, and it is **the only method that supports
-`mise self-update`**:
+Use the official installer. It installs a single binary that supports `mise self-update`. mise releases often, and the docs recommend staying on a recent version.
+
+### Install on macOS and Linux
+
+Run the official installer. The command is the same on macOS and Linux:
 
 ```sh
 curl https://mise.run | sh
 ```
 
-It lands in `~/.local/bin/mise`. Same command on macOS and Linux.
+mise is installed to `~/.local/bin/mise`.
 
-Windows:
+### Install on Windows
+
+Install with winget:
 
 ```powershell
 winget install --id jdx.mise
 ```
 
-**Package-manager builds lag behind and cannot self-update.** The Homebrew build refuses outright:
+The winget build supports `mise self-update`.
 
-```
-mise ERROR mise is installed via a package manager, cannot update
-```
+## Configuration
 
-mise releases almost daily, and it talks to aqua, GitHub releases and language registries that keep
-changing upstream — which is why the docs recommend staying on a recent version. Handing that
-schedule to a formula maintainer is a poor trade. The winget build does allow `self-update`.
+The following settings are independent. Apply the ones you need.
 
-## Shell Integration
+### Activate mise in the shell
+
+Add to `~/.zshrc`:
 
 ```sh
-eval "$(mise activate zsh)"
+eval "$($HOME/.local/bin/mise activate zsh)"
 ```
+
+Add to your PowerShell profile:
 
 ```powershell
 (&mise activate pwsh) | Out-String | Invoke-Expression
 ```
 
-PowerShell supports both `mise activate` and the `chpwd` hook. The FAQ passage claiming native
-Windows only works "via the use of shims until someone adds powershell support" is **stale** — the
-shell compatibility table in the same docs lists `mise activate` as Yes for PowerShell. Only
-`[shell_alias]` is genuinely unsupported.
+PowerShell supports `mise activate` and the `chpwd` hook. Only `[shell_alias]` is unsupported. The FAQ passage saying native Windows works only through shims is outdated; the shell compatibility table in the same docs is correct.
 
-### Non-interactive shells need shims
+### Add shims for non-interactive shells
 
-`mise activate` belongs in `.zshrc`, and `.zshrc` is never read non-interactively. `ssh host
-'command'`, LaunchAgents, cron and CI all take that path and would see none of the managed tools.
-
-Put the shims directory in `.zshenv` to cover them:
+`mise activate` only works in interactive shells. Scripts, `ssh host 'command'`, LaunchAgents and CI see none of the tools mise manages. When needed, add the shims to `~/.zprofile`. It runs after macOS `path_helper` and is read by every login shell:
 
 ```sh
+typeset -U path fpath
+
 path=(
   "$HOME/.local/bin"
   "$HOME/.local/share/mise/shims"
@@ -59,207 +64,225 @@ path=(
 )
 ```
 
-Shims resolve the version for the current directory themselves, so **per-project switching still
-works** without activation:
+Shims resolve the version for the current directory, so per-project switching works in non-interactive shells too:
 
 ```sh
-zsh -lc 'cd ~/i/some-project && pnpm -v'   # the version the project pins, not the global fallback
+zsh -lc 'cd ~/i/some-project && pnpm -v'   # the version the project pins
 ```
 
-That is strictly better than fnm's `aliases/default/bin` fallback, which is pinned to one version.
+Place the shims in PATH as follows:
 
-### PATH order: installs first, shims after
+- After the installs directories that `mise activate` prepends, as a fallback only.
+- Before Homebrew. Otherwise `brew install node` shadows the version mise selected.
 
-In interactive shells `mise activate` prepends `~/.local/share/mise/installs/*`. Shims are only a
-fallback and must sit behind them.
+### Global config file
 
-On macOS also mind `path_helper`: it runs from `/etc/zprofile` and moves the system paths to the
-front, pushing anything set in `.zshenv` behind `/usr/bin` and even `/opt/homebrew/bin`. So the
-shims need to be re-prepended in `.zprofile` as well:
-
-```sh
-path=(
-  "$HOME/.local/bin"
-  "$HOME/.local/share/mise/shims"     # must come before homebrew
-  $path
-)
-```
-
-Skip this and a future `brew install node` will silently shadow whatever version mise selected.
-
-## Where Versions Come From
-
-The global config lives at `~/.config/mise/config.toml` (same path on Windows, `~\.config\mise\`):
+The global config lives at `~/.config/mise/config.toml`. The path is the same on Windows: `~\.config\mise\`. Example:
 
 ```toml
+[settings]
+idiomatic_version_file_enable_tools = ["pnpm", "yarn", "npm", "node"]
+minimum_release_age = "0"
+
 [tools]
-node = "24"
-pnpm = "11.21.0"
-"npm:@antfu/ni" = "latest"
+java = "lts"
+ni = "latest"
+node = "lts"
+opencode = "latest"
+pi = "latest"
+pnpm = "latest"
+vercel = { version = "latest", allow_builds = ["esbuild"], trust_policy_excludes = ["undici"] }
+yarn = "latest"
 ```
 
-A `mise.toml` or `.tool-versions` in the project overrides it.
+Global values are only fallbacks. A project's `mise.toml`, `.node-version` or the `packageManager` field in `package.json` overrides them.
 
-### package.json fields are off by default
+- Java projects that need JDK 8 or 17 declare it in the project's `mise.toml`.
+- Yarn 1 repositories must declare their version in `packageManager`. Otherwise Yarn 4 migrates the lockfile to the Berry format.
+- For `minimum_release_age` and the exceptions on the `vercel` line, see [Supply-chain checks](#supply-chain-checks).
 
-`.nvmrc`, `.node-version` and the package.json fields are what mise calls idiomatic version files,
-and they are **all disabled by default**. Enable them explicitly:
+### Read versions from package.json
+
+mise calls `.nvmrc`, `.node-version` and the version fields in `package.json` idiomatic version files. They are all disabled by default. Enable them explicitly:
 
 ```toml
 [settings]
 idiomatic_version_file_enable_tools = ["node", "pnpm", "npm", "yarn"]
 ```
 
-Once enabled, mise reads the `packageManager` and `devEngines` fields
-([jdx/mise#8059](https://github.com/jdx/mise/pull/8059)) — enough to replace corepack for
-per-project pnpm versions.
+Once enabled, mise reads the `packageManager` and `devEngines` fields ([jdx/mise#8059](https://github.com/jdx/mise/pull/8059)). This is enough to replace corepack for per-project pnpm versions.
 
-**It does not read the traditional `engines.node`.** That PR
-([#2288](https://github.com/jdx/mise/pull/2288)) was never merged. fnm's `--resolve-engines` reads
-exactly that field, so the capability is lost in the migration — projects relying on `engines.node`
-need `devEngines.runtime` or a `.node-version` instead.
+mise does not read the traditional `engines.node`; the PR for it ([#2288](https://github.com/jdx/mise/pull/2288)) was not merged. Projects that rely on `engines.node` need `devEngines.runtime` or a `.node-version` file instead.
 
-## The GitHub API Rate Limit
+### Enable completions
 
-mise queries the GitHub Releases API to resolve versions, and the anonymous quota is only **60
-requests per hour**. Once exhausted, every install fails:
+Load mise completions as follows:
 
+1. Declare the `usage` tool. The completion script calls the `usage` CLI at runtime. Homebrew installs it along with mise; the official installer and winget do not:
+
+   ```toml
+   [tools]
+   usage = "latest"
+   ```
+
+2. Load completions after `activate`. `usage` is managed by mise and is not on PATH before activation. Otherwise every new shell prints `usage CLI not found`:
+
+   ```powershell
+   (&mise activate pwsh) | Out-String | Invoke-Expression
+   mise completion powershell | Out-String | Invoke-Expression
+   ```
+
+On Windows, when PowerShell is the OpenSSH default shell, that warning makes scp fail.
+
+### Supply-chain checks
+
+mise's `npm:` backend installs through the embedded aube by default. aube runs three supply-chain checks:
+
+- **Trust downgrade check**: blocks a dependency whose newer version lost its trusted-publisher evidence.
+- **Build script approval**: follows pnpm's build approval model. A dependency's `preinstall`, `install` and `postinstall` do not run by default. Your own project's scripts still run.
+- **Release-age gate**: `minimum_release_age`, 24h by default. Only versions published longer ago than the threshold are installed, giving the community time to catch a compromised release. It mirrors pnpm's `minimumReleaseAge` and Renovate's equivalent.
+
+The three checks are independent. When the trust policy blocks an install, changing `minimum_release_age` has no effect.
+
+When an install is blocked, add the narrowest per-package exception instead of a global switch. See [Troubleshooting](#troubleshooting).
+
+`npm.shell_out = true` (use the npm CLI) and `npm.package_manager = "pnpm"` both bypass the trust policy for every package. The docs label `shell_out` a last resort. `npm.shell_out` still passes `--ignore-scripts` to npm, so it does not solve the build-script problem either.
+
+| Backend                | Trust policy | Build scripts           |
+| ---------------------- | ------------ | ----------------------- |
+| `auto` (default, aube) | yes          | denied + `allow_builds` |
+| `pnpm`                 | no           | denied + `allow_builds` |
+| `npm.shell_out`        | no           | `--ignore-scripts`      |
+
+## Usage
+
+### Migrate from fnm
+
+fnm options and their mise equivalents:
+
+| fnm                                                      | mise                                                                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `fnm env --use-on-cd`                                    | `mise activate` (chpwd hook built in)                                                 |
+| `--version-file-strategy=recursive`                      | searches upward by default                                                            |
+| `--corepack-enabled` + corepack reading `packageManager` | mise reads `packageManager` directly; corepack layer can go                           |
+| `--resolve-engines` (reads `engines.node`)               | no equivalent, see [Read versions from package.json](#read-versions-from-packagejson) |
+| `aliases/default/bin` fallback                           | `shims`, and they switch per project                                                  |
+
+Uninstall fnm and remove its data:
+
+1. Check that no process is using fnm's node:
+
+   ```powershell
+   Get-Process node -EA SilentlyContinue | Where-Object { $_.Path -like "*fnm*" }
+   ```
+
+   A running node holds the exe inside `node-versions` open. `Remove-Item` silently skips those files and leaves a directory that will not delete.
+
+2. Delete the data directories. node installs live in `%APPDATA%\fnm` (Windows) or `~/.local/share/fnm`. Multishells live in `%LOCALAPPDATA%\fnm_multishells` or `~/.local/state/fnm_multishells`.
+
+   Multishells are junctions. Removing a link does not affect running processes, but those processes fail when they later spawn a child.
+
+3. On Windows, uninstall the winget fnm package separately. Open a normal, non-elevated local PowerShell and run:
+
+   ```powershell
+   winget uninstall --id Schniz.fnm --exact
+   ```
+
+   An elevated session fails with:
+
+   ```text
+   The package installed for user scope cannot be uninstalled when running with administrator privileges.
+   ```
+
+   SSH sessions are elevated by default, so run it locally.
+
+## Troubleshooting
+
+### self-update fails on a Homebrew install
+
+Running `mise self-update` on a Homebrew install fails with:
+
+```text
+mise ERROR mise is installed via a package manager, cannot update
 ```
+
+Cause: builds from package managers such as Homebrew cannot self-update and lag behind releases.
+
+Fix: uninstall the package-manager build and install with the [official installer](#install-on-macos-and-linux).
+
+### Installs fail with GitHub rate limit exceeded
+
+Every install fails with:
+
+```text
 mise WARN  GitHub rate limit exceeded
 mise WARN  [pnpm/pnpm] failed to fetch version tags: HTTP status client error (403 Forbidden)
 ```
 
-mise reads a token from the gh CLI's `hosts.yml` by default (`github.gh_cli_tokens` is true).
-**But when gh stores its token in the system keyring, `hosts.yml` holds nothing**, so that path
-yields no token:
+Cause: mise queries the GitHub Releases API to resolve versions, and the anonymous quota is 60 requests per hour. mise reads a token from the gh CLI's `hosts.yml` by default (`github.gh_cli_tokens` is true). When gh stores its token in the system keyring, `hosts.yml` has no token.
+
+Confirm the token is in the keyring:
 
 ```sh
 gh auth status     # ✓ Logged in ... (keyring)
 grep token ~/.config/gh/hosts.yml    # nothing
 ```
 
-Fetch it on demand instead — the token never touches disk or the environment:
+Fix: in `~/.config/mise/config.toml`, fetch the token on demand with a command:
 
 ```toml
 [settings.github]
 credential_command = "gh auth token"
 ```
 
-It exists only for the instant mise needs it, which is a different thing from `export`ing a
-credential into every child process.
+The token is fetched only when mise needs it. It is not written to disk or exported to the environment.
 
-## Completions Need usage, in the Right Order
+### Install fails with trust downgrade
 
-mise's completion script shells out to the `usage` CLI at runtime. Homebrew pulls it in as a
-dependency; the official installer and winget do not, so declare it:
+Installing an npm tool fails with:
 
-```toml
-[tools]
-usage = "latest"
-```
-
-There is a second trap: **`activate` must come before the completions**. `usage` is itself a
-mise-managed tool, so before activation it is not on PATH, and every new shell prints:
-
-```
-WARNING: Error: usage CLI not found. This is required for completions to work in mise.
-```
-
-Correct order:
-
-```powershell
-(&mise activate pwsh) | Out-String | Invoke-Expression   # activate first
-
-$__f = "$__cacheDir\mise-completions.ps1"                 # completions after, cached
-$__src = (Get-Command mise -ErrorAction SilentlyContinue).Source
-if ($__src -and ((-not (Test-Path $__f)) -or (Get-Item $__src).LastWriteTime -gt (Get-Item $__f).LastWriteTime)) {
-    mise completion powershell | Out-String | Set-Content $__f -Encoding utf8
-}
-if (Test-Path $__f) { . $__f }
-```
-
-On Windows that warning is more than cosmetic — with PowerShell as `DefaultShell`, **any profile
-output to stdout breaks scp/sftp**:
-
-```
-scp: Received message too long 458961715
-scp: Ensure the remote shell produces no output for non-interactive sessions.
-```
-
-Fix the order, the warning goes away, and scp works again immediately.
-
-## Three Layers of Supply-Chain Checks {#supply-chain}
-
-mise's `npm:` backend installs through the embedded **aube**, which brings three supply-chain
-checks. Some tools get blocked by them — when that happens, **do not reach for a global switch**;
-add the narrowest per-package exception instead.
-
-### The two ways it blocks an install
-
-**1. Trust downgrade**
-
-```
+```text
 trust downgrade for @smithy/core@3.33.0 (trustPolicy=no-downgrade):
 earlier published version 3.24.6 had trusted publisher but this version has no trust evidence
 ```
 
-An indirect dependency's older release carried trusted-publisher evidence while the newer one
-does not, so aube treats it as a downgrade. Common causes are a manual publish, a backport that
-skipped the trusted workflow, or a mirror that strips metadata — not necessarily tampering. The
-AWS SDK's `@smithy/*` family behaves this way, and pinning one version at a time never ends, so
-exempt the whole family by **bare package name**:
+Cause: an indirect dependency's older release carried trusted-publisher evidence and the newer one does not. Common causes are a manual publish, a backport that skipped the trusted workflow, or a mirror that strips metadata. It is not necessarily tampering. The AWS SDK's `@smithy/*` family behaves this way.
+
+Fix: exempt the packages with `trust_policy_excludes`. Replace `some-tool` with the package you are installing:
 
 ```toml
 [tools]
 "npm:some-tool" = { version = "latest", trust_policy_excludes = ["@smithy/core", "@smithy/node-http-handler"] }
 ```
 
-With a version it exempts only that version; a bare name exempts every version.
+A name with a version exempts only that version; a bare name exempts every version of the package. For frequently released families such as `@smithy/*`, use bare names.
 
-**2. Build scripts denied**
+### Installed tool reports it is not compatible with Windows
 
-aube follows pnpm's build approval model: a dependency's `preinstall` / `install` / `postinstall`
-**does not run** unless allowlisted (your own project's scripts still run). Packages that fetch a
-platform binary in postinstall end up **half-installed**:
+A tool installed through the `npm:` backend fails to run with:
 
 ```powershell
 # the resulting opencode.exe is 479 bytes
 This version of opencode.exe is not compatible with the version of Windows you're running…
 ```
 
-That message is badly misleading — nothing is wrong with the architecture. Those 479 bytes are
-not a PE file at all but the author's "postinstall did not run" notice (header `ec`, not `MZ`).
-Allow it:
+Cause: the package downloads a platform binary in postinstall, and aube does not run dependency build scripts by default. The 479-byte file is not a PE file (header `ec`, not `MZ`). It is the author's "postinstall did not run" notice. The architecture is not the problem.
+
+Fix: allow the package's build scripts with `allow_builds`:
 
 ```toml
 "npm:opencode-ai" = { version = "latest", allow_builds = true }
 ```
 
-`allow_builds` also takes an array to permit specific dependencies only: `allow_builds = ["esbuild"]`.
+`allow_builds` also takes an array to allow specific dependencies only: `allow_builds = ["esbuild"]`.
 
-### Two escape hatches to avoid {#avoid-global-switches}
+### Newly published version fails to install
 
-mise also offers `npm.shell_out = true` (use the npm CLI) and `npm.package_manager = "pnpm"`.
-Both bypass the trust policy — at the cost of **dropping the checks for every package to unblock
-one**. The docs themselves label `shell_out` a last resort.
+An npm package you just published cannot be installed for verification.
 
-| Backend                | Trust policy | Build scripts           | When to use |
-| ---------------------- | ------------ | ----------------------- | ----------- |
-| `auto` (default, aube) | yes          | denied + `allow_builds` | always      |
-| `pnpm`                 | no           | denied + `allow_builds` | not needed  |
-| `npm.shell_out`        | no           | `--ignore-scripts`      | not needed  |
+Cause: `minimum_release_age` defaults to 24h, so only versions published more than 24 hours ago are installed.
 
-Note that `npm.shell_out` still passes `--ignore-scripts` to npm, so it does not even solve the
-build-script problem.
-
-### The release-age gate {#minimum-release-age}
-
-The third layer is `minimum_release_age`, defaulting to **24h**: only versions published longer
-ago than the threshold are installed, giving the community time to catch a compromised release
-(mirroring pnpm's `minimumReleaseAge` and Renovate's equivalent).
-
-It gets in the way if you publish npm packages yourself — a version you just published cannot be
-installed for verification. Two ways around it:
+Fix: use either option. Replace `@your-scope` with your npm scope:
 
 ```toml
 # turn it off globally
@@ -270,44 +293,18 @@ minimum_release_age = "24h"
 minimum_release_age_excludes = ["npm:@your-scope/*"]
 ```
 
-This layer is **independent** of the other two — when a trust policy blocks an install, changing
-this setting has no effect whatsoever.
+### mise reports not trusted inside a config repository
 
-## Migrating From fnm
+After you `cd` into a repository that backs up your configuration, mise reports `not trusted`, and node and pnpm stop working in that directory.
 
-| fnm                                                      | mise                                                        |
-| -------------------------------------------------------- | ----------------------------------------------------------- |
-| `fnm env --use-on-cd`                                    | `mise activate` (chpwd hook built in)                       |
-| `--version-file-strategy=recursive`                      | searches upward by default                                  |
-| `--corepack-enabled` + corepack reading `packageManager` | mise reads `packageManager` directly; corepack layer can go |
-| `--resolve-engines` (reads `engines.node`)               | **no equivalent**, see above                                |
-| `aliases/default/bin` fallback                           | `shims`, and they switch per project                        |
+Cause: the repository contains its own `.config/mise/config.toml`, and mise loads it as a project config.
 
-After uninstalling, clear the data directories: fnm keeps node under `%APPDATA%\fnm` (Windows) or
-`~/.local/share/fnm`, and multishells under `%LOCALAPPDATA%\fnm_multishells` /
-`~/.local/state/fnm_multishells`.
+Fix: ignore that file with an environment variable. This is an early-init setting, so it has no effect in `mise.toml`. Add to `~/.zshenv`, and replace the path with your repository's location:
 
-**Check for running processes first**:
-
-```powershell
-Get-Process node -EA SilentlyContinue | Where-Object { $_.Path -like "*fnm*" }
+```sh
+export MISE_IGNORED_CONFIG_PATHS="$HOME/i/guanyme/config/.config/mise/config.toml"
 ```
 
-A running node holds the exe inside `node-versions` open, and `Remove-Item` silently skips those
-files, leaving a directory that will not delete. The multishells are junctions: removing the link
-does not disturb already-running processes (their file handles stay valid), but those processes
-will fail once they try to spawn a child.
+## References
 
-On Windows the winget package needs a separate uninstall, and it **cannot be done from an elevated
-session**:
-
-```
-The package installed for user scope cannot be uninstalled when running with administrator privileges.
-```
-
-SSH sessions are elevated by default, so run `winget uninstall --id Schniz.fnm --exact` from a
-normal local PowerShell.
-
-## config
-
-[⚙︎ Guany config](https://github.com/guanyme/config)
+- [Guany config](https://github.com/guanyme/config): the configuration repository that contains the mise config on this page.

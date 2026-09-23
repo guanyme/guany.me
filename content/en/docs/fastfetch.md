@@ -1,24 +1,34 @@
+---
+description: 'fastfetch system info tool: install and run it on macOS, Windows and Ubuntu.'
+---
+
 # fastfetch
 
-Fastfetch is a neofetch-like system information fetching tool, but much faster.
+fastfetch is a neofetch-like system information tool that runs faster. This page covers installing it on macOS, Windows and Ubuntu and basic usage.
 
 ## Installation
 
-### macOS (Homebrew)
+Choose the method for your operating system.
+
+### Install on macOS
+
+Install with Homebrew:
 
 ```sh
 brew install fastfetch
 ```
 
-### Windows (winget)
+### Install on Windows
 
-```sh
+Install with winget:
+
+```powershell
 winget install fastfetch
 ```
 
-### Ubuntu (PPA)
+### Install on Ubuntu
 
-The commands below assume you are already running in a root shell.
+In a root shell, add the Fastfetch PPA, update the package list, then install:
 
 ```sh
 # Add the Fastfetch PPA
@@ -32,6 +42,12 @@ apt install fastfetch
 ```
 
 ## Usage
+
+fastfetch runs without arguments.
+
+### Show system information
+
+Run:
 
 ```sh
 fastfetch

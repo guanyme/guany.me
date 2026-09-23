@@ -1,10 +1,18 @@
-# docker
+---
+description: '在 Ubuntu 上安装 Docker Engine，并为拉取镜像、容器和构建配置代理。'
+---
 
-Docker
+# Docker
 
-## 设置 Docker 的 apt 存储库 {#setup-docker-apt-repository}
+Docker 是容器运行平台。本页介绍在 Ubuntu 上从 apt 存储库安装 Docker Engine，以及为 Docker 配置代理。
 
-### 官方 {#official}
+## 安装 {#installation}
+
+先添加一个 Docker 的 apt 存储库，再安装 Docker 包。下面的命令在 root shell 下执行。
+
+### 添加官方 apt 存储库 {#add-the-official-apt-repository}
+
+添加 Docker 官方 GPG 密钥和存储库：
 
 ```sh
 # Add Docker's official GPG key:
@@ -25,7 +33,9 @@ EOF
 apt update
 ```
 
-### 阿里云公网镜像 {#aliyun-public-mirror}
+### 添加阿里云公网镜像存储库 {#add-the-alibaba-cloud-public-mirror-repository}
+
+使用阿里云公网镜像时，改用以下命令：
 
 ```sh
 # Add Docker's official GPG key:
@@ -46,7 +56,9 @@ EOF
 apt update
 ```
 
-### 阿里云 ECS VPC 镜像 {#aliyun-ecs-vpc-mirror}
+### 添加阿里云 ECS VPC 镜像存储库 {#add-the-alibaba-cloud-ecs-vpc-mirror-repository}
+
+在阿里云 ECS 上，可以改用 VPC 内网镜像：
 
 ```sh
 # Add Docker's official GPG key:
@@ -67,61 +79,69 @@ EOF
 apt update
 ```
 
-## 安装 Docker 包 {#install-docker-packages}
+### 安装 Docker 包 {#install-docker-packages}
+
+添加存储库后，安装 Docker Engine 及插件：
 
 ```sh
 apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-## 配置 Docker Engine 的拉取代理 {#configure-docker-engine-pull-proxy}
+## 配置 {#configuration}
 
-如果 `docker pull` 需要走代理，优先配置 Docker Engine（`dockerd`）本身的代理。对于使用 `systemd` 的 Linux，一般有两种方式。下面这些宿主机级别的命令默认在 root shell 下执行。
+`docker pull`、`docker push` 等请求由 Docker Engine（`dockerd`）发起，需要给 `dockerd` 配置代理。以下方式任选其一，适用于使用 `systemd` 的 Linux 上的 Docker Engine。Docker Desktop 不使用这里的 `daemon.json` 代理设置。
 
-### 方式一：`daemon.json` {#daemon-json}
+`NO_PROXY` 建议包含内网域名、私有镜像仓库地址、`localhost` 和 `127.0.0.1`。
 
-Docker Engine 23.0+ 可以直接在 `/etc/docker/daemon.json` 中配置代理：
+### 在 daemon.json 中配置拉取代理 {#configure-a-pull-proxy-in-daemonjson}
 
-```json
-{
-  "proxies": {
-    "http-proxy": "http://127.0.0.1:7890",
-    "https-proxy": "http://127.0.0.1:7890",
-    "no-proxy": "localhost,127.0.0.1,.local,.corp"
-  }
-}
-```
+Docker Engine 23.0+ 支持在 `daemon.json` 中配置代理。`daemon.json` 中的代理配置优先级高于环境变量配置。
 
-保存后重启 Docker：
+1. 在 `/etc/docker/daemon.json` 里写入：
 
-```sh
-systemctl restart docker
-```
+   ```json
+   {
+     "proxies": {
+       "http-proxy": "http://127.0.0.1:7890",
+       "https-proxy": "http://127.0.0.1:7890",
+       "no-proxy": "localhost,127.0.0.1,.local,.corp"
+     }
+   }
+   ```
 
-### 方式二：`systemd` 服务环境变量 {#systemd-service-proxy}
+2. 重启 Docker：
 
-如果更习惯按服务配置，也可以给 `docker.service` 添加代理环境变量：
+   ```sh
+   systemctl restart docker
+   ```
 
-```sh
-mkdir -p /etc/systemd/system/docker.service.d
-tee /etc/systemd/system/docker.service.d/http-proxy.conf <<'EOF'
-[Service]
-Environment="HTTP_PROXY=http://127.0.0.1:7890"
-Environment="HTTPS_PROXY=http://127.0.0.1:7890"
-Environment="NO_PROXY=localhost,127.0.0.1,.local,.corp"
-EOF
-systemctl daemon-reload
-systemctl restart docker
-```
+### 用 systemd 环境变量配置拉取代理 {#configure-a-pull-proxy-with-systemd}
 
-查看是否生效：
+给 `docker.service` 添加代理环境变量。代理地址含 `#?!()[]{}` 等特殊字符时，按 Docker 官方文档转义。
 
-```sh
-systemctl show --property=Environment docker
-```
+1. 在 root shell 下写入配置并重启 Docker：
 
-### Rootless Docker {#rootless-docker-proxy}
+   ```sh
+   mkdir -p /etc/systemd/system/docker.service.d
+   tee /etc/systemd/system/docker.service.d/http-proxy.conf <<'EOF'
+   [Service]
+   Environment="HTTP_PROXY=http://127.0.0.1:7890"
+   Environment="HTTPS_PROXY=http://127.0.0.1:7890"
+   Environment="NO_PROXY=localhost,127.0.0.1,.local,.corp"
+   EOF
+   systemctl daemon-reload
+   systemctl restart docker
+   ```
 
-如果是 rootless Docker，`systemd` 配置目录改为当前用户目录，并且使用当前用户执行：
+2. 确认环境变量已加载：
+
+   ```sh
+   systemctl show --property=Environment docker
+   ```
+
+### 为 rootless Docker 配置拉取代理 {#configure-a-pull-proxy-for-rootless-docker}
+
+rootless Docker 的 `systemd` 配置放在当前用户目录下。以当前用户执行：
 
 ```sh
 mkdir -p ~/.config/systemd/user/docker.service.d
@@ -135,18 +155,13 @@ systemctl --user daemon-reload
 systemctl --user restart docker
 ```
 
-说明：
+## 使用 {#usage}
 
-- `daemon.json` 中的代理配置优先级高于环境变量配置。
-- `NO_PROXY` 建议加入内网域名、私有镜像仓库地址、`localhost` 和 `127.0.0.1`。
-- 如果代理地址里包含 `#?!()[]{}` 等特殊字符，写入 `systemd` 环境变量时需要按 Docker 官方说明做转义。
-- 上述配置适用于 Docker Engine；Docker Desktop 不使用这里的 `daemon.json` 代理设置。
+`dockerd` 的代理只作用于守护进程自己的请求。容器内访问外网、`docker build` 下载依赖，需要在命令里另行传入代理。
 
-## 配置容器和构建的代理 {#configure-container-and-build-proxy}
+### 为容器设置代理 {#run-a-container-with-a-proxy}
 
-仅配置 `dockerd` 只能解决 `docker pull`、`docker push` 之类由守护进程发起的请求。若容器内访问外网或 `docker build` 拉依赖也要走代理，还需要额外配置客户端侧代理。
-
-### 临时为容器设置代理 {#temporary-container-proxy}
+用 `-e` 传入代理环境变量：
 
 ```sh
 docker run --rm \
@@ -156,21 +171,20 @@ docker run --rm \
   alpine env | grep -i _PROXY
 ```
 
-### 临时为构建设置代理 {#temporary-build-proxy}
+### 为构建设置代理 {#build-an-image-with-a-proxy}
+
+用 `--build-arg` 传入代理，不要把代理写进 Dockerfile 的 `ENV`：
 
 ```sh
 docker build \
   --build-arg HTTP_PROXY=http://127.0.0.1:7890 \
   --build-arg HTTPS_PROXY=http://127.0.0.1:7890 \
   --build-arg NO_PROXY=localhost,127.0.0.1,.local,.corp \
- .
+  .
 ```
 
-说明：
+代理地址可能含认证信息，不要提交到仓库。
 
-- 构建阶段优先使用 `--build-arg`，不要把代理直接写进 Dockerfile 的 `ENV`。
-- 代理信息可能包含敏感内容，不建议把带认证信息的代理地址提交到仓库。
+## 参考 {#references}
 
-## 配置阿里云镜像加速器 {#configure-aliyun-mirror-accelerator}
-
-[容器镜像服务控制台](https://cr.console.aliyun.com/)
+- [阿里云容器镜像服务控制台](https://cr.console.aliyun.com/)：获取并配置阿里云镜像加速器。

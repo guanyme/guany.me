@@ -1,86 +1,94 @@
-# ollama
+---
+description: 'Configure the Ollama bind address and CORS origins for LAN and cross-origin access.'
+---
 
-Ollama CORS & LAN Access
+# Ollama
 
-## Environment Variables
+Ollama runs large language models locally. This page covers enabling LAN access and cross-origin (CORS) access to Ollama on macOS, Windows, and Linux.
+
+## Configuration
+
+Ollama uses environment variables to control its bind address and allowed CORS origins. Set the variables for your platform, open the firewall port if needed, then verify.
+
+### Environment variables
+
+Ollama reads these environment variables:
 
 | Variable         | Purpose              | Default                |
 | ---------------- | -------------------- | ---------------------- |
 | `OLLAMA_HOST`    | Bind address         | `127.0.0.1:11434`      |
 | `OLLAMA_ORIGINS` | Allowed CORS origins | `127.0.0.1`, `0.0.0.0` |
 
-Set `OLLAMA_HOST=0.0.0.0:11434` to allow LAN access, and `OLLAMA_ORIGINS=*` to allow all cross-origin requests.
+Set `OLLAMA_HOST=0.0.0.0:11434` to allow LAN access. Set `OLLAMA_ORIGINS=*` to allow all cross-origin requests.
 
-## macOS
+`OLLAMA_ORIGINS` accepts these values:
 
-Ollama runs as a GUI app managed by `launchd`. Environment variables in `~/.zshrc` do **not** affect it.
+| Value                                     | Description           |
+| ----------------------------------------- | --------------------- |
+| `*`                                       | Allow all origins     |
+| `http://localhost:3000`                   | Allow specific origin |
+| `http://localhost:3000,https://myapp.com` | Multiple origins      |
 
-### Set Environment Variables
+### Set environment variables on macOS
 
-```sh
-launchctl setenv OLLAMA_HOST "0.0.0.0:11434"
-launchctl setenv OLLAMA_ORIGINS "*"
-```
+On macOS, Ollama runs as a GUI app managed by `launchd`.
 
-Then quit and relaunch Ollama from the menu bar.
+1. Set the variables with `launchctl`:
 
-> Note: `launchctl setenv` does not persist across reboots. To persist, run `ollama serve` manually or create a LaunchAgent plist.
+   ```sh
+   launchctl setenv OLLAMA_HOST "0.0.0.0:11434"
+   launchctl setenv OLLAMA_ORIGINS "*"
+   ```
 
-### Verify
+2. Quit Ollama from the menu bar and relaunch it.
 
-```sh
-curl http://localhost:11434/api/version
-```
+### Set environment variables on Windows
 
-## Windows
+1. Set user environment variables in PowerShell:
 
-### Set Environment Variables
+   ```powershell
+   [System.Environment]::SetEnvironmentVariable("OLLAMA_HOST", "0.0.0.0:11434", "User")
+   [System.Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS", "*", "User")
+   ```
 
-```powershell
-[System.Environment]::SetEnvironmentVariable("OLLAMA_HOST", "0.0.0.0:11434", "User")
-[System.Environment]::SetEnvironmentVariable("OLLAMA_ORIGINS", "*", "User")
-```
+2. Quit Ollama from the Start menu and relaunch it.
 
-Then quit and relaunch Ollama from the Start menu.
+### Set environment variables on Linux
 
-### Firewall
+On Linux, Ollama runs as a systemd service. Run these steps in a root shell:
+
+1. Edit the service configuration:
+
+   ```sh
+   systemctl edit ollama.service
+   ```
+
+2. Add the following content:
+
+   ```ini
+   [Service]
+   Environment="OLLAMA_HOST=0.0.0.0:11434"
+   Environment="OLLAMA_ORIGINS=*"
+   ```
+
+3. Reload the configuration and restart the service:
+
+   ```sh
+   systemctl daemon-reload
+   systemctl restart ollama
+   ```
+
+### Allow the port in Windows Firewall
+
+Add an inbound rule for TCP port 11434:
 
 ```powershell
 New-NetFirewallRule -DisplayName "Ollama API" -Direction Inbound -Protocol TCP -LocalPort 11434 -Action Allow
 ```
 
-### Verify
+### Allow the port in Linux firewall
 
-```powershell
-curl http://127.0.0.1:11434/api/version
-```
-
-## Linux
-
-Ollama runs as a systemd service. Use `systemctl edit` to configure environment variables. The host-level commands below assume you are already running in a root shell.
-
-### Set Environment Variables
-
-```sh
-systemctl edit ollama.service
-```
-
-Add the following content:
-
-```ini
-[Service]
-Environment="OLLAMA_HOST=0.0.0.0:11434"
-Environment="OLLAMA_ORIGINS=*"
-```
-
-Then reload and restart:
-
-```sh
-systemctl daemon-reload
-systemctl restart ollama
-```
-
-### Firewall
+Allow TCP port 11434 in the firewall you use:
 
 ```sh
 # UFW
@@ -91,16 +99,37 @@ firewall-cmd --permanent --add-port=11434/tcp
 firewall-cmd --reload
 ```
 
-### Verify
+### Verify the configuration
+
+Request the version endpoint. A version number in the response means the service is reachable.
+
+macOS and Linux:
 
 ```sh
 curl http://localhost:11434/api/version
 ```
 
-## OLLAMA_ORIGINS
+Windows:
 
-| Value                                     | Description           |
-| ----------------------------------------- | --------------------- |
-| `*`                                       | Allow all origins     |
-| `http://localhost:3000`                   | Allow specific origin |
-| `http://localhost:3000,https://myapp.com` | Multiple origins      |
+```powershell
+curl http://127.0.0.1:11434/api/version
+```
+
+## Troubleshooting
+
+These are common cases where environment variables do not take effect on macOS.
+
+### Environment variables in zshrc have no effect on macOS
+
+Cause: Ollama is started by `launchd` and does not read `~/.zshrc`.
+
+Fix: set the variables with `launchctl setenv` instead. See [Set environment variables on macOS](#set-environment-variables-on-macos).
+
+### Settings are lost after restarting macOS
+
+Cause: settings made with `launchctl setenv` do not persist across reboots.
+
+Fix: use either method to persist them:
+
+- Run `ollama serve` manually.
+- Create a LaunchAgent plist.

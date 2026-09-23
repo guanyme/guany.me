@@ -1,18 +1,26 @@
+---
+description: 'OpenAI Codex CLI 的全局指令、MCP 服务器、shell 函数和会话续接命令。'
+---
+
 # Codex
 
-OpenAI Codex CLI
+Codex 是 OpenAI 的命令行编码工具（Codex CLI）。本页介绍它的全局指令、MCP 服务器、shell 函数和常用命令。
 
-## AGENTS.md
+## 配置 {#configuration}
 
-配置文件位置：`~/.codex/AGENTS.md`
+Codex 的配置文件都在 `~/.codex` 目录下。
+
+### 全局指令 {#global-instructions}
+
+在 `~/.codex/AGENTS.md` 里写入：
 
 ```markdown
 - Always respond in Chinese-simplified
 ```
 
-## MCP Servers
+### MCP 服务器 {#mcp-servers}
 
-配置文件位置：`~/.codex/config.toml`
+在 `~/.codex/config.toml` 里加上：
 
 ```toml
 [mcp_servers.claude-code]
@@ -28,25 +36,15 @@ command = "npx"
 args = ["shadcn@latest", "mcp"]
 ```
 
-## Command
-
-```sh
-# 继续当前目录最近的一次交互会话
-codex resume --last
-
-# 完全跳过审批和 sandbox，风险极高
-codex --dangerously-bypass-approvals-and-sandbox
-```
-
-`codex resume --last` 默认会按当前工作目录过滤会话，所以进入一个项目目录后执行它，就会优先尝试续接这个目录最近的那次会话。Codex 本身不会在你 `cd` 进入目录时自动弹起续接，但可以用 shell 函数把“先续接，失败再新开”包起来。
-
 ### Shell 函数 {#shell-function}
 
-#### 不自动续接
+用同名 shell 函数包装 `codex`，每次启动自动带上基础参数。把函数加到 `~/.zshrc` 或 PowerShell 的 `$PROFILE` 里。以下两种写法任选其一。
 
-每次都新开会话，只带上基础参数：
+#### 每次新建会话 {#always-start-a-new-session}
 
-**Zsh**
+每次都新开会话，只带上基础参数。
+
+Zsh：
 
 ```zsh
 codex() {
@@ -56,7 +54,7 @@ codex() {
 }
 ```
 
-**PowerShell**
+PowerShell：
 
 ```powershell
 function codex {
@@ -67,11 +65,11 @@ function codex {
 }
 ```
 
-#### 自动续接
+#### 自动续接当前目录的会话 {#resume-the-current-directorys-session-automatically}
 
-优先尝试继续当前目录最近的一次会话，失败则新建对话：
+先尝试继续当前目录最近的一次会话，失败则新建会话。
 
-**Zsh**
+Zsh：
 
 ```zsh
 codex() {
@@ -81,7 +79,7 @@ codex() {
 }
 ```
 
-**PowerShell**
+PowerShell：
 
 ```powershell
 function codex {
@@ -95,3 +93,17 @@ function codex {
     }
 }
 ```
+
+## 使用 {#usage}
+
+常用命令：
+
+```sh
+# 继续当前目录最近的一次交互会话
+codex resume --last
+
+# 完全跳过审批和 sandbox，风险极高
+codex --dangerously-bypass-approvals-and-sandbox
+```
+
+`codex resume --last` 默认按当前工作目录过滤会话。在项目目录里执行它，会续接该目录最近的一次会话。Codex 不会在 `cd` 进入目录时自动续接。需要“先续接，失败再新开”时，用 [shell 函数](#shell-function)实现。

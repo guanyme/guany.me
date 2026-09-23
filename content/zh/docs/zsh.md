@@ -1,34 +1,41 @@
-# zsh
+---
+description: '用 oh-my-zsh、插件和 Starship 配置 Zsh，并排查 PATH 问题'
+---
 
-Zsh
+# Zsh
+
+本页介绍如何用 oh-my-zsh、插件和 Starship 配置 Zsh shell，以及如何排查常见的 PATH 问题。
 
 ## 安装 {#installation}
 
-```sh
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-```
+按顺序安装 oh-my-zsh、插件和 Starship：
 
-```sh
-cd ~/.oh-my-zsh/plugins
-```
+1. 安装 oh-my-zsh：
 
-```sh
-gcl https://github.com/zsh-users/zsh-autosuggestions.git
-```
+   ```sh
+   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+   ```
 
-```sh
-gcl https://github.com/zsh-users/zsh-syntax-highlighting.git
-```
+2. 把 zsh-autosuggestions 和 zsh-syntax-highlighting 克隆到 oh-my-zsh 的插件目录：
 
-```sh
-cd ~
-```
+   ```sh
+   git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.oh-my-zsh/plugins/zsh-autosuggestions
+   git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
+   ```
 
-```sh
-curl -sS https://starship.rs/install.sh | sh
-```
+3. 安装 Starship：
 
-## 使用说明 {#usage}
+   ```sh
+   curl -sS https://starship.rs/install.sh | sh
+   ```
+
+## 配置 {#configuration}
+
+配置写在 `~/.zshrc` 里。插件列表写在 `source $ZSH/oh-my-zsh.sh` 之前，其余配置写在它之后。
+
+### 插件 {#plugins}
+
+在 `~/.zshrc` 里启用插件：
 
 ```sh
 plugins=(
@@ -38,12 +45,19 @@ plugins=(
 )
 ```
 
-不装 `git` 插件 —— 它一次性塞进 197 个别名，实际用到的只有几个，自己定义即可，见 git 文档。
-`zsh-z` 同理，跳转用 `i` 函数就够了。
+不启用 `git` 和 `zsh-z` 插件。git 别名在下面单独定义，目录跳转用下面的 `i` 函数。
+
+### 提示符 {#prompt}
+
+在 `~/.zshrc` 里启用 Starship：
 
 ```sh
 eval "$(starship init zsh)"
 ```
+
+### 函数 {#functions}
+
+在 `~/.zshrc` 里定义 `i` 函数：
 
 ```sh
 i() {
@@ -51,96 +65,130 @@ i() {
 }
 ```
 
-## 别名 {#aliases}
+`i <目录>` 跳到 `~/i` 下的对应目录。
 
-跨机器统一的 ls 别名只有 `la` 一个。git 相关见 git 文档。
+### 别名 {#aliases}
 
-```sh
-alias la='ls -lAh'     # 长格式 + 隐藏项
-```
+oh-my-zsh 自带 `la='ls -lAh'`，以长格式列出包括隐藏项在内的所有文件。
 
-Ubuntu 的 `.bashrc` 默认给的是 `la='ls -A'`（只列隐藏、短格式），语义不同。
-改在**原处** —— 把发行版默认那行注释掉，新值紧跟其后：
+Ubuntu 的 `.bashrc` 默认是 `la='ls -A'`。要得到同样的效果，在 `~/.bashrc` 里改成：
 
 ```sh
-# some more ls aliases
-alias ll='ls -alF'
 # alias la='ls -A'
 alias la='ls -lAh'
-alias l='ls -CF'
 ```
 
-堆在文件末尾也能生效（后定义的赢），但改在原处才看得出「这里换过约定」，
-不然下次读 `.bashrc` 会以为发行版默认还在起作用。
-
-**`ll` 和 `l` 不统一，保持各发行版原样。** oh-my-zsh 给的是 `ll='ls -lh'`、`l='ls -lah'`，
-Ubuntu 给的是 `ll='ls -alF'`、`l='ls -CF'` —— 确实不一致，但既然日常只敲 `la`，
-统一它们没有收益。跨机器对齐的意义在于「换机器不踩空」，而踩空只发生在真正会用的命令上；
-不用的别名统一了没人受益，改动本身反倒是噪音。
-
-oh-my-zsh 自带 `la`，装了就有，不用重复定义。
-
-## 加载顺序 {#load-order}
-
-```
-①  ~/.zshenv       所有 zsh 都读，包括脚本、cron、LaunchAgent
-②  /etc/zprofile   ← macOS 在这里跑 path_helper
-③  ~/.zprofile     登录 shell
-④  /etc/zshrc
-⑤  ~/.zshrc        仅交互式
-```
-
-### path_helper 会重排 PATH {#path-helper}
-
-macOS 的 `/etc/zprofile` 里有这么一段：
+在 `~/.zshrc` 里加上 git 和 `nr` 的别名：
 
 ```sh
-if [ -x /usr/libexec/path_helper ]; then
-	eval `/usr/libexec/path_helper -s`
-fi
+alias g="git"
+alias gaa="git add --all"
+alias gcmsg="git commit --message"
+alias gp="git push"
+alias gl="git pull"
+alias gcl="git clone --recurse-submodules"
+alias grt='cd "$(git rev-parse --show-toplevel)"'
+
+alias nio="ni --prefer-offline"
+alias s="nr start"
+alias d="nr dev"
+alias b="nr build"
+alias bw="nr build --watch"
+alias t="nr test"
+alias tu="nr test -u"
+alias tw="nr test --watch"
+alias w="nr watch"
+alias p="nr play"
+alias c="nr typecheck"
+alias lint="nr lint"
+alias lintf="nr lint --fix"
+alias release="nr release"
+alias re="nr release"
 ```
 
-它把 `/etc/paths` 和 `/etc/paths.d/*` 里的系统路径**整体移到最前面**，`~/.zshenv` 设的用户目录会被压到 `/usr/bin` 之后：
+### 环境变量 {#environment-variables}
 
-```
-仅 ~/.zshenv：    ~/.local/bin  ~/.cargo/bin  /opt/homebrew/bin  …
-经过 .zprofile：  /opt/homebrew/bin  /usr/local/bin  /usr/bin  …  ~/.local/bin
-```
-
-**所以在 macOS 上把 PATH 优先级寄望于 `.zshenv` 是不成立的。** `.zshenv` 只保证「脚本能找到」，真正的优先级必须在 `path_helper` 之后重新确立。
-
-### 非交互登录 shell 会静默降级 {#non-interactive-login}
-
-如果优先级只写在 `.zshrc` 里，同一个命令在两种场景下会解析到不同实现 —— 因为 `.zshrc` 非交互不读：
+在 `~/.zshrc` 里设置编辑器和 PATH：
 
 ```sh
-zsh -lic 'command -v python3; command -v tar'   # 交互：uv 的 python、GNU tar
-zsh -lc  'command -v python3; command -v tar'   # 非交互：homebrew 的 python、bsdtar
+export EDITOR='code'
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-`ssh 本机 '命令'`、LaunchAgent、CI 走的都是后者。GNU tar 与 bsdtar 在 `--wildcards`、`--transform` 上行为不同，交互式调通的命令写进脚本就可能跑不通。
+uv、claude、codex、mise 的官方安装器都装到 `~/.local/bin`。
 
-**修法是把优先级放进 `~/.zprofile`** —— 它在 `path_helper` 之后执行，且交互与非交互登录 shell 都会读：
+### 语言运行时 {#runtimes}
+
+node、pnpm、java 等由 mise 管理。在 `~/.zshrc` 里激活 mise：
 
 ```sh
-typeset -U path fpath
-
-path=(
-  "$HOME/.local/bin"
-  "$HOME/.local/share/mise/shims"                                # 语言运行时的兜底
-  "${HOMEBREW_PREFIX:-/opt/homebrew}/opt/gnu-tar/libexec/gnubin"
-  $path
-)
+eval "$($HOME/.local/bin/mise activate zsh)"
 ```
 
-想连 `zsh -c` 跑的脚本也一致，再在 `~/.zshenv` 里加一份（`typeset -U` 会去重）。
+bun 和 Maven 的配置：
 
-mise 的 shims 放这里同理 —— `mise activate` 只写在 `.zshrc`，非交互根本不执行。
-shims 会自己解析当前目录该用哪个版本，所以非交互下也能按项目切。见 mise 文档。
+```sh
+export MAVEN_HOME="/usr/local/maven"
+export PATH="$MAVEN_HOME/bin:$PATH"
 
-## 命令遮挡 {#shadowing}
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+```
 
-同名可执行文件出现在多个 PATH 目录时，只有最前面那个生效。列出全部重名：
+### 其他启动文件 {#other-startup-files}
+
+Homebrew 写在 `~/.zprofile`：
+
+```sh
+eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+```
+
+### 只给单条命令注入密钥 {#pass-secrets-to-a-single-command}
+
+`.zshrc` 里 `export` 的密钥，所有子进程都能读到。只在需要它的那条命令上临时注入：
+
+```sh
+TAURI_SIGNING_PRIVATE_KEY="$(<~/.tauri/tauri.key)" nr build
+```
+
+## 故障排查 {#troubleshooting}
+
+### 脚本里的 PATH 和终端里不一样 {#path-differs-in-scripts}
+
+zsh 按以下顺序读取启动文件：
+
+```text
+~/.zshenv      所有 zsh，包括脚本、cron、LaunchAgent
+/etc/zprofile  macOS 在这里跑 path_helper
+~/.zprofile    登录 shell
+~/.zshrc       仅交互式
+```
+
+写在 `.zshrc` 里的 PATH 和 `mise activate`，`ssh <主机> '<命令>'`、LaunchAgent、CI 都读不到。macOS 的 `path_helper` 还会把系统路径整体提到最前，打乱 `.zshenv` 里设的顺序。
+
+1. 把 PATH 优先级写进 `~/.zprofile`，它在 `path_helper` 之后执行：
+
+   ```sh
+   typeset -U path fpath
+
+   path=(
+     "$HOME/.local/bin"
+     "$HOME/.local/share/mise/shims"
+     $path
+   )
+   ```
+
+2. 验证交互和非交互 shell 的结果一致：
+
+   ```sh
+   zsh -lic 'command -v python3'   # 交互
+   zsh -lc  'command -v python3'   # 非交互，结果应该一样
+   ```
+
+### 运行的不是预期的同名命令 {#a-command-runs-the-wrong-executable}
+
+PATH 里排在前面的目录优先。列出所有在多个目录里重名的可执行文件：
 
 ```sh
 echo $PATH | tr ':' '\n' | while read -r d; do
@@ -150,53 +198,11 @@ echo $PATH | tr ':' '\n' | while read -r d; do
 done | sort -t'|' -k1,1 | awk -F'|' '$1==p{print $1" <- "$2} {p=$1}'
 ```
 
-统计时**只算可执行文件** —— 目录软链（如 gnu-tar 的 `gnuman`）也带执行位，会造成误报。
+常见的两种情况：
 
-### uv 的 python 与 pip 要一起软链 {#uv-pip}
+- **uv 的 python 和 Homebrew 的 pip 不同源。** `~/.local/bin` 只有 `python3` 的软链时，`pip3` 会落到 Homebrew，装的包 `python3` import 不到。改用 `python3 -m pip`，或者把 uv python 目录下的 `pip` 也软链到 `~/.local/bin`。
+- **两个工具抢一个名字。** Cursor CLI 和 Grok 都会装一个 `agent`，PATH 里排在前面的生效。
 
-`~/.local/bin` 里如果只有 `python`/`python3`，`pip3` 就会落到 Homebrew，于是 `pip3 install` 装的包 `python3` 根本 import 不到：
+## 参考 {#references}
 
-```sh
-python3 -m pip --version   # ~/.local/share/uv/python/.../site-packages/pip
-pip3 --version             # /opt/homebrew/lib/python3.14/site-packages/pip   ← 不同源
-```
-
-uv 的 python 目录里本来就带 pip，补上软链即可：
-
-```sh
-base="$HOME/.local/share/uv/python/cpython-3.14-macos-aarch64-none/bin"
-for f in pip pip3 pip3.14; do ln -s "$base/$f" ~/.local/bin/$f; done
-```
-
-### 上游会抢同一个命令名 {#name-collision}
-
-Cursor 的 CLI 二进制就叫 `agent`，装进 `~/.local/bin`；Grok 的安装器则同时创建 `grok` 和 `agent` 两个软链到 `~/.grok/bin`，指向同一个二进制。两者都占用 `agent`，谁在 PATH 前面谁生效。
-
-这种情况优先保留**只有一个名字的那个**（Cursor 的 `agent` 丢了就没了，Grok 的 `agent` 只是 `grok` 的别名，丢掉零损失）。
-
-## 密钥不要常驻环境变量 {#secrets-on-demand}
-
-在 `.zshrc` 里 `export` 私钥，等于让**所有子进程**都能读到 —— npm 的 postinstall 脚本、CLI 的崩溃上报、agent 的 env dump 都会顺带带走。改成按需注入，密钥只在被包装的那条命令的生命周期内存在：
-
-```sh
-tauri-sign() {
-  local k="$HOME/.tauri/tauri.key" p="$HOME/.tauri/tauri.pass"
-  [ -r "$k" ] || { print -u2 "tauri-sign: 缺少 $k"; return 1 }
-  [ -r "$p" ] || { print -u2 "tauri-sign: 缺少 $p"; return 1 }
-  [ $# -gt 0 ] || { print -u2 "用法: tauri-sign <命令> [参数...]"; return 2 }
-  TAURI_SIGNING_PRIVATE_KEY="$(<"$k")" \
-  TAURI_SIGNING_PRIVATE_KEY_PASSWORD="$(<"$p")" \
-    "$@"
-}
-```
-
-```sh
-tauri-sign nr build
-env | grep -c '^TAURI_SIGNING'   # 平时为 0
-```
-
-密钥文件本身用 `chmod 600`，目录 `chmod 700`。
-
-## config
-
-[⚙︎ Guany config](https://github.com/guanyme/config)
+- [Guany config](https://github.com/guanyme/config)：Guany 的配置仓库。

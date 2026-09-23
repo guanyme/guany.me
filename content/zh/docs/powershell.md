@@ -1,39 +1,93 @@
-# powershell
+---
+description: '安装 PowerShell 7，配置 $PROFILE 里的补全、提示符、别名和函数'
+---
 
-PowerShell
+# PowerShell
+
+本页介绍如何安装 PowerShell 7 及相关工具，在 `$PROFILE` 里配置补全、提示符、别名和函数，并排查 profile 导致的 scp 问题。
 
 ## 安装 {#installation}
+
+用 winget 安装以下工具。
+
+安装 PowerShell 7：
 
 ```powershell
 winget install --id Microsoft.PowerShell
 ```
 
+安装 Starship：
+
 ```powershell
 winget install --id Starship.Starship
 ```
+
+安装 gsudo：
 
 ```powershell
 winget install gerardog.gsudo
 ```
 
-## 使用说明 {#usage}
+## 配置 {#configuration}
+
+以下配置都写在 `$PROFILE` 里。
+
+### 设置补全和提示符 {#set-up-completion-and-the-prompt}
+
+在 `$PROFILE` 里加上 Tab 菜单补全和 Starship 提示符：
 
 ```powershell
 Set-PSReadlineKeyHandler -Key Tab -Function MenuComplete
+
+Invoke-Expression (&starship init powershell)
 ```
 
+### 用函数定义别名 {#define-aliases-as-functions}
+
+PowerShell 的别名不能带参数，所以 `la`、git、`nr` 这些都写成函数。内置别名的优先级比函数高，要先移除 `la`、`gp`（Get-ItemProperty）、`gl`（Get-Location）、`ni`（New-Item），否则调不到同名函数：
+
 ```powershell
-# la —— 对齐 Unix 侧的约定：长格式 + 隐藏项。
-# 只能写成函数 —— PowerShell 的别名不能携带固定参数（这里是 -Force）。
-# 而别名的解析优先级高于函数，所以原有的 Set-Alias la 必须先移除
-Remove-Item Alias:la -Force -ErrorAction Ignore
+foreach ($a in "la", "gp", "gl", "ni") { Remove-Item "Alias:$a" -Force -ErrorAction Ignore }
 
 function la { Get-ChildItem -Force @args }
 ```
 
-`-Force` 对应 Unix 的 `-A`，让 `la` 列出隐藏和系统项。
+`-Force` 会同时列出隐藏文件和系统文件。
 
-不定义 `ll` —— PowerShell 侧本来就没有，跨平台统一只做真正会敲的那个。
+在 `$PROFILE` 里加上 git 和 `nr` 的函数：
+
+```powershell
+function g { git @args }
+function gaa { git add --all @args }
+function gcmsg { git commit --message @args }
+function gp { git push @args }
+function gl { git pull @args }
+function gcl { git clone --recurse-submodules @args }
+function grt {
+    $root = git rev-parse --show-toplevel 2>$null
+    if ($root) { Set-Location $root } else { Write-Warning "不在 git 仓库中" }
+}
+
+function nio { ni --prefer-offline }
+function s { nr start }
+function d { nr dev }
+function b { nr build }
+function bw { nr build --watch }
+function t { nr test }
+function tu { nr test -u }
+function tw { nr test --watch }
+function w { nr watch }
+function p { nr play }
+function c { nr typecheck }
+function lint { nr lint }
+function lintf { nr lint --fix }
+function release { nr release }
+function re { nr release }
+```
+
+### 函数 {#functions}
+
+在 `$PROFILE` 里定义 `i` 函数，跳到 `$HOME\i` 下的对应目录：
 
 ```powershell
 function i {
@@ -45,56 +99,27 @@ function i {
 }
 ```
 
-git 相关不再用 `posh-git` / `git-aliases` 模块，改为自己定义函数，见 git 文档。
+### 语言运行时 {#runtimes}
 
-## 加快启动 {#speed-up-startup}
-
-profile 的开销几乎全花在拉起子进程上。实测 `pwsh -Command "exit"` 的中位值：
-
-|                           | 耗时   |
-| ------------------------- | ------ |
-| `pwsh -NoProfile`（基线） | 151 ms |
-| 优化前                    | 630 ms |
-| 优化后                    | 524 ms |
-
-### starship 会被拉起两次 {#starship-double-init}
-
-`starship init powershell` 的输出只有一行：
+在 `$PROFILE` 里激活 mise：
 
 ```powershell
-Invoke-Expression (& 'C:\Program Files\starship\bin\starship.exe' init powershell --print-full-init | Out-String)
+(&mise activate pwsh) | Out-String | Invoke-Expression
 ```
 
-也就是说执行它的时候会**再调一次 starship**。直接取完整脚本并缓存到文件，省掉这一整轮：
+## 故障排查 {#troubleshooting}
 
-```powershell
-$__cacheDir = "$HOME\.cache\pwsh"
-if (-not (Test-Path $__cacheDir)) { New-Item -ItemType Directory $__cacheDir -Force | Out-Null }
+### profile 有输出会弄坏 scp {#profile-output-breaks-scp}
 
-$__f = "$__cacheDir\starship.ps1"
-$__src = (Get-Command starship -ErrorAction SilentlyContinue).Source
-if ($__src -and ((-not (Test-Path $__f)) -or (Get-Item $__src).LastWriteTime -gt (Get-Item $__f).LastWriteTime)) {
-    starship init powershell --print-full-init | Out-String | Set-Content $__f -Encoding utf8
-}
-if (Test-Path $__f) { . $__f }
+PowerShell 作为 OpenSSH 的 `DefaultShell` 时，scp 和 sftp 失败：
+
+```text
+scp: Received message too long 458961715
+scp: Ensure the remote shell produces no output for non-interactive sessions.
 ```
 
-按二进制的 `LastWriteTime` 决定是否重新生成，`winget upgrade` 之后会自动更新，不用手动清缓存。
+原因是 profile 往 stdout 写了内容。检查 profile 里的 `echo`、`Write-Output` 和会打印警告的命令，删掉或改掉它们。例如 mise 补全放在 `activate` 前面会打印 `usage CLI not found`。
 
-**dot-source 必须写在 profile 顶层。** 把这段包进函数里，`. $__f` 只会作用于函数作用域，
-prompt 定义不到全局，表现就是「缓存跑了但提示符没变」。
+## 参考 {#references}
 
-mise 的补全脚本也用同样的方式缓存，但**必须排在 `mise activate` 之后** ——
-补全运行时要调 `usage`，而 usage 本身是 mise 管的工具，activate 之前不在 PATH 里，
-于是每开一个 shell 都会打一行 `usage CLI not found`。详见 mise 文档。
-
-### 动不了的那部分 {#irreducible-cost}
-
-`Set-PSReadlineKeyHandler` 一行约 183 ms，实际是 **PSReadLine 模块首次加载**的代价，不是设快捷键本身。
-交互式会话里这个模块本来就会加载，把它挪走或延迟只是把耗时推到第一次按键，体感不会变快。
-
-`mise activate` 也不能缓存 —— 它必须每次执行，为当前会话解析版本并挂上目录切换钩子。
-
-## powershell-profile
-
-[⚙︎ Guany Powershell profile](https://github.com/guanyme/powershell-profile/)
+- [Guany PowerShell profile](https://github.com/guanyme/powershell-profile/)：Guany 的 PowerShell profile 仓库。

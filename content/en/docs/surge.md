@@ -1,19 +1,73 @@
+---
+description: 'Surge Agent Skill setup, proxy ports and common surge-cli commands.'
+---
+
 # Surge
 
-Network proxy and rule engine for macOS / iOS. Use `surge-cli` for status checks and policy tweaks; agents can use the bundled Skill for scripted operations.
+Surge is a network proxy and rule engine for macOS / iOS. This page covers installing the bundled Agent Skill, Surge's proxy ports, and using `surge-cli` to check status and switch policies.
 
-## surge-cli
+## Installation
+
+Surge ships `surge-cli` and an Agent Skill in the app. No separate download is needed.
+
+### Install the Agent Skill
+
+Surge ships an Agent Skill inside the app bundle:
+
+`/Applications/Surge.app/Contents/Resources/Skills/surge`
+
+Skill content lives in `~/.agents/skills`, and `~/.claude/skills` holds symlinks to it. This is the same layout as other skills installed with the Skills CLI; Claude Code loads skills from `~/.claude/skills`. Link to the bundle instead of copying it, so the skill updates with Surge.
+
+1. Link the bundled skill into `~/.agents/skills`, then into `~/.claude/skills`:
+
+   ```sh
+   ln -sfn "/Applications/Surge.app/Contents/Resources/Skills/surge" "$HOME/.agents/skills/surge"
+   ln -sfn "../../.agents/skills/surge" "$HOME/.claude/skills/surge"
+   ```
+
+2. Verify the link:
+
+   ```sh
+   test -f "$HOME/.claude/skills/surge/SKILL.md" && echo "Surge skill OK"
+   ```
+
+   The output `Surge skill OK` means the skill is installed.
+
+3. Optional: if you use `~/.cursor/skills`, link it the same way:
+
+   ```sh
+   ln -sfn "../../.agents/skills/surge" "$HOME/.cursor/skills/surge"
+   ```
+
+Notes:
+
+- You do not need to edit `~/.agents/.skill-lock.json`. That file only tracks skills installed from GitHub with `npx skills add`.
+- Cursor loads the same personal skills as Claude Code from `~/.claude/skills`.
+
+## Configuration
+
+Surge's local proxy listens on the following ports.
+
+### Proxy port
+
+Surge listens on **6152** for HTTP and **6153** for SOCKS5 by default. Point the terminal proxy variables and SSH `ProxyCommand` at these two ports.
+
+## Usage
+
+Use `surge-cli` to check Surge's state and change runtime settings.
+
+### Locate surge-cli
 
 Resolve the executable in this order:
 
 1. `surge-cli` on `PATH`
 2. `/Applications/Surge.app/Contents/Applications/surge-cli`
 
-Prefer `--raw` for JSON output. Add `--remote password@host:port` when targeting a remote Surge instance.
+Add `--raw` for machine-readable JSON output. Add `--remote password@host:port` to target a remote Surge instance.
 
-## Common Commands
+### Inspect state
 
-Inspect runtime environment:
+Inspect the runtime environment:
 
 ```sh
 surge-cli --raw environment
@@ -26,38 +80,17 @@ surge-cli --raw dump policy
 surge-cli --raw dump profile
 ```
 
-Apply runtime changes (dump first, then verify with `environment`):
+### Change runtime settings
 
-```sh
-surge-cli --raw set ProxyMode=2
-surge-cli --raw set ProxyGroupSelection.Proxy=HK
-surge-cli --raw set AutoPolicyGroupOverride.Streaming=<nil>
-```
+Dump a snapshot before the change and verify afterwards:
 
-## Agent Skill
+1. Dump the current policy and profile. See [Inspect state](#inspect-state) for the commands.
+2. Apply runtime changes:
 
-Surge ships an Agent Skill inside the app bundle:
+   ```sh
+   surge-cli --raw set ProxyMode=2
+   surge-cli --raw set ProxyGroupSelection.Proxy=HK
+   surge-cli --raw set AutoPolicyGroupOverride.Streaming=<nil>
+   ```
 
-`/Applications/Surge.app/Contents/Resources/Skills/surge`
-
-On this machine, personal skills follow the same layout as [Claude Code](./claude-code): **`~/.agents/skills` holds content**, and **`~/.claude/skills` symlinks into it**. Link to the bundle so the skill updates when Surge is upgraded.
-
-```sh
-ln -sfn "/Applications/Surge.app/Contents/Resources/Skills/surge" "$HOME/.agents/skills/surge"
-ln -sfn "../../.agents/skills/surge" "$HOME/.claude/skills/surge"
-```
-
-Verify:
-
-```sh
-test -f "$HOME/.claude/skills/surge/SKILL.md" && echo "Surge skill OK"
-```
-
-Notes:
-
-- You do not need to edit `~/.agents/.skill-lock.json`; that file tracks skills installed via `npx skills add` from GitHub only.
-- Cursor loads the same personal skills from `~/.claude/skills`. If you use `~/.cursor/skills`, link the same way: `ln -sfn "../../.agents/skills/surge" "$HOME/.cursor/skills/surge"`.
-
-## Proxy Port
-
-Other local tools ([macOS proxy env](./macos), [WSL proxy env](./wsl)) often use **7890** for HTTP/SOCKS; keep that aligned with Surge’s HTTP/SOCKS5 listener.
+3. Run `surge-cli --raw environment` to confirm the change took effect.

@@ -1,13 +1,23 @@
-# claude-code
+---
+description: 'Claude Code 的设置文件、MCP 服务器、常用命令和 shell 函数。'
+---
 
-Claude Code
+# Claude Code
 
-## Settings
+Claude Code 是 Anthropic 的命令行编码工具。本页介绍它的设置文件、MCP 服务器、常用命令和 shell 函数。
 
-配置文件位置：
+## 配置 {#configuration}
 
-- macOS / Linux: `~/.claude/settings.json`
-- Windows: `$HOME\.claude\settings.json`
+Claude Code 的配置分为设置文件、MCP 服务器和可选的 shell 函数。
+
+### 设置 {#settings}
+
+设置文件位置：
+
+- macOS / Linux：`~/.claude/settings.json`
+- Windows：`$HOME\.claude\settings.json`
+
+在设置文件里写入：
 
 ```json
 {
@@ -20,9 +30,9 @@ Claude Code
 }
 ```
 
-## MCP Servers
+### MCP 服务器 {#mcp-servers}
 
-配置文件位置：`~/.claude.json`
+在 `~/.claude.json` 里加上：
 
 ```json
 {
@@ -45,23 +55,15 @@ Claude Code
 }
 ```
 
-## Command
-
-```sh
-# 继续上一次对话
-claude -c
-
-# 跳过权限确认
-claude --dangerously-skip-permissions
-```
-
 ### Shell 函数 {#shell-function}
 
-#### 不自动续接
+用同名 shell 函数包装 `claude`，每次启动自动带上基础参数。把函数加到 `~/.zshrc` 或 PowerShell 的 `$PROFILE` 里。以下两种写法任选其一。
 
-每次都新开对话，只带上基础参数：
+#### 每次新建对话 {#always-start-a-new-conversation}
 
-**Zsh**
+每次都新开对话，只带上基础参数。
+
+Zsh：
 
 ```zsh
 claude() {
@@ -71,7 +73,7 @@ claude() {
 }
 ```
 
-**PowerShell**
+PowerShell：
 
 ```powershell
 function claude {
@@ -82,11 +84,11 @@ function claude {
 }
 ```
 
-#### 自动续接
+#### 自动续接上次对话 {#resume-the-last-conversation-automatically}
 
-优先尝试继续上次对话，失败则新建对话：
+先尝试继续上次对话，失败则新建对话。
 
-**Zsh**
+Zsh：
 
 ```zsh
 claude() {
@@ -96,7 +98,7 @@ claude() {
 }
 ```
 
-**PowerShell**
+PowerShell：
 
 ```powershell
 function claude {
@@ -109,4 +111,16 @@ function claude {
         & $claudePath @baseArgs @args
     }
 }
+```
+
+## 使用 {#usage}
+
+常用命令：
+
+```sh
+# 继续上一次对话
+claude -c
+
+# 跳过权限确认
+claude --dangerously-skip-permissions
 ```
