@@ -1,10 +1,23 @@
 import createMiddleware from 'next-intl/middleware'
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { routing } from './i18n/routing'
 
 const handleI18nRouting = createMiddleware(routing)
 
+// /docs/zsh.md、/zh/docs/zsh.md → 该文档的 Markdown 原文。
+// 不经过 next-intl，免得按浏览器语言被重定向到别的语言版本。
+const docsMarkdownPath = new RegExp(
+  `^(?:/(${routing.locales.join('|')}))?/docs/(.+)\\.md$`,
+)
+
 export function proxy(request: NextRequest) {
+  const match = request.nextUrl.pathname.match(docsMarkdownPath)
+  if (match) {
+    const [, locale = routing.defaultLocale, slug] = match
+    return NextResponse.rewrite(
+      new URL(`/api/docs-md/${locale}/${slug}`, request.url),
+    )
+  }
   return handleI18nRouting(request)
 }
 
@@ -17,5 +30,8 @@ export const config = {
     // the dot-exclusion above would skip them and 404 the unprefixed default-
     // locale URL. Match project routes explicitly so the locale gets injected.
     '/projects/:path*',
+    // 同理，文档地址加 .md 后带点，需要显式匹配才能进到上面的改写
+    '/docs/:path*',
+    '/:locale/docs/:path*',
   ],
 }
