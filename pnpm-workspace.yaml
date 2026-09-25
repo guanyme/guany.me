@@ -3,8 +3,8 @@ allowBuilds:
   '@swc/core': true
   esbuild: true
   msw: true
-  sharp: true
-  unrs-resolver: true
+  sharp: false
+  unrs-resolver: false
 # 安全补丁（Dependabot / pnpm audit）。都是间接依赖、上游还没跟进到修复版的。
 #
 # 每条都**锁在原来的大版本内**，只抬补丁号 / 次版本号。写成「>=修复版」会把
