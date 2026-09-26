@@ -45,9 +45,7 @@ function MarkdownLink({
   // 标题锚点由 rehypeCustomSlug 注入，不该套用正文链接的下划线与主色。
   const isHeadingAnchor =
     (rest as Record<string, unknown>)['data-heading-anchor'] !== undefined
-  const classes = isHeadingAnchor
-    ? className
-    : cn(linkClassName, className)
+  const classes = isHeadingAnchor ? className : cn(linkClassName, className)
   const incomplete = href === 'streamdown:incomplete-link'
 
   if (isHeadingAnchor) {
