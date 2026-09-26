@@ -45,9 +45,7 @@ function MarkdownLink({
   // Heading anchors are injected by rehypeCustomSlug and should not inherit the underline and primary color used for body links.
   const isHeadingAnchor =
     (rest as Record<string, unknown>)['data-heading-anchor'] !== undefined
-  const classes = isHeadingAnchor
-    ? className
-    : cn(linkClassName, className)
+  const classes = isHeadingAnchor ? className : cn(linkClassName, className)
   const incomplete = href === 'streamdown:incomplete-link'
 
   if (isHeadingAnchor) {

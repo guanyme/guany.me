@@ -216,9 +216,7 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
   }
 
   return (
-    <aside
-      className="fixed top-24 hidden max-h-[calc(100vh-6rem)] w-60 flex-col xl:right-4 xl:flex 2xl:right-[calc((100vw-80rem)/2+1rem)]"
-    >
+    <aside className="fixed top-24 hidden max-h-[calc(100vh-6rem)] w-60 flex-col xl:right-4 xl:flex 2xl:right-[calc((100vw-80rem)/2+1rem)]">
       {rawContent && (
         <div className="mb-4 shrink-0">
           <Button
@@ -242,7 +240,10 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
           {/* The scroll container is here, not aside: the copy button and heading need to stay pinned at the top.
               min-h-0 is essential — flex children default to min-height:auto; without it, they won't
               shrink, and overflow will never be triggered. */}
-          <nav ref={navRef} className="min-h-0 flex-1 overflow-y-auto pr-2 pb-8">
+          <nav
+            ref={navRef}
+            className="min-h-0 flex-1 overflow-y-auto pr-2 pb-8"
+          >
             <ul className="space-y-2 text-sm">
               {toc.map((item, index) => (
                 <li
