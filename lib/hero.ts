@@ -1,9 +1,5 @@
 import { cache } from 'react'
-import type {
-  HeroBackground,
-  HeroBackgroundConfig,
-  HomeConfig,
-} from '@/types/hero'
+import type { HeroBackground, HeroBackgroundConfig, HomeConfig } from '@/types/hero'
 import { toMkt } from '@/lib/locale'
 import { fetchWithTimeout } from '@/lib/server-fetch'
 
@@ -14,9 +10,7 @@ function normalizePosition(position?: string): string {
   return trimmed || 'center'
 }
 
-function toCustomBackground(
-  config: HeroBackgroundConfig,
-): HeroBackground | null {
+function toCustomBackground(config: HeroBackgroundConfig): HeroBackground | null {
   if (config.mode !== 'custom') return null
 
   const url = config.url?.trim()
@@ -63,19 +57,15 @@ async function getBingWallpaper(locale: string): Promise<string | null> {
   }
 }
 
-export const getHeroBackground = cache(
-  async (locale: string): Promise<HeroBackground | null> => {
-    const remoteConfig = await getRemoteHeroConfig()
-    const customBackground = remoteConfig
-      ? toCustomBackground(remoteConfig)
-      : null
-    if (customBackground) return customBackground
+export const getHeroBackground = cache(async (locale: string): Promise<HeroBackground | null> => {
+  const remoteConfig = await getRemoteHeroConfig()
+  const customBackground = remoteConfig ? toCustomBackground(remoteConfig) : null
+  if (customBackground) return customBackground
 
-    const url = await getBingWallpaper(locale)
-    if (!url) return null
-    return {
-      url,
-      position: normalizePosition(remoteConfig?.position),
-    }
-  },
-)
+  const url = await getBingWallpaper(locale)
+  if (!url) return null
+  return {
+    url,
+    position: normalizePosition(remoteConfig?.position),
+  }
+})

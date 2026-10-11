@@ -48,9 +48,7 @@ export function rehypeCustomSlug() {
       node.properties = node.properties || {}
       node.properties.id = id
       node.properties.className = [
-        ...(Array.isArray(node.properties.className)
-          ? node.properties.className
-          : []),
+        ...(Array.isArray(node.properties.className) ? node.properties.className : []),
         'group',
       ]
 

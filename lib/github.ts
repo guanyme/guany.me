@@ -57,46 +57,37 @@ export const getRepos = cache(async (): Promise<GitHubRepo[]> => {
 
   const data = await res.json()
 
-  return data
-    .filter((repo: Record<string, unknown>) => !repo.fork && !repo.private)
-    .map(mapRepo)
+  return data.filter((repo: Record<string, unknown>) => !repo.fork && !repo.private).map(mapRepo)
 })
 
-export const getRepo = cache(
-  async (name: string): Promise<GitHubRepo | null> => {
-    if (!token) return null
+export const getRepo = cache(async (name: string): Promise<GitHubRepo | null> => {
+  if (!token) return null
 
-    const username = await getUsername()
-    if (!username) return null
+  const username = await getUsername()
+  if (!username) return null
 
-    const res = await fetchWithTimeout(
-      `https://api.github.com/repos/${username}/${name}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        next: { revalidate: 1800 },
-        timeoutMs: 5000,
-      },
-    )
+  const res = await fetchWithTimeout(`https://api.github.com/repos/${username}/${name}`, {
+    headers: { Authorization: `Bearer ${token}` },
+    next: { revalidate: 1800 },
+    timeoutMs: 5000,
+  })
 
-    if (!res.ok) return null
+  if (!res.ok) return null
 
-    const repo = await res.json()
+  const repo = await res.json()
 
-    // Filter out forked and private repositories
-    if (repo.fork || repo.private) return null
+  // Filter out forked and private repositories
+  if (repo.fork || repo.private) return null
 
-    return mapRepo(repo)
-  },
-)
+  return mapRepo(repo)
+})
 
 // First look up names in the repository list: it already includes full_name, avoiding two sequential requests to getUser → getRepo.
 // Look up separately only if the repository isn't in the list (repositories created after the build).
-export const getRepoByName = cache(
-  async (name: string): Promise<GitHubRepo | null> => {
-    const repos = await getRepos()
-    return repos.find((repo) => repo.name === name) ?? getRepo(name)
-  },
-)
+export const getRepoByName = cache(async (name: string): Promise<GitHubRepo | null> => {
+  const repos = await getRepos()
+  return repos.find((repo) => repo.name === name) ?? getRepo(name)
+})
 
 // File types that can be viewed on GitHub blob pages
 const VIEWABLE_EXTENSIONS = new Set([
@@ -168,12 +159,7 @@ function getBlobUrl(fullName: string, branch: string, path: string): string {
 }
 
 // Resolve a relative path to a full URL
-function resolveUrl(
-  url: string,
-  fullName: string,
-  branch: string,
-  forEmbed: boolean,
-): string {
+function resolveUrl(url: string, fullName: string, branch: string, forEmbed: boolean): string {
   if (!isRelativePath(url)) return url
 
   if (forEmbed) {
@@ -189,26 +175,19 @@ function resolveUrl(
   return getRawUrl(fullName, branch, url)
 }
 
-function processReadmeContent(
-  content: string,
-  fullName: string,
-  branch: string,
-): string {
+function processReadmeContent(content: string, fullName: string, branch: string): string {
   // Handle <picture> tags (dark/light mode images)
   const result = content
-    .replace(
-      /<a\s[^>]*>\s*<picture>([\s\S]*?)<\/picture>\s*<\/a>/gi,
-      (_, inner) => {
-        const darkMatch = inner.match(/srcset=["']([^"']+)["']/)
-        const lightMatch = inner.match(/<img[\s\S]*?src=["']([^"']+)["']/)
-        const altMatch = inner.match(/alt=["']([^"']*)["']/)
-        if (!darkMatch || !lightMatch) return `<picture>${inner}</picture>`
-        const dark = resolveUrl(darkMatch[1], fullName, branch, true)
-        const light = resolveUrl(lightMatch[1], fullName, branch, true)
-        const alt = altMatch?.[1] || ''
-        return `<img class="block dark:hidden" alt="${alt}" src="${light}" />\n<img class="hidden dark:block" alt="${alt}" src="${dark}" />`
-      },
-    )
+    .replace(/<a\s[^>]*>\s*<picture>([\s\S]*?)<\/picture>\s*<\/a>/gi, (_, inner) => {
+      const darkMatch = inner.match(/srcset=["']([^"']+)["']/)
+      const lightMatch = inner.match(/<img[\s\S]*?src=["']([^"']+)["']/)
+      const altMatch = inner.match(/alt=["']([^"']*)["']/)
+      if (!darkMatch || !lightMatch) return `<picture>${inner}</picture>`
+      const dark = resolveUrl(darkMatch[1], fullName, branch, true)
+      const light = resolveUrl(lightMatch[1], fullName, branch, true)
+      const alt = altMatch?.[1] || ''
+      return `<img class="block dark:hidden" alt="${alt}" src="${light}" />\n<img class="hidden dark:block" alt="${alt}" src="${dark}" />`
+    })
     .replace(/<picture>([\s\S]*?)<\/picture>/gi, (_, inner) => {
       const darkMatch = inner.match(/srcset=["']([^"']+)["']/)
       const lightMatch = inner.match(/<img[\s\S]*?src=["']([^"']+)["']/)
@@ -253,10 +232,7 @@ function processReadmeContent(
   )
 }
 
-async function fetchReadmeByName(
-  fullName: string,
-  filename: string,
-): Promise<string | null> {
+async function fetchReadmeByName(fullName: string, filename: string): Promise<string | null> {
   if (!token) return null
   const res = await fetchWithTimeout(
     `https://api.github.com/repos/${fullName}/contents/${filename}`,
@@ -301,42 +277,29 @@ function extractTagline(content: string): string | null {
 }
 
 export const getRepoTagline = cache(
-  async (
-    fullName: string,
-    defaultBranch: string,
-    locale: string,
-  ): Promise<string | null> => {
+  async (fullName: string, defaultBranch: string, locale: string): Promise<string | null> => {
     const readme = await getRepoReadme(fullName, defaultBranch, locale)
     if (!readme) return null
     return extractTagline(readme)
   },
 )
 
-const fetchDefaultReadme = cache(
-  async (fullName: string): Promise<string | null> => {
-    if (!token) return null
-    const res = await fetchWithTimeout(
-      `https://api.github.com/repos/${fullName}/readme`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/vnd.github.raw+json',
-        },
-        next: { revalidate: 3600 },
-        timeoutMs: 5000,
-      },
-    )
-    if (!res.ok) return null
-    return res.text()
-  },
-)
+const fetchDefaultReadme = cache(async (fullName: string): Promise<string | null> => {
+  if (!token) return null
+  const res = await fetchWithTimeout(`https://api.github.com/repos/${fullName}/readme`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github.raw+json',
+    },
+    next: { revalidate: 3600 },
+    timeoutMs: 5000,
+  })
+  if (!res.ok) return null
+  return res.text()
+})
 
 export const getRepoReadme = cache(
-  async (
-    fullName: string,
-    defaultBranch: string,
-    locale?: string,
-  ): Promise<string | null> => {
+  async (fullName: string, defaultBranch: string, locale?: string): Promise<string | null> => {
     if (!token) return null
 
     // For non-default locales, race the localized README and the default one

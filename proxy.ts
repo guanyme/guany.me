@@ -6,17 +6,13 @@ const handleI18nRouting = createMiddleware(routing)
 
 // /docs/zsh.md, /zh/docs/zsh.md → the document's original Markdown source.
 // Bypass next-intl to avoid redirects to another language version based on the browser language.
-const docsMarkdownPath = new RegExp(
-  `^(?:/(${routing.locales.join('|')}))?/docs/(.+)\\.md$`,
-)
+const docsMarkdownPath = new RegExp(`^(?:/(${routing.locales.join('|')}))?/docs/(.+)\\.md$`)
 
 export function proxy(request: NextRequest) {
   const match = request.nextUrl.pathname.match(docsMarkdownPath)
   if (match) {
     const [, locale = routing.defaultLocale, slug] = match
-    return NextResponse.rewrite(
-      new URL(`/api/docs-md/${locale}/${slug}`, request.url),
-    )
+    return NextResponse.rewrite(new URL(`/api/docs-md/${locale}/${slug}`, request.url))
   }
   return handleI18nRouting(request)
 }

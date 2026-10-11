@@ -14,10 +14,7 @@ export async function GET(request: NextRequest) {
   )
 
   if (!res.ok) {
-    return NextResponse.json(
-      { error: 'Failed to fetch Bing wallpaper' },
-      { status: res.status },
-    )
+    return NextResponse.json({ error: 'Failed to fetch Bing wallpaper' }, { status: res.status })
   }
 
   const data: BingWallpaperResponse = await res.json()

@@ -2,9 +2,7 @@
 
 import { useState, useCallback } from 'react'
 
-export function useCopy(
-  timeout = 2000,
-): [boolean, (text: string) => Promise<void>] {
+export function useCopy(timeout = 2000): [boolean, (text: string) => Promise<void>] {
   const [copied, setCopied] = useState(false)
 
   const copy = useCallback(

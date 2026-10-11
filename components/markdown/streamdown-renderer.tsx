@@ -9,9 +9,7 @@ import type { StreamdownRendererProps } from './streamdown-view'
 //
 // Must use dynamic() in a client component: client components imported by a server component are all counted as page
 // dependencies, regardless of which one is actually rendered, so on-demand splitting won't work.
-const StreamdownFull = dynamic(() =>
-  import('./streamdown-full').then((m) => m.StreamdownFull),
-)
+const StreamdownFull = dynamic(() => import('./streamdown-full').then((m) => m.StreamdownFull))
 
 // The math plugin only recognizes $$ (singleDollarTextMath is disabled by default), so checking for $$ is enough.
 function needsFullRenderer(content: string) {

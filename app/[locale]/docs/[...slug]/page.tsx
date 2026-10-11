@@ -1,12 +1,7 @@
 import { notFound } from 'next/navigation'
 import matter from 'gray-matter'
 import { setRequestLocale, getTranslations } from 'next-intl/server'
-import {
-  getDocBySlug,
-  getAllDocs,
-  extractToc,
-  getDocLastUpdated,
-} from '@/lib/mdx'
+import { getDocBySlug, getAllDocs, extractToc, getDocLastUpdated } from '@/lib/mdx'
 import { DocsToc } from '@/components/docs/docs-toc'
 import { DocsFooter } from '@/components/docs/docs-footer'
 import { StreamdownRenderer } from '@/components/markdown/streamdown-renderer'

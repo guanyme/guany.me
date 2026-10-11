@@ -16,11 +16,7 @@ export function CopyCloneButton({ fullName }: CopyCloneButtonProps) {
 
   return (
     <Button variant="outline" size="sm" onClick={() => copy(cloneUrl)}>
-      {copied ? (
-        <Check className="mr-1.5 size-4" />
-      ) : (
-        <Copy className="mr-1.5 size-4" />
-      )}
+      {copied ? <Check className="mr-1.5 size-4" /> : <Copy className="mr-1.5 size-4" />}
       {copied ? t('copied') : t('copyCloneUrl')}
     </Button>
   )

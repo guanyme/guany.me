@@ -13,17 +13,9 @@ const getClientSnapshot = () => true
 const getServerSnapshot = () => false
 
 function useMounted() {
-  return useSyncExternalStore(
-    emptySubscribe,
-    getClientSnapshot,
-    getServerSnapshot,
-  )
+  return useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot)
 }
-import {
-  Streamdown,
-  type PluginConfig,
-  type LinkSafetyModalProps,
-} from 'streamdown'
+import { Streamdown, type PluginConfig, type LinkSafetyModalProps } from 'streamdown'
 import rehypeRaw from 'rehype-raw'
 import { rehypeCustomSlug } from '@/lib/rehype-custom-slug'
 import rehypeUnwrapImages from 'rehype-unwrap-images'
@@ -43,8 +35,7 @@ function MarkdownLink({
 }: ComponentProps<'a'> & { node?: unknown }) {
   const [externalOpen, setExternalOpen] = useState(false)
   // Heading anchors are injected by rehypeCustomSlug and should not inherit the underline and primary color used for body links.
-  const isHeadingAnchor =
-    (rest as Record<string, unknown>)['data-heading-anchor'] !== undefined
+  const isHeadingAnchor = (rest as Record<string, unknown>)['data-heading-anchor'] !== undefined
   const classes = isHeadingAnchor ? className : cn(linkClassName, className)
   const incomplete = href === 'streamdown:incomplete-link'
 
@@ -58,11 +49,7 @@ function MarkdownLink({
 
   if (!href || incomplete) {
     return (
-      <span
-        className={classes}
-        data-incomplete={incomplete || undefined}
-        data-streamdown="link"
-      >
+      <span className={classes} data-incomplete={incomplete || undefined} data-streamdown="link">
         {children}
       </span>
     )
@@ -118,12 +105,7 @@ function MarkdownLink({
 
 const markdownComponents = { a: MarkdownLink }
 
-function LinkSafetyModal({
-  url,
-  isOpen,
-  onClose,
-  onConfirm,
-}: LinkSafetyModalProps) {
+function LinkSafetyModal({ url, isOpen, onClose, onConfirm }: LinkSafetyModalProps) {
   const t = useTranslations('linkSafety')
   if (!isOpen || typeof document === 'undefined') return null
 
@@ -143,9 +125,7 @@ function LinkSafetyModal({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <span className="mb-4 block text-muted-foreground">
-          {t('description')}
-        </span>
+        <span className="mb-4 block text-muted-foreground">{t('description')}</span>
         <div className="mb-4 rounded bg-muted p-3 text-sm break-all">{url}</div>
         <div className="flex gap-2">
           <button

@@ -18,20 +18,12 @@ export function ProjectsSectionSkeleton() {
 }
 
 export async function ProjectsSection() {
-  const [repos, t, locale] = await Promise.all([
-    getRepos(),
-    getTranslations('home'),
-    getLocale(),
-  ])
+  const [repos, t, locale] = await Promise.all([getRepos(), getTranslations('home'), getLocale()])
   const featured = repos.slice(0, 6)
   const enriched = await Promise.all(
     featured.map(async (repo) => ({
       ...repo,
-      tagline: await getRepoTagline(
-        repo.full_name,
-        repo.default_branch,
-        locale,
-      ),
+      tagline: await getRepoTagline(repo.full_name, repo.default_branch, locale),
     })),
   )
 

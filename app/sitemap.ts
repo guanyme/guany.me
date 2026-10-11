@@ -34,9 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const slugs = docsConfig.flatMap((g) => g.items.map((i) => i.slug))
   for (const slug of slugs) {
     const tsKey = `en/docs/${slug}.md`
-    const lastModified = timestamps[tsKey]
-      ? new Date(timestamps[tsKey])
-      : new Date()
+    const lastModified = timestamps[tsKey] ? new Date(timestamps[tsKey]) : new Date()
 
     entries.push({
       url: `${siteUrl}/docs/${slug}`,

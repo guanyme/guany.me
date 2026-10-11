@@ -110,42 +110,31 @@ function normalizeCodeBlocks(content: string): string {
 function resolveRelativeUrls(content: string, sourceUrl: string): string {
   const baseUrl = sourceUrl.substring(0, sourceUrl.lastIndexOf('/') + 1)
 
-  return content.replace(
-    /(!?\[[^\]]*\]\()([^)]+)(\))/g,
-    (match, prefix, url, suffix) => {
-      if (prefix.startsWith('!')) {
-        if (
-          url.startsWith('http://') ||
-          url.startsWith('https://') ||
-          url.startsWith('//')
-        ) {
-          return match
-        }
-        return `${prefix}${new URL(url, baseUrl).href}${suffix}`
-      }
-
-      if (url.startsWith('#')) {
+  return content.replace(/(!?\[[^\]]*\]\()([^)]+)(\))/g, (match, prefix, url, suffix) => {
+    if (prefix.startsWith('!')) {
+      if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
         return match
       }
+      return `${prefix}${new URL(url, baseUrl).href}${suffix}`
+    }
 
-      if (
-        url.startsWith('http://') ||
-        url.startsWith('https://') ||
-        url.startsWith('//')
-      ) {
-        if (url.endsWith('.md')) {
-          return `${prefix}/md?url=${encodeURIComponent(url)}${suffix}`
-        }
-        return match
-      }
+    if (url.startsWith('#')) {
+      return match
+    }
 
-      const absoluteUrl = new URL(url, baseUrl).href
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('//')) {
       if (url.endsWith('.md')) {
-        return `${prefix}/md?url=${encodeURIComponent(absoluteUrl)}${suffix}`
+        return `${prefix}/md?url=${encodeURIComponent(url)}${suffix}`
       }
-      return `${prefix}${absoluteUrl}${suffix}`
-    },
-  )
+      return match
+    }
+
+    const absoluteUrl = new URL(url, baseUrl).href
+    if (url.endsWith('.md')) {
+      return `${prefix}/md?url=${encodeURIComponent(absoluteUrl)}${suffix}`
+    }
+    return `${prefix}${absoluteUrl}${suffix}`
+  })
 }
 
 export default async function MdPage({ params, searchParams }: MdPageProps) {

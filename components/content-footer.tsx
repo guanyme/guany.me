@@ -33,8 +33,7 @@ export async function ContentFooter({
         <EditOnGitHub url={editUrl} locale={locale} />
         {lastUpdated && (
           <span className="text-muted-foreground">
-            {t('lastUpdated')}:{' '}
-            <LocaleTime date={lastUpdated} locale={locale} />
+            {t('lastUpdated')}: <LocaleTime date={lastUpdated} locale={locale} />
           </span>
         )}
       </div>

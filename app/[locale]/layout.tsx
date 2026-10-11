@@ -1,11 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Fira_Code } from 'next/font/google'
 import { notFound } from 'next/navigation'
-import {
-  setRequestLocale,
-  getTranslations,
-  getMessages,
-} from 'next-intl/server'
+import { setRequestLocale, getTranslations, getMessages } from 'next-intl/server'
 import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SiteHeader } from '@/components/layout/site-header'

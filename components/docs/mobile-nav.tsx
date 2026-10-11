@@ -24,18 +24,14 @@ export function MobileNav({ className }: { className?: string }) {
   return (
     <div className={cn('lg:hidden', className)}>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
-        <SheetTrigger
-          render={<Button variant="ghost" size="icon" className="size-9" />}
-        >
+        <SheetTrigger render={<Button variant="ghost" size="icon" className="size-9" />}>
           <Menu className="size-5" />
         </SheetTrigger>
 
         <SheetContent side="left" className="p-0">
           <SheetHeader className="border-b border-border pr-14">
             <SheetTitle>{t('title')}</SheetTitle>
-            <SheetDescription className="sr-only">
-              {t('pageNav')}
-            </SheetDescription>
+            <SheetDescription className="sr-only">{t('pageNav')}</SheetDescription>
           </SheetHeader>
 
           <div className="overflow-y-auto p-4">
@@ -60,9 +56,7 @@ export function MobileNav({ className }: { className?: string }) {
                                 : 'text-muted-foreground hover:bg-accent hover:text-foreground',
                             )}
                           >
-                            {t.has(item.titleKey)
-                              ? t(item.titleKey)
-                              : item.titleKey}
+                            {t.has(item.titleKey) ? t(item.titleKey) : item.titleKey}
                           </Link>
                         </li>
                       )

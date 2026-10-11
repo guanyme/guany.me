@@ -69,11 +69,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
     notFound()
   }
 
-  const readme = await getRepoReadme(
-    repo.full_name,
-    repo.default_branch,
-    locale,
-  )
+  const readme = await getRepoReadme(repo.full_name, repo.default_branch, locale)
 
   const index = repos.findIndex((r) => r.name === slug)
   const prevRepo = index > 0 ? repos[index - 1] : null
@@ -114,13 +110,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             variant="outline"
             size="sm"
             nativeButton={false}
-            render={
-              <a
-                href={repo.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-              />
-            }
+            render={<a href={repo.html_url} target="_blank" rel="noopener noreferrer" />}
           >
             <SimpleIcon icon={siGithub} className="mr-1.5 size-4" />
             GitHub
@@ -130,13 +120,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
               variant="outline"
               size="sm"
               nativeButton={false}
-              render={
-                <a
-                  href={repo.homepage}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
+              render={<a href={repo.homepage} target="_blank" rel="noopener noreferrer" />}
             >
               <ExternalLink className="mr-1.5 size-4" />
               {t('visit')}
@@ -158,16 +142,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
         <ContentFooter
           editUrl={`https://github.com/${repo.full_name}/edit/${repo.default_branch}/${locale !== 'en' ? `README.${locale}.md` : 'README.md'}`}
           locale={locale}
-          prev={
-            prevRepo
-              ? { title: prevRepo.name, href: `/projects/${prevRepo.name}` }
-              : null
-          }
-          next={
-            nextRepo
-              ? { title: nextRepo.name, href: `/projects/${nextRepo.name}` }
-              : null
-          }
+          prev={prevRepo ? { title: prevRepo.name, href: `/projects/${prevRepo.name}` } : null}
+          next={nextRepo ? { title: nextRepo.name, href: `/projects/${nextRepo.name}` } : null}
         />
       </div>
     </div>

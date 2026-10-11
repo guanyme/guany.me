@@ -1,13 +1,7 @@
 import { Suspense } from 'react'
 import { setRequestLocale } from 'next-intl/server'
-import {
-  HeroSection,
-  HeroSectionSkeleton,
-} from '@/components/home/hero-section'
-import {
-  ProjectsSection,
-  ProjectsSectionSkeleton,
-} from '@/components/home/projects-section'
+import { HeroSection, HeroSectionSkeleton } from '@/components/home/hero-section'
+import { ProjectsSection, ProjectsSectionSkeleton } from '@/components/home/projects-section'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { getUser } from '@/lib/github'
 import { getHeroBackground } from '@/lib/hero'
@@ -23,20 +17,12 @@ async function Hero({ locale }: { locale: string }) {
         // hero wallpaper an LCP-friendly preload.
         <link rel="preload" as="image" href={hero.url} fetchPriority="high" />
       )}
-      <HeroSection
-        user={user}
-        backgroundUrl={hero?.url}
-        backgroundPosition={hero?.position}
-      />
+      <HeroSection user={user} backgroundUrl={hero?.url} backgroundPosition={hero?.position} />
     </>
   )
 }
 
-export default async function Home({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
+export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   setRequestLocale(locale)
 

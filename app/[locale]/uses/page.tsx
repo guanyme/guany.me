@@ -7,11 +7,7 @@ import { CopyMarkdownButton } from '@/components/copy-markdown-button'
 import { ContentFooter } from '@/components/content-footer'
 import { getDocLastUpdated } from '@/lib/mdx'
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'uses' })
   return {
@@ -20,11 +16,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function UsesPage({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
+export default async function UsesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   setRequestLocale(locale)
 

@@ -2,11 +2,7 @@ import { setRequestLocale, getTranslations } from 'next-intl/server'
 import { getRepos, getRepoTagline } from '@/lib/github'
 import { ProjectList } from '@/components/home/project-list'
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>
-}) {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
   const t = await getTranslations({ locale, namespace: 'projects' })
   return {
@@ -32,11 +28,7 @@ export default async function ProjectsPage({
   const enriched = await Promise.all(
     repos.map(async (repo) => ({
       ...repo,
-      tagline: await getRepoTagline(
-        repo.full_name,
-        repo.default_branch,
-        locale,
-      ),
+      tagline: await getRepoTagline(repo.full_name, repo.default_branch, locale),
     })),
   )
 

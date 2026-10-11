@@ -5,10 +5,7 @@ export async function GET() {
   const token = process.env.GITHUB_TOKEN
 
   if (!token) {
-    return NextResponse.json(
-      { error: 'GITHUB_TOKEN is not configured' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: 'GITHUB_TOKEN is not configured' }, { status: 500 })
   }
 
   const res = await fetch('https://api.github.com/user', {
@@ -19,10 +16,7 @@ export async function GET() {
   })
 
   if (!res.ok) {
-    return NextResponse.json(
-      { error: 'Failed to fetch GitHub user' },
-      { status: res.status },
-    )
+    return NextResponse.json({ error: 'Failed to fetch GitHub user' }, { status: res.status })
   }
 
   const data = await res.json()

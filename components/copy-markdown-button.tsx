@@ -15,11 +15,7 @@ export function CopyMarkdownButton({ content }: CopyMarkdownButtonProps) {
 
   return (
     <Button variant="outline" size="sm" onClick={() => copy(content)}>
-      {copied ? (
-        <Check className="mr-1.5 size-4" />
-      ) : (
-        <Copy className="mr-1.5 size-4" />
-      )}
+      {copied ? <Check className="mr-1.5 size-4" /> : <Copy className="mr-1.5 size-4" />}
       {copied ? t('copied') : t('copyMarkdown')}
     </Button>
   )

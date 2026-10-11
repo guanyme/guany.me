@@ -54,8 +54,7 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
     // Also, don't use location.hash = x — that makes the browser jump to the anchor, forcibly jolting the page while scrolling,
     // and also triggers the hashchange listener below.
     const syncHash = (id: string) => {
-      if (!userHasScrolled || !id || window.location.pathname !== pathname)
-        return
+      if (!userHasScrolled || !id || window.location.pathname !== pathname) return
       const next = `#${id}`
       if (window.location.hash === next) return
       window.history.replaceState(null, '', next)
@@ -70,9 +69,7 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
     const measure = () => {
       positions = (
         Array.from(
-          document.querySelectorAll(
-            'article h2[id], article h3[id], article h4[id]',
-          ),
+          document.querySelectorAll('article h2[id], article h3[id], article h4[id]'),
         ) as HTMLElement[]
       ).map((h) => ({ id: h.id, top: getAbsoluteTop(h) }))
     }
@@ -188,9 +185,7 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
     const container = navRef.current
     if (!container || !activeId) return
 
-    const link = container.querySelector<HTMLElement>(
-      `a[href="#${CSS.escape(activeId)}"]`,
-    )
+    const link = container.querySelector<HTMLElement>(`a[href="#${CSS.escape(activeId)}"]`)
     if (!link) return
 
     const containerRect = container.getBoundingClientRect()
@@ -201,8 +196,7 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
 
     // Only move when the highlighted item has completely left the viewport. If we instead scrolled when it "neared the edge," the table of contents would
     // jerk back and forth as readers made small adjustments around section boundaries.
-    const fullyVisible =
-      relativeTop >= viewTop && relativeTop + linkRect.height <= viewBottom
+    const fullyVisible = relativeTop >= viewTop && relativeTop + linkRect.height <= viewBottom
     if (fullyVisible) return
 
     // Position it one-third of the way down the visible area to leave room for the context below and reduce how often this is triggered again.
@@ -225,11 +219,7 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
             className="h-8 w-full gap-2 text-xs"
             onClick={() => rawContent && copy(rawContent)}
           >
-            {copied ? (
-              <Check className="size-3.5" />
-            ) : (
-              <Copy className="size-3.5" />
-            )}
+            {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
             {copied ? tCopy('copied') : tCopy('copyMarkdown')}
           </Button>
         </div>
@@ -240,10 +230,7 @@ export function DocsToc({ toc, rawContent }: DocsTocProps) {
           {/* The scroll container is here, not aside: the copy button and heading need to stay pinned at the top.
               min-h-0 is essential — flex children default to min-height:auto; without it, they won't
               shrink, and overflow will never be triggered. */}
-          <nav
-            ref={navRef}
-            className="min-h-0 flex-1 overflow-y-auto pr-2 pb-8"
-          >
+          <nav ref={navRef} className="min-h-0 flex-1 overflow-y-auto pr-2 pb-8">
             <ul className="space-y-2 text-sm">
               {toc.map((item, index) => (
                 <li

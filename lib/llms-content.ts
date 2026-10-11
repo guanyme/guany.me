@@ -57,14 +57,7 @@ export async function buildLlmsContent({
             /\]\(\.\/([a-z0-9-]+)(?:#[^)]*)?\)/g,
             (_, slug) => `](${canonicalOrigin}/docs/${slug}.md)`,
           )
-        lines.push(
-          '---',
-          '',
-          `Source: ${canonicalOrigin}/docs/${item.slug}.md`,
-          '',
-          body,
-          '',
-        )
+        lines.push('---', '', `Source: ${canonicalOrigin}/docs/${item.slug}.md`, '', body, '')
       } else {
         const description = doc.meta.description || ''
         lines.push(
@@ -89,11 +82,7 @@ export async function buildLlmsContent({
         if (repo.language) lines.push(`- Language: ${repo.language}`)
         lines.push(`- Stars: ${repo.stargazers_count}`, '')
 
-        const readme = await getRepoReadme(
-          repo.full_name,
-          repo.default_branch,
-          'en',
-        )
+        const readme = await getRepoReadme(repo.full_name, repo.default_branch, 'en')
         if (readme) {
           lines.push('### README', '', readme.trim(), '')
         }

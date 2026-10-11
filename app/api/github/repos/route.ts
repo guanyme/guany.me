@@ -5,10 +5,7 @@ export async function GET() {
   const repos = await getRepos()
 
   if (repos.length === 0) {
-    return NextResponse.json(
-      { error: 'Failed to fetch GitHub repos' },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: 'Failed to fetch GitHub repos' }, { status: 500 })
   }
 
   // Return only the first 6 projects

@@ -19,11 +19,7 @@ export function ProjectCard({ repo, index }: ProjectCardProps) {
       className="group animate-fade-in-up relative flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary hover:shadow-lg"
       style={{ animationDelay: `${100 + index * 50}ms` }}
     >
-      <Link
-        href={href}
-        className="absolute inset-0 rounded-xl"
-        aria-label={repo.name}
-      />
+      <Link href={href} className="absolute inset-0 rounded-xl" aria-label={repo.name} />
 
       <div className="pointer-events-none relative z-0 flex flex-1 flex-col gap-3">
         {/* Card Header */}

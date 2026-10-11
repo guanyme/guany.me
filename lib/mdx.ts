@@ -72,20 +72,12 @@ function extractTitleFromContent(content: string): string | undefined {
 }
 
 // Get a single document by slug
-export function getDocBySlug(
-  locale: string,
-  subDir: string,
-  slug: string,
-): Doc | null {
+export function getDocBySlug(locale: string, subDir: string, slug: string): Doc | null {
   const docsDir = path.join(contentDir, locale, subDir)
   const mdxPath = path.join(docsDir, `${slug}.mdx`)
   const mdPath = path.join(docsDir, `${slug}.md`)
 
-  const filePath = fs.existsSync(mdxPath)
-    ? mdxPath
-    : fs.existsSync(mdPath)
-      ? mdPath
-      : null
+  const filePath = fs.existsSync(mdxPath) ? mdxPath : fs.existsSync(mdPath) ? mdPath : null
 
   if (!filePath) {
     return null

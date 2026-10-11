@@ -51,11 +51,7 @@ export function HeroSection({
           <h1 className="mb-3 text-4xl font-bold md:text-5xl">Guany</h1>
 
           {/* Bio */}
-          {user?.bio && (
-            <p className="mb-6 max-w-md text-lg text-muted-foreground">
-              {user.bio}
-            </p>
-          )}
+          {user?.bio && <p className="mb-6 max-w-md text-lg text-muted-foreground">{user.bio}</p>}
 
           {/* Stats */}
           <div className="mb-8 flex flex-wrap items-center justify-center gap-6">
@@ -96,18 +92,12 @@ export function HeroSectionSkeleton() {
           <div className="mb-8 h-5 w-72 animate-pulse rounded bg-muted" />
           <div className="mb-8 flex flex-wrap items-center justify-center gap-6">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-5 w-24 animate-pulse rounded bg-muted"
-              />
+              <div key={i} className="h-5 w-24 animate-pulse rounded bg-muted" />
             ))}
           </div>
           <div className="flex gap-3">
             {Array.from({ length: 2 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-10 w-28 animate-pulse rounded-md bg-muted"
-              />
+              <div key={i} className="h-10 w-28 animate-pulse rounded-md bg-muted" />
             ))}
           </div>
         </div>
