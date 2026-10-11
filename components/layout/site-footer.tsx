@@ -24,6 +24,8 @@ export function SiteFooter({ avatar, name }: SiteFooterProps) {
               />
             )}
             <span className="text-sm text-muted-foreground">
+              {/* A copyright year; re-reading it on re-render is harmless and keeps it correct. */}
+              {/* oxlint-disable-next-line react/purity */}
               © {new Date().getFullYear()} {name || 'Guany'}
             </span>
           </div>
