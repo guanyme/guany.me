@@ -270,7 +270,7 @@ function extractTagline(content: string): string | null {
     }
     if (!trimmed) continue
     if (/^[<#|*\->`+]/.test(trimmed)) continue
-    if (/^!\[/.test(trimmed)) continue
+    if (trimmed.startsWith('![')) continue
     return trimmed
   }
   return null
