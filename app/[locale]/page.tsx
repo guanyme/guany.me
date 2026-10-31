@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import { setRequestLocale } from 'next-intl/server'
 import { HeroSection, HeroSectionSkeleton } from '@/components/home/hero-section'
 import { ProjectsSection, ProjectsSectionSkeleton } from '@/components/home/projects-section'
 import { SiteFooter } from '@/components/layout/site-footer'
@@ -24,7 +23,6 @@ async function Hero({ locale }: { locale: string }) {
 
 export default async function Home({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
-  setRequestLocale(locale)
 
   return (
     <>

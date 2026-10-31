@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import matter from 'gray-matter'
-import { setRequestLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 import { getDocBySlug, getAllDocs, extractToc, getDocLastUpdated } from '@/lib/mdx'
 import { DocsToc } from '@/components/docs/docs-toc'
 import { DocsFooter } from '@/components/docs/docs-footer'
@@ -12,7 +12,8 @@ interface DocsPageProps {
   params: Promise<{ locale: string; slug: string[] }>
 }
 
-export const dynamicParams = false
+// Unlisted slugs wait for the full render instead of streaming the shell, so a missing page still answers with a 404 status
+export const ensureStatic = 'navigation'
 
 export async function generateStaticParams() {
   const docs = getAllDocs('en', 'docs')
@@ -46,7 +47,6 @@ export async function generateMetadata({ params }: DocsPageProps) {
 
 export default async function DocsSlugPage({ params }: DocsPageProps) {
   const { locale, slug } = await params
-  setRequestLocale(locale)
 
   const slugPath = slug.join('/')
   const doc = getDocBySlug(locale, 'docs', slugPath)

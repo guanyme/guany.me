@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, ExternalLink } from 'lucide-react'
 import { siGithub } from 'simple-icons'
 import { SimpleIcon } from '@/components/simple-icon'
-import { setRequestLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 import { getRepos, getRepoByName, getRepoReadme } from '@/lib/github'
 import { StreamdownRenderer } from '@/components/markdown/streamdown-renderer'
 import { CopyCloneButton } from '@/components/copy-clone-button'
@@ -17,9 +17,8 @@ interface ProjectPageProps {
   params: Promise<{ locale: string; slug: string }>
 }
 
-// Repositories created after the build aren't in the generateStaticParams list, so allow them to be generated on demand on first access;
-// repositories that don't exist, are forks, or are private return null from getRepo and still go through notFound()
-export const dynamicParams = true
+// Unlisted slugs wait for the full render instead of streaming the shell, so a missing page still answers with a 404 status
+export const ensureStatic = 'navigation'
 
 export async function generateStaticParams() {
   const repos = await getRepos()
@@ -55,7 +54,6 @@ export async function generateMetadata({ params }: ProjectPageProps) {
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { locale, slug } = await params
-  setRequestLocale(locale)
 
   // Copy, the repository list, and the current repository are independent; fetch them concurrently. getRepoByName and the
   // getRepos() here share the same cached list request

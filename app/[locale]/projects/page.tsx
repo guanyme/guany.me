@@ -1,4 +1,5 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server'
+import { Suspense, type ComponentProps } from 'react'
+import { getTranslations } from 'next-intl/server'
 import { getRepos, getRepoTagline } from '@/lib/github'
 import { ProjectList } from '@/components/home/project-list'
 
@@ -19,10 +20,6 @@ export default async function ProjectsPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { locale } = await params
-  setRequestLocale(locale)
-
-  const { keyword } = await searchParams
-  const initialKeyword = typeof keyword === 'string' ? keyword : ''
 
   const repos = await getRepos()
   const enriched = await Promise.all(
@@ -37,7 +34,10 @@ export default async function ProjectsPage({
       <h1 className="mb-8 text-3xl font-bold">
         <ProjectsTitle />
       </h1>
-      <ProjectList repos={enriched} initialKeyword={initialKeyword} />
+      {/* The unfiltered list is the static shell; a ?keyword= link only swaps in the pre-filled list */}
+      <Suspense fallback={<ProjectList repos={enriched} />}>
+        <KeywordProjectList repos={enriched} searchParams={searchParams} />
+      </Suspense>
     </div>
   )
 }
@@ -45,4 +45,15 @@ export default async function ProjectsPage({
 async function ProjectsTitle() {
   const t = await getTranslations('projects')
   return <>{t('title')}</>
+}
+
+async function KeywordProjectList({
+  repos,
+  searchParams,
+}: {
+  repos: ComponentProps<typeof ProjectList>['repos']
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { keyword } = await searchParams
+  return <ProjectList repos={repos} initialKeyword={typeof keyword === 'string' ? keyword : ''} />
 }

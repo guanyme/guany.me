@@ -1,16 +1,6 @@
-import { setRequestLocale } from 'next-intl/server'
 import { DocsSidebar } from '@/components/docs/docs-sidebar'
 
-export default async function DocsLayout({
-  children,
-  params,
-}: {
-  children: React.ReactNode
-  params: Promise<{ locale: string }>
-}) {
-  const { locale } = await params
-  setRequestLocale(locale)
-
+export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-7xl px-4 pt-4">
       <DocsSidebar />

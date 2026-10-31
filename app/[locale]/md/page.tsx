@@ -1,19 +1,24 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server'
+import { Suspense } from 'react'
+import { cacheLife } from 'next/cache'
+import { getTranslations } from 'next-intl/server'
 import { StreamdownRenderer } from '@/components/markdown/streamdown-renderer'
 
 interface MdPageProps {
-  params: Promise<{ locale: string }>
   searchParams: Promise<{ url?: string }>
 }
 
 async function fetchMarkdown(url: string): Promise<string | null> {
+  'use cache'
   try {
-    const res = await fetch(url, { next: { revalidate: 60 } })
-    if (!res.ok) return null
-    return res.text()
-  } catch {
-    return null
-  }
+    const res = await fetch(url)
+    if (res.ok) {
+      const text = await res.text()
+      cacheLife({ revalidate: 60 })
+      return text
+    }
+  } catch {}
+  cacheLife('minutes')
+  return null
 }
 
 const supportedLanguages = new Set([
@@ -137,10 +142,16 @@ function resolveRelativeUrls(content: string, sourceUrl: string): string {
   })
 }
 
-export default async function MdPage({ params, searchParams }: MdPageProps) {
-  const { locale } = await params
-  setRequestLocale(locale)
+export default function MdPage({ searchParams }: MdPageProps) {
+  return (
+    <Suspense>
+      <MdContent searchParams={searchParams} />
+    </Suspense>
+  )
+}
 
+// The source URL is a search param, only known per request
+async function MdContent({ searchParams }: Pick<MdPageProps, 'searchParams'>) {
   const t = await getTranslations('md')
   const { url } = await searchParams
 

@@ -2,8 +2,6 @@ import { headers } from 'next/headers'
 import { buildLlmsContent } from '@/lib/llms-content'
 import { siteUrl } from '@/lib/site'
 
-export const revalidate = 3600
-
 export async function GET() {
   const headersList = await headers()
   const origin =

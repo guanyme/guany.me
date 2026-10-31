@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { cacheLife } from 'next/cache'
 import { useTranslations } from 'next-intl'
 
 interface SiteFooterProps {
@@ -24,9 +25,7 @@ export function SiteFooter({ avatar, name }: SiteFooterProps) {
               />
             )}
             <span className="text-sm text-muted-foreground">
-              {/* A copyright year; re-reading it on re-render is harmless and keeps it correct. */}
-              {/* oxlint-disable-next-line react/purity */}© {new Date().getFullYear()}{' '}
-              {name || 'Guany'}
+              © <CopyrightYear /> {name || 'Guany'}
             </span>
           </div>
 
@@ -35,4 +34,11 @@ export function SiteFooter({ avatar, name }: SiteFooterProps) {
       </div>
     </footer>
   )
+}
+
+// Cached for a day so the prerendered footer still rolls over to the new year
+async function CopyrightYear() {
+  'use cache'
+  cacheLife('days')
+  return new Date().getFullYear()
 }

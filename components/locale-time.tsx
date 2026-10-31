@@ -1,5 +1,7 @@
 'use client'
 
+import { useSyncExternalStore } from 'react'
+
 const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['year', 365 * 24 * 60 * 60 * 1000],
   ['month', 30 * 24 * 60 * 60 * 1000],
@@ -21,6 +23,8 @@ function formatRelative(date: string, locale: string): string {
   return rtf.format(0, 'second')
 }
 
+const subscribe = () => () => {}
+
 interface LocaleTimeProps {
   date: string
   locale: string
@@ -28,6 +32,12 @@ interface LocaleTimeProps {
 
 export function LocaleTime({ date, locale }: LocaleTimeProps) {
   const loc = new Intl.Locale(locale).toString()
+  // "3 days ago" depends on the visitor's clock, so the prerendered shell shows the date and the browser swaps in the relative form
+  const inBrowser = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  )
 
   return (
     <time
@@ -42,7 +52,13 @@ export function LocaleTime({ date, locale }: LocaleTimeProps) {
       })}
       suppressHydrationWarning
     >
-      {formatRelative(date, loc)}
+      {inBrowser
+        ? formatRelative(date, loc)
+        : new Date(date).toLocaleDateString(loc, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
     </time>
   )
 }

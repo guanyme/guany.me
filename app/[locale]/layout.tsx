@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter, Fira_Code } from 'next/font/google'
 import { notFound } from 'next/navigation'
-import { setRequestLocale, getTranslations, getMessages } from 'next-intl/server'
+import { getTranslations, getMessages } from 'next-intl/server'
 import { hasLocale, NextIntlClientProvider } from 'next-intl'
 import { ThemeProvider } from '@/components/theme-provider'
 import { SiteHeader } from '@/components/layout/site-header'
@@ -93,7 +93,6 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) {
     notFound()
   }
-  setRequestLocale(locale)
 
   const [user, messages, t] = await Promise.all([
     getUser(),

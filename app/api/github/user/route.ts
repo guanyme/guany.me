@@ -1,25 +1,18 @@
 import { NextResponse } from 'next/server'
 import type { GitHubUser } from '@/types/github'
+import { getUser } from '@/lib/github'
 
 export async function GET() {
-  const token = process.env.GITHUB_TOKEN
-
-  if (!token) {
+  if (!process.env.GITHUB_TOKEN) {
     return NextResponse.json({ error: 'GITHUB_TOKEN is not configured' }, { status: 500 })
   }
 
-  const res = await fetch('https://api.github.com/user', {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    next: { revalidate: 3600 }, // Cache for 1 hour
-  })
+  // Same request and one-hour cache as the site header
+  const data = await getUser()
 
-  if (!res.ok) {
-    return NextResponse.json({ error: 'Failed to fetch GitHub user' }, { status: res.status })
+  if (!data) {
+    return NextResponse.json({ error: 'Failed to fetch GitHub user' }, { status: 502 })
   }
-
-  const data = await res.json()
 
   const user: GitHubUser = {
     login: data.login,

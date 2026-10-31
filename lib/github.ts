@@ -1,24 +1,29 @@
 import { cache } from 'react'
+import { cacheLife } from 'next/cache'
 import type { GitHubRepo, GitHubUser } from '@/types/github'
 import { fetchWithTimeout } from '@/lib/server-fetch'
 
 const token = process.env.GITHUB_TOKEN
 
-export const getUser = cache(async (): Promise<GitHubUser | null> => {
+// Remote so the cache is shared across Vercel's serverless instances; GitHub rate-limits us, and /llms-full.txt reads every README per request.
+// Failures get the one-minute profile rather than the full lifetime, so a GitHub hiccup doesn't blank the section for an hour
+export async function getUser(): Promise<GitHubUser | null> {
+  'use cache: remote'
   if (!token) return null
 
   try {
     const res = await fetchWithTimeout('https://api.github.com/user', {
       headers: { Authorization: `Bearer ${token}` },
-      next: { revalidate: 3600 },
       timeoutMs: 5000,
     })
-    if (!res.ok) return null
-    return await res.json()
-  } catch {
-    return null
-  }
-})
+    if (res.ok) {
+      cacheLife({ revalidate: 3600 })
+      return await res.json()
+    }
+  } catch {}
+  cacheLife('minutes')
+  return null
+}
 
 async function getUsername(): Promise<string | null> {
   const user = await getUser()
@@ -41,38 +46,49 @@ function mapRepo(repo: Record<string, unknown>): GitHubRepo {
   }
 }
 
-export const getRepos = cache(async (): Promise<GitHubRepo[]> => {
+export async function getRepos(): Promise<GitHubRepo[]> {
+  'use cache: remote'
   if (!token) return []
 
   const res = await fetchWithTimeout(
     'https://api.github.com/user/repos?sort=pushed&per_page=100&affiliation=owner',
     {
       headers: { Authorization: `Bearer ${token}` },
-      next: { revalidate: 1800 },
       timeoutMs: 8000,
     },
   )
 
-  if (!res.ok) return []
+  if (!res.ok) {
+    cacheLife('minutes')
+    return []
+  }
+  cacheLife({ revalidate: 1800 })
 
   const data = await res.json()
 
   return data.filter((repo: Record<string, unknown>) => !repo.fork && !repo.private).map(mapRepo)
-})
+}
 
-export const getRepo = cache(async (name: string): Promise<GitHubRepo | null> => {
+export async function getRepo(name: string): Promise<GitHubRepo | null> {
+  'use cache: remote'
   if (!token) return null
 
   const username = await getUsername()
-  if (!username) return null
+  if (!username) {
+    cacheLife('minutes')
+    return null
+  }
 
   const res = await fetchWithTimeout(`https://api.github.com/repos/${username}/${name}`, {
     headers: { Authorization: `Bearer ${token}` },
-    next: { revalidate: 1800 },
     timeoutMs: 5000,
   })
 
-  if (!res.ok) return null
+  if (!res.ok) {
+    cacheLife('minutes')
+    return null
+  }
+  cacheLife({ revalidate: 1800 })
 
   const repo = await res.json()
 
@@ -80,7 +96,7 @@ export const getRepo = cache(async (name: string): Promise<GitHubRepo | null> =>
   if (repo.fork || repo.private) return null
 
   return mapRepo(repo)
-})
+}
 
 // First look up names in the repository list: it already includes full_name, avoiding two sequential requests to getUser → getRepo.
 // Look up separately only if the repository isn't in the list (repositories created after the build).
@@ -233,6 +249,7 @@ function processReadmeContent(content: string, fullName: string, branch: string)
 }
 
 async function fetchReadmeByName(fullName: string, filename: string): Promise<string | null> {
+  'use cache: remote'
   if (!token) return null
   const res = await fetchWithTimeout(
     `https://api.github.com/repos/${fullName}/contents/${filename}`,
@@ -241,12 +258,16 @@ async function fetchReadmeByName(fullName: string, filename: string): Promise<st
         Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.github.raw+json',
       },
-      next: { revalidate: 3600 },
       timeoutMs: 5000,
     },
   )
-  if (!res.ok) return null
-  return res.text()
+  // A missing README.<locale>.md is the common case, so only other failures get the one-minute profile
+  if (!res.ok && res.status !== 404) {
+    cacheLife('minutes')
+    return null
+  }
+  cacheLife({ revalidate: 3600 })
+  return res.ok ? res.text() : null
 }
 
 // Extract the tagline that follows the H1 title in a README. Convention:
@@ -284,19 +305,23 @@ export const getRepoTagline = cache(
   },
 )
 
-const fetchDefaultReadme = cache(async (fullName: string): Promise<string | null> => {
+async function fetchDefaultReadme(fullName: string): Promise<string | null> {
+  'use cache: remote'
   if (!token) return null
   const res = await fetchWithTimeout(`https://api.github.com/repos/${fullName}/readme`, {
     headers: {
       Authorization: `Bearer ${token}`,
       Accept: 'application/vnd.github.raw+json',
     },
-    next: { revalidate: 3600 },
     timeoutMs: 5000,
   })
-  if (!res.ok) return null
-  return res.text()
-})
+  if (!res.ok && res.status !== 404) {
+    cacheLife('minutes')
+    return null
+  }
+  cacheLife({ revalidate: 3600 })
+  return res.ok ? res.text() : null
+}
 
 export const getRepoReadme = cache(
   async (fullName: string, defaultBranch: string, locale?: string): Promise<string | null> => {

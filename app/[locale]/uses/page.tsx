@@ -1,4 +1,4 @@
-import { setRequestLocale, getTranslations } from 'next-intl/server'
+import { getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import matter from 'gray-matter'
 import { getDocBySlug } from '@/lib/mdx'
@@ -18,7 +18,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function UsesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params
-  setRequestLocale(locale)
 
   const doc = getDocBySlug(locale, 'pages', 'uses')
 

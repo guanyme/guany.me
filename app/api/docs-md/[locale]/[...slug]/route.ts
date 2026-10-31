@@ -4,8 +4,6 @@ import { routing } from '@/i18n/routing'
 
 // The proxy rewrites /docs/<slug>.md and /zh/docs/<slug>.md to here, returning the document's
 // raw Markdown (with frontmatter removed, matching the content of "Copy Markdown" on the page).
-export const dynamicParams = false
-
 export function generateStaticParams() {
   const docs = getAllDocs('en', 'docs')
   return routing.locales.flatMap((locale) =>
