@@ -16,9 +16,6 @@ const nextConfig: NextConfig = {
   },
   reactCompiler: true,
   experimental: {
-    // Rust port of the React Compiler — runs natively in Turbopack instead of
-    // going through Babel, which makes it the single biggest dev/build win here.
-    turbopackRustReactCompiler: true,
     optimizePackageImports: ['simple-icons', 'streamdown'],
   },
   async headers() {
