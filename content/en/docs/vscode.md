@@ -10,6 +10,14 @@ VS Code is a code editor from Microsoft. This page provides a user `settings.jso
 
 VS Code stores user settings in `settings.json`.
 
+### Install the Vitesse theme
+
+Install the [Vitesse extension](https://marketplace.visualstudio.com/items?itemName=antfu.theme-vitesse):
+
+```sh
+code --install-extension antfu.theme-vitesse
+```
+
 ### Edit settings.json
 
 Add the following to your user `settings.json`:
@@ -53,3 +61,4 @@ Add the following to your user `settings.json`:
 ## References
 
 - [Guany VS Code profile](https://github.com/guanyme/vscode-profile/): the VS Code profile repository these settings come from.
+- [vscode-theme-vitesse](https://github.com/antfu/vscode-theme-vitesse): the Vitesse theme for VS Code.

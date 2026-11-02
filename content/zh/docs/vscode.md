@@ -10,6 +10,14 @@ VS Code 是微软推出的代码编辑器。本页给出一份用户设置 `sett
 
 VS Code 的用户设置保存在 `settings.json` 里。
 
+### 安装 Vitesse 主题 {#install-the-vitesse-theme}
+
+安装 [Vitesse 扩展](https://marketplace.visualstudio.com/items?itemName=antfu.theme-vitesse)：
+
+```sh
+code --install-extension antfu.theme-vitesse
+```
+
 ### 编辑 settings.json {#edit-settingsjson}
 
 在用户 `settings.json` 里写入：
@@ -53,3 +61,4 @@ VS Code 的用户设置保存在 `settings.json` 里。
 ## 参考 {#references}
 
 - [Guany VS Code profile](https://github.com/guanyme/vscode-profile/)：本页设置所在的 VS Code 配置仓库。
+- [vscode-theme-vitesse](https://github.com/antfu/vscode-theme-vitesse)：VS Code 的 Vitesse 主题。
