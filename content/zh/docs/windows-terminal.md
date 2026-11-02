@@ -1,10 +1,10 @@
 ---
-description: 'Windows Terminal 的 settings.json 配置：默认值、PowerShell 7 和 Vitesse Dark 配色'
+description: 'Windows Terminal 的 settings.json 配置：默认值、PowerShell 7 和 Vitesse 配色'
 ---
 
 # Windows Terminal
 
-本页给出 Windows Terminal 的 `settings.json` 配置：profile 默认值、PowerShell 7 启动命令和 Vitesse Dark 配色。
+本页给出 Windows Terminal 的 `settings.json` 配置：profile 默认值、PowerShell 7 启动命令和 Vitesse 配色。
 
 ## 配置 {#configuration}
 
@@ -17,12 +17,17 @@ description: 'Windows Terminal 的 settings.json 配置：默认值、PowerShell
 ```json
 {
   "bellStyle": "none",
-  "colorScheme": "Vitesse Dark",
+  "colorScheme": {
+    "light": "Vitesse Light",
+    "dark": "Vitesse Dark"
+  },
   "font": {
     "face": "FiraCode Nerd Font"
   }
 }
 ```
+
+同时设置浅色和深色配色后，只要 `theme` 保持默认的 `system`，Windows Terminal 就会跟随 Windows 的浅色或深色模式。
 
 ### 启动 PowerShell 7 {#launch-powershell-7}
 
@@ -36,9 +41,9 @@ description: 'Windows Terminal 的 settings.json 配置：默认值、PowerShell
 ]
 ```
 
-### 添加 Vitesse Dark 配色 {#add-the-vitesse-dark-color-scheme}
+### 添加 Vitesse 配色 {#add-the-vitesse-color-schemes}
 
-在 `schemes` 数组里加上：
+在 `schemes` 数组里加上这两个配色：
 
 ```json
 {
@@ -53,15 +58,41 @@ description: 'Windows Terminal 的 settings.json 配置：默认值、PowerShell
   "brightRed": "#CB7676",
   "brightWhite": "#FFFFFF",
   "brightYellow": "#E6CC77",
-  "cursorColor": "#CDC9BD",
+  "cursorColor": "#CECABE",
   "cyan": "#5EAAB5",
-  "foreground": "#CDCABE",
+  "foreground": "#CECABE",
   "green": "#4D9375",
   "name": "Vitesse Dark",
   "purple": "#D9739F",
   "red": "#CB7676",
-  "selectionBackground": "#252525",
-  "white": "#CDCABE",
+  "selectionBackground": "#272727",
+  "white": "#DBD7CA",
   "yellow": "#E6CC77"
+}
+```
+
+```json
+{
+  "background": "#FFFFFF",
+  "black": "#121212",
+  "blue": "#296AA3",
+  "brightBlack": "#AAAAAA",
+  "brightBlue": "#296AA3",
+  "brightCyan": "#2993A3",
+  "brightGreen": "#1E754F",
+  "brightPurple": "#A13865",
+  "brightRed": "#AB5959",
+  "brightWhite": "#DDDDDD",
+  "brightYellow": "#BDA437",
+  "cursorColor": "#393A34",
+  "cyan": "#2993A3",
+  "foreground": "#393A34",
+  "green": "#1E754F",
+  "name": "Vitesse Light",
+  "purple": "#A13865",
+  "red": "#AB5959",
+  "selectionBackground": "#EAEAEA",
+  "white": "#DBD7CA",
+  "yellow": "#BDA437"
 }
 ```
