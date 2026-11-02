@@ -12,14 +12,14 @@ Warp loads custom themes from a local themes directory.
 
 ### Install the Vitesse theme
 
-Clone the [warp-theme-vitesse](https://github.com/HiDeoo/warp-theme-vitesse) repository and copy its `.yaml` theme files into the Warp themes directory.
+Clone the [warp-theme-vitesse](https://github.com/HiDeoo/warp-theme-vitesse) repository and copy the `.yaml` theme files from its `themes` folder into the Warp themes directory.
 
 macOS:
 
 ```sh
 mkdir -p $HOME/.warp/themes
 git clone https://github.com/HiDeoo/warp-theme-vitesse.git /tmp/warp-theme-vitesse
-cp /tmp/warp-theme-vitesse/*.yaml $HOME/.warp/themes/
+cp /tmp/warp-theme-vitesse/themes/*.yaml $HOME/.warp/themes/
 ```
 
 Windows:
@@ -27,7 +27,7 @@ Windows:
 ```powershell
 New-Item -Path "$env:APPDATA\warp\Warp\data\themes" -ItemType Directory -Force
 git clone https://github.com/HiDeoo/warp-theme-vitesse.git "$env:TEMP\warp-theme-vitesse"
-Copy-Item "$env:TEMP\warp-theme-vitesse\*.yaml" "$env:APPDATA\warp\Warp\data\themes\"
+Copy-Item "$env:TEMP\warp-theme-vitesse\themes\*.yaml" "$env:APPDATA\warp\Warp\data\themes\"
 ```
 
 ## Usage

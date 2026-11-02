@@ -12,14 +12,14 @@ Warp 从本地主题目录读取自定义主题。
 
 ### 安装 Vitesse 主题 {#install-the-vitesse-theme}
 
-克隆 [warp-theme-vitesse](https://github.com/HiDeoo/warp-theme-vitesse) 仓库，把其中的 `.yaml` 主题文件复制到 Warp 的主题目录。
+克隆 [warp-theme-vitesse](https://github.com/HiDeoo/warp-theme-vitesse) 仓库，把其中 `themes` 文件夹里的 `.yaml` 主题文件复制到 Warp 的主题目录。
 
 macOS：
 
 ```sh
 mkdir -p $HOME/.warp/themes
 git clone https://github.com/HiDeoo/warp-theme-vitesse.git /tmp/warp-theme-vitesse
-cp /tmp/warp-theme-vitesse/*.yaml $HOME/.warp/themes/
+cp /tmp/warp-theme-vitesse/themes/*.yaml $HOME/.warp/themes/
 ```
 
 Windows：
@@ -27,7 +27,7 @@ Windows：
 ```powershell
 New-Item -Path "$env:APPDATA\warp\Warp\data\themes" -ItemType Directory -Force
 git clone https://github.com/HiDeoo/warp-theme-vitesse.git "$env:TEMP\warp-theme-vitesse"
-Copy-Item "$env:TEMP\warp-theme-vitesse\*.yaml" "$env:APPDATA\warp\Warp\data\themes\"
+Copy-Item "$env:TEMP\warp-theme-vitesse\themes\*.yaml" "$env:APPDATA\warp\Warp\data\themes\"
 ```
 
 ## 使用 {#usage}
