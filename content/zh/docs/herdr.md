@@ -151,6 +151,37 @@ herdr config check    # 输出 config: ok 才算过
 
 3. 在 oneshot 单元里加上 `Requires=herdr.service` 和 `After=herdr.service`。重启 Herdr 时这个单元会跟着运行。
 
+### 在 Herdr 桌面应用里使用 Vitesse 主题 {#use-the-vitesse-theme-in-the-herdr-app}
+
+Herdr 桌面应用的配置独立于 TUI，保存在 `~/.config/herdr-app`。把 [herdr-theme-vitesse](https://github.com/guanyme/herdr-theme-vitesse) 的主题复制到它的 `themes` 文件夹。
+
+macOS / Linux：
+
+```sh
+mkdir -p ~/.config/herdr-app/themes
+git clone https://github.com/guanyme/herdr-theme-vitesse.git /tmp/herdr-theme-vitesse
+cp /tmp/herdr-theme-vitesse/themes/*.json ~/.config/herdr-app/themes/
+```
+
+Windows：
+
+```powershell
+New-Item -Path "$HOME\.config\herdr-app\themes" -ItemType Directory -Force
+git clone https://github.com/guanyme/herdr-theme-vitesse.git "$env:TEMP\herdr-theme-vitesse"
+Copy-Item "$env:TEMP\herdr-theme-vitesse\themes\*.json" "$HOME\.config\herdr-app\themes\"
+```
+
+然后在 `~/.config/herdr-app/settings.json` 里加上下面的配置，让主题跟随系统的浅色或深色模式：
+
+```json
+{
+  "theme": {
+    "light": "vitesse-light",
+    "dark": "vitesse-dark"
+  }
+}
+```
+
 ## 使用 {#usage}
 
 `herdr` CLI 用来查询和控制当前会话。大部分命令返回 JSON，pane、tab、workspace 的 id 从响应里取，不要猜。
@@ -310,3 +341,4 @@ Windows 11 24H2+ 收紧了 reparse point 的遍历，SSH 会话看不见 junctio
 ## 参考 {#references}
 
 - [herdr.dev](https://herdr.dev)：Herdr 官网。
+- [herdr-theme-vitesse](https://github.com/guanyme/herdr-theme-vitesse)：Herdr 桌面应用的 Vitesse 主题。

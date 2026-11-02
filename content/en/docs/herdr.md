@@ -152,6 +152,37 @@ herdr config check    # only "config: ok" counts
 
 3. Add `Requires=herdr.service` and `After=herdr.service` to the oneshot unit. Restarting Herdr then reruns this unit.
 
+### Use the Vitesse theme in the Herdr app
+
+The Herdr desktop app keeps its own configuration in `~/.config/herdr-app`, separate from the TUI. Copy the [herdr-theme-vitesse](https://github.com/guanyme/herdr-theme-vitesse) themes into its `themes` folder.
+
+macOS / Linux:
+
+```sh
+mkdir -p ~/.config/herdr-app/themes
+git clone https://github.com/guanyme/herdr-theme-vitesse.git /tmp/herdr-theme-vitesse
+cp /tmp/herdr-theme-vitesse/themes/*.json ~/.config/herdr-app/themes/
+```
+
+Windows:
+
+```powershell
+New-Item -Path "$HOME\.config\herdr-app\themes" -ItemType Directory -Force
+git clone https://github.com/guanyme/herdr-theme-vitesse.git "$env:TEMP\herdr-theme-vitesse"
+Copy-Item "$env:TEMP\herdr-theme-vitesse\themes\*.json" "$HOME\.config\herdr-app\themes\"
+```
+
+Then add to `~/.config/herdr-app/settings.json` to follow the system's light or dark mode:
+
+```json
+{
+  "theme": {
+    "light": "vitesse-light",
+    "dark": "vitesse-dark"
+  }
+}
+```
+
 ## Usage
 
 Use the `herdr` CLI to query and control the current session. Most commands return JSON. Read pane, tab and workspace ids from the response instead of guessing them.
@@ -311,3 +342,4 @@ Repeat step 2 after every Herdr upgrade. The target path includes the version nu
 ## References
 
 - [herdr.dev](https://herdr.dev): the official Herdr website.
+- [herdr-theme-vitesse](https://github.com/guanyme/herdr-theme-vitesse): Vitesse themes for the Herdr desktop app.
