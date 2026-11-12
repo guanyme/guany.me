@@ -12,7 +12,8 @@ interface DocsPageProps {
   params: Promise<{ locale: string; slug: string[] }>
 }
 
-// Unlisted slugs wait for the full render instead of streaming the shell, so a missing page still answers with a 404 status
+// Wait for slug resolution before sending headers so missing documents return HTTP 404.
+export const instant = false
 export const ensureStatic = 'navigation'
 
 export async function generateStaticParams() {
