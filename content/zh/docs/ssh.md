@@ -20,12 +20,44 @@ ssh-keygen -t ed25519 -C "your_email@example.com"
 
 ### 在 Windows 上启动 ssh-agent {#start-ssh-agent-on-windows}
 
-Windows 需要先启动 ssh-agent 服务才能添加密钥：
+用官方安装包安装 Git for Windows 时，在 SSH 选项中选择 **Use external OpenSSH**。系统的 OpenSSH Client 已安装且在 `PATH` 中时，Git 和 Git Bash 可以直接使用它，无需配置 `core.sshCommand`。 [Git for Windows 安装说明](https://gitforwindows.org/using-an-external-openssh-client.html)
+
+在管理员 PowerShell 中启用系统的 `ssh-agent` 服务：
 
 ```powershell
 Set-Service -Name ssh-agent -StartupType Automatic
 Start-Service ssh-agent
 ```
+
+服务启动后，在日常使用的 Windows 账户下用系统的 `ssh-add` [添加密钥](#add-a-key-to-ssh-agent)，再用 `ssh-add -l` 确认。密钥已加载时，可以省略 `AddKeysToAgent yes`。如果安装 Git 时选了默认的 **Use bundled OpenSSH**，Git 可能使用自带的 SSH 客户端，这一行不会让它接入 Windows 的系统 agent。 [Windows 密钥管理](https://learn.microsoft.com/windows-server/administration/openssh/openssh_keymanagement) · [GitHub 的 Windows agent 排查说明](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#troubleshooting-ssh-agent-conflicts-in-windows)
+
+### 在 macOS 上使用系统 ssh-agent {#use-the-system-ssh-agent-on-macos}
+
+用 Homebrew 安装的 Git 可以直接使用 macOS 自带的 `/usr/bin/ssh`。系统 agent 由 `launchd` 管理。若希望 SSH 在从文件读取私钥时自动把它加入 agent，在 `~/.ssh/config` 末尾的 `Host *` 段加入：
+
+```sshconfig
+Host *
+  AddKeysToAgent yes
+```
+
+如果已有 `Host *` 段，只加这一行。若想让 macOS 和 Windows 共用一份 SSH 配置，也可以在 Windows 保留它。 [OpenSSH 手册](https://man.openbsd.org/ssh_config#AddKeysToAgent)
+
+### 用本地私钥签名 commit {#sign-commits-with-a-local-key}
+
+macOS 和 Windows 可以共用以下 Git 配置。两边各自保留本地私钥，文件名相同即可。Git 直接读取私钥来签名，签名前无需把密钥加入 agent。 [Git 签名配置](https://git-scm.com/docs/git-config#Documentation/git-config.txt-usersigningKey)
+
+```gitconfig
+[user]
+  signingkey = ~/.ssh/id_ed25519
+[gpg]
+  format = ssh
+[commit]
+  gpgSign = true
+[tag]
+  gpgSign = true
+```
+
+从 1Password 切换时，移除原先指向 `op-ssh-sign` 的 `gpg.ssh.program`，以及 SSH 配置中指向 1Password 的 `IdentityAgent`。
 
 ### 通过 HTTPS 端口连接 GitHub {#connect-to-github-over-the-https-port}
 

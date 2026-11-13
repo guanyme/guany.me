@@ -20,12 +20,44 @@ ssh-keygen -t ed25519 -C "your_email@example.com"
 
 ### Start ssh-agent on Windows
 
-On Windows, start the ssh-agent service before adding keys:
+When running the official Git for Windows installer, choose **Use external OpenSSH**. With the Windows OpenSSH Client installed and on `PATH`, Git and Git Bash can use it without setting `core.sshCommand`. [Git for Windows installation guide](https://gitforwindows.org/using-an-external-openssh-client.html)
+
+Enable the Windows `ssh-agent` service from an elevated PowerShell:
 
 ```powershell
 Set-Service -Name ssh-agent -StartupType Automatic
 Start-Service ssh-agent
 ```
+
+Once the service is running, use the system `ssh-add` to [add your keys](#add-a-key-to-ssh-agent) from your regular Windows account. Check them with `ssh-add -l`. Once the keys are loaded, you can omit `AddKeysToAgent yes`. If you chose the default **Use bundled OpenSSH** during installation, Git may use its bundled SSH client. This setting does not connect that client to the Windows agent. [Windows key management](https://learn.microsoft.com/windows-server/administration/openssh/openssh_keymanagement) · [GitHub's Windows agent troubleshooting guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#troubleshooting-ssh-agent-conflicts-in-windows)
+
+### Use the system ssh-agent on macOS
+
+Git installed through Homebrew can use the macOS system client at `/usr/bin/ssh`. macOS manages the agent through `launchd`. To add keys to the agent as SSH reads them from disk, put this at the end of `~/.ssh/config`:
+
+```sshconfig
+Host *
+  AddKeysToAgent yes
+```
+
+If you already have a `Host *` block, add the setting there. You can keep it on Windows as well if you share one SSH configuration between the two systems. [OpenSSH manual](https://man.openbsd.org/ssh_config#AddKeysToAgent)
+
+### Sign commits with a local key
+
+macOS and Windows can share these Git settings. Keep each private key on its own machine and use the same filename on both. Git reads the private key directly, so it can sign even when the key has yet to be loaded into the agent. [Git signing configuration](https://git-scm.com/docs/git-config#Documentation/git-config.txt-usersigningKey)
+
+```gitconfig
+[user]
+  signingkey = ~/.ssh/id_ed25519
+[gpg]
+  format = ssh
+[commit]
+  gpgSign = true
+[tag]
+  gpgSign = true
+```
+
+When switching from 1Password, remove the `gpg.ssh.program` entry that points to `op-ssh-sign` and the `IdentityAgent` entry that points to 1Password.
 
 ### Connect to GitHub over the HTTPS port
 
