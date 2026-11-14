@@ -43,3 +43,9 @@ content/timestamps.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Vite and Workers
+/dist/
+/.tanstack/
+/.wrangler/
+.dev.vars*

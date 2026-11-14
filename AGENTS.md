@@ -1,9 +1,8 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# TanStack Start
 
-## This is NOT the Next.js you know
+Keep file routes under `src/routes`. Let the Vite plugin generate `src/routeTree.gen.ts`. Use the installed TanStack Intent skills for routing and server boundaries, and verify the production bundle with `pnpm preview` in the local Cloudflare Workers runtime.
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+```sh
+pnpm dlx @tanstack/intent list
+pnpm dlx @tanstack/intent load @tanstack/react-start#lifecycle/migrate-from-nextjs
+```
