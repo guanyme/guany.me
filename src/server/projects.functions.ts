@@ -7,16 +7,16 @@ import { getHeroBackground } from './wallpaper.server'
 
 const localeSchema = z.enum(locales)
 
-export const getHomePage = createServerFn({ method: 'GET' })
+export const getHomeHero = createServerFn({ method: 'GET' })
   .validator(localeSchema)
   .handler(async ({ data: locale }) => {
-    const [user, hero, projects] = await Promise.all([
-      getUser(),
-      getHeroBackground(locale),
-      getRepos().then((repos) => getProjectCards(repos.slice(0, 6), locale)),
-    ])
-    return { user, hero, projects, copyrightYear: new Date().getUTCFullYear() }
+    const [user, hero] = await Promise.all([getUser(), getHeroBackground(locale)])
+    return { user, hero, copyrightYear: new Date().getUTCFullYear() }
   })
+
+export const getHomeProjects = createServerFn({ method: 'GET' })
+  .validator(localeSchema)
+  .handler(async ({ data: locale }) => getProjectCards((await getRepos()).slice(0, 6), locale))
 
 export const getProjectsPage = createServerFn({ method: 'GET' })
   .validator(localeSchema)
