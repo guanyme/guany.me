@@ -12,7 +12,7 @@ const cases = [
     language: 'en',
     htmlLang: 'en',
     vary: true,
-    body: /<p[^>]*>Guany’s website<\/p>/,
+    body: /<h1[^>]*>Guany<\/h1>/,
   },
   {
     name: 'Chinese browser redirect',
@@ -42,7 +42,7 @@ const cases = [
     status: 200,
     htmlLang: 'zh',
     setCookie: 'NEXT_LOCALE=zh',
-    body: /<p[^>]*>Guany 的网站<\/p>/,
+    body: /<h1[^>]*>Guany<\/h1>/,
   },
   {
     name: 'explicit Chinese URL overrides an English cookie',
@@ -128,6 +128,56 @@ const cases = [
   },
   { name: 'unknown project', path: '/projects/unknown-project', status: 404, htmlLang: 'en' },
   {
+    name: 'English uses page',
+    path: '/uses',
+    status: 200,
+    htmlLang: 'en',
+    body: /<h1[^>]*>Things I Use<\/h1>/,
+  },
+  {
+    name: 'Chinese uses page',
+    path: '/zh/uses',
+    status: 200,
+    htmlLang: 'zh',
+    body: /<h1[^>]*>我在使用的东西<\/h1>/,
+  },
+  {
+    name: 'uses locale redirect',
+    path: '/uses',
+    language: 'zh-CN',
+    status: 307,
+    location: '/zh/uses',
+  },
+  {
+    name: 'Chinese verification page',
+    path: '/zh/auth/verified',
+    status: 200,
+    htmlLang: 'zh',
+    body: /<h1[^>]*>邮箱已验证<\/h1>/,
+  },
+  {
+    name: 'Chinese remote markdown page',
+    path: '/zh/md',
+    status: 200,
+    htmlLang: 'zh',
+    body: /请提供 markdown 链接/,
+  },
+  {
+    name: 'English llms index',
+    path: '/llms.txt',
+    status: 200,
+    body: /https:\/\/guany\.me\/docs\/herdr/,
+  },
+  { name: 'full llms export', path: '/llms-full.txt', status: 200, body: /Herdr App/ },
+  {
+    name: 'robots',
+    path: '/robots.txt',
+    status: 200,
+    body: /Sitemap: https:\/\/guany\.me\/sitemap\.xml/,
+  },
+  { name: 'sitemap', path: '/sitemap.xml', status: 200, body: /https:\/\/guany\.me\/zh\/uses/ },
+  { name: 'web manifest', path: '/manifest.webmanifest', status: 200, body: /"start_url":\s*"\/"/ },
+  {
     name: 'static avatar skips locale negotiation',
     path: '/avatar.png',
     status: 200,
@@ -173,7 +223,7 @@ for (const scenario of cases) {
       assert.equal(await response.text(), source.slice(frontmatterEnd + 4).trimStart())
     } else if (scenario.htmlLang || scenario.body) {
       const body = await response.text()
-      if (scenario.htmlLang) assert.ok(body.includes(`<html lang="${scenario.htmlLang}">`))
+      if (scenario.htmlLang) assert.match(body, new RegExp(`<html lang="${scenario.htmlLang}"[ >]`))
       if (scenario.body) assert.match(body, scenario.body)
     }
   })
@@ -201,6 +251,6 @@ test('the English alias stays English after its redirect', async () => {
   })
   assert.equal(canonical.status, 200)
   const body = await canonical.text()
-  assert.ok(body.includes('<html lang="en">'))
+  assert.match(body, /<html lang="en"[ >]/)
   assert.match(body, /<h1[^>]*>Projects<\/h1>/)
 })

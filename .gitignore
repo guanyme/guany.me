@@ -49,6 +49,7 @@ next-env.d.ts
 /.tanstack/
 /.wrangler/
 .dev.vars*
+!.dev.vars.example
 
 # Paraglide JS and inlang
 /src/paraglide/

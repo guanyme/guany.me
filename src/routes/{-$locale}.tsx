@@ -1,4 +1,5 @@
 import { Link, Outlet, createFileRoute } from '@tanstack/react-router'
+import { SiteHeader } from '#/components/layout/site-header'
 import { m } from '#/paraglide/messages.js'
 import { baseLocale, isLocale, setLocale } from '#/paraglide/runtime.js'
 
@@ -16,39 +17,36 @@ export const Route = createFileRoute('/{-$locale}')({
 function LocaleLayout() {
   const { locale } = Route.useRouteContext()
   const otherLocale = locale === 'zh' ? 'en' : 'zh'
-  const localeParams = { locale: locale === baseLocale ? undefined : locale }
 
   return (
-    <main className="mx-auto max-w-3xl p-6">
-      <nav className="mb-6 flex flex-wrap gap-4" aria-label={m.nav_label({}, { locale })}>
-        <Link to="/{-$locale}" params={localeParams}>
-          Guany
-        </Link>
-        <Link to="/{-$locale}/projects" params={localeParams}>
-          {m.projects_title({}, { locale })}
-        </Link>
-        <Link to="/{-$locale}/docs/$" params={{ ...localeParams, _splat: 'getting-started' }}>
-          {m.nav_docs({}, { locale })}
-        </Link>
-        <Link
-          to="."
-          params={(params) => ({
-            ...params,
-            locale: otherLocale === baseLocale ? undefined : otherLocale,
-          })}
-          search
-          hash
-          preload={false}
-          lang={otherLocale}
-          onClick={(event) => {
-            if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) return
-            void setLocale(otherLocale, { reload: false })
-          }}
-        >
-          {m.language_name({}, { locale: otherLocale })}
-        </Link>
-      </nav>
-      <Outlet />
-    </main>
+    <div className="flex min-h-full flex-col">
+      <SiteHeader
+        locale={locale}
+        languageSwitch={
+          <Link
+            className="inline-flex h-8 items-center rounded-lg px-2 text-sm hover:bg-muted"
+            to="."
+            params={(params) => ({
+              ...params,
+              locale: otherLocale === baseLocale ? undefined : otherLocale,
+            })}
+            search
+            hash
+            preload={false}
+            lang={otherLocale}
+            title={m.nav_language({}, { locale })}
+            onClick={(event) => {
+              if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) return
+              void setLocale(otherLocale, { reload: false })
+            }}
+          >
+            {m.language_name({}, { locale: otherLocale })}
+          </Link>
+        }
+      />
+      <main className="flex-1 pt-16">
+        <Outlet />
+      </main>
+    </div>
   )
 }

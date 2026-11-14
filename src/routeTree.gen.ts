@@ -9,14 +9,51 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LlmsFullDottxtRouteImport } from './routes/llms-full[.]txt'
+import { Route as LlmsDottxtRouteImport } from './routes/llms[.]txt'
+import { Route as ManifestDotwebmanifestRouteImport } from './routes/manifest[.]webmanifest'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as Char123LocaleChar125RouteImport } from './routes/{-$locale}'
 import { Route as Char123LocaleChar125IndexRouteImport } from './routes/{-$locale}/index'
+import { Route as Char123LocaleChar125MdRouteImport } from './routes/{-$locale}/md'
+import { Route as Char123LocaleChar125UsesRouteImport } from './routes/{-$locale}/uses'
+import { Route as ApiBingWallpaperRouteImport } from './routes/api/bing/wallpaper'
+import { Route as ApiGithubReposRouteImport } from './routes/api/github/repos'
+import { Route as ApiGithubUserRouteImport } from './routes/api/github/user'
+import { Route as Char123LocaleChar125AuthVerifiedRouteImport } from './routes/{-$locale}/auth/verified'
 import { Route as Char123LocaleChar125DocsIndexRouteImport } from './routes/{-$locale}/docs/index'
 import { Route as Char123LocaleChar125DocsSplatRouteImport } from './routes/{-$locale}/docs/$'
 import { Route as Char123LocaleChar125DocsChar123Char125DotmdRouteImport } from './routes/{-$locale}/docs/{$}[.]md'
 import { Route as Char123LocaleChar125ProjectsIndexRouteImport } from './routes/{-$locale}/projects/index'
 import { Route as Char123LocaleChar125ProjectsSlugRouteImport } from './routes/{-$locale}/projects/$slug'
+import { Route as ApiDocsMdLocaleSplatRouteImport } from './routes/api/docs-md/$locale/$'
 
+const LlmsFullDottxtRoute = LlmsFullDottxtRouteImport.update({
+  id: '/llms-full.txt',
+  path: '/llms-full.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LlmsDottxtRoute = LlmsDottxtRouteImport.update({
+  id: '/llms.txt',
+  path: '/llms.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestDotwebmanifestRoute = ManifestDotwebmanifestRouteImport.update({
+  id: '/manifest.webmanifest',
+  path: '/manifest.webmanifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Char123LocaleChar125Route = Char123LocaleChar125RouteImport.update({
   id: '/{-$locale}',
   path: '/{-$locale}',
@@ -26,6 +63,38 @@ const Char123LocaleChar125IndexRoute =
   Char123LocaleChar125IndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => Char123LocaleChar125Route,
+  } as any)
+const Char123LocaleChar125MdRoute = Char123LocaleChar125MdRouteImport.update({
+  id: '/md',
+  path: '/md',
+  getParentRoute: () => Char123LocaleChar125Route,
+} as any)
+const Char123LocaleChar125UsesRoute =
+  Char123LocaleChar125UsesRouteImport.update({
+    id: '/uses',
+    path: '/uses',
+    getParentRoute: () => Char123LocaleChar125Route,
+  } as any)
+const ApiBingWallpaperRoute = ApiBingWallpaperRouteImport.update({
+  id: '/api/bing/wallpaper',
+  path: '/api/bing/wallpaper',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGithubReposRoute = ApiGithubReposRouteImport.update({
+  id: '/api/github/repos',
+  path: '/api/github/repos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGithubUserRoute = ApiGithubUserRouteImport.update({
+  id: '/api/github/user',
+  path: '/api/github/user',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char123LocaleChar125AuthVerifiedRoute =
+  Char123LocaleChar125AuthVerifiedRouteImport.update({
+    id: '/auth/verified',
+    path: '/auth/verified',
     getParentRoute: () => Char123LocaleChar125Route,
   } as any)
 const Char123LocaleChar125DocsIndexRoute =
@@ -58,69 +127,190 @@ const Char123LocaleChar125ProjectsSlugRoute =
     path: '/projects/$slug',
     getParentRoute: () => Char123LocaleChar125Route,
   } as any)
+const ApiDocsMdLocaleSplatRoute = ApiDocsMdLocaleSplatRouteImport.update({
+  id: '/api/docs-md/$locale/$',
+  path: '/api/docs-md/$locale/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/{-$locale}': typeof Char123LocaleChar125RouteWithChildren
+  '/{-$locale}/md': typeof Char123LocaleChar125MdRoute
+  '/{-$locale}/uses': typeof Char123LocaleChar125UsesRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
+  '/api/bing/wallpaper': typeof ApiBingWallpaperRoute
+  '/api/github/repos': typeof ApiGithubReposRoute
+  '/api/github/user': typeof ApiGithubUserRoute
+  '/{-$locale}/auth/verified': typeof Char123LocaleChar125AuthVerifiedRoute
   '/{-$locale}/docs/$': typeof Char123LocaleChar125DocsSplatRoute
   '/{-$locale}/docs/{$}.md': typeof Char123LocaleChar125DocsChar123Char125DotmdRoute
   '/{-$locale}/projects/$slug': typeof Char123LocaleChar125ProjectsSlugRoute
   '/{-$locale}/docs/': typeof Char123LocaleChar125DocsIndexRoute
   '/{-$locale}/projects/': typeof Char123LocaleChar125ProjectsIndexRoute
+  '/api/docs-md/$locale/$': typeof ApiDocsMdLocaleSplatRoute
 }
 export interface FileRoutesByTo {
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/{-$locale}/md': typeof Char123LocaleChar125MdRoute
+  '/{-$locale}/uses': typeof Char123LocaleChar125UsesRoute
   '/{-$locale}': typeof Char123LocaleChar125IndexRoute
+  '/api/bing/wallpaper': typeof ApiBingWallpaperRoute
+  '/api/github/repos': typeof ApiGithubReposRoute
+  '/api/github/user': typeof ApiGithubUserRoute
+  '/{-$locale}/auth/verified': typeof Char123LocaleChar125AuthVerifiedRoute
   '/{-$locale}/docs/$': typeof Char123LocaleChar125DocsSplatRoute
   '/{-$locale}/docs/{$}.md': typeof Char123LocaleChar125DocsChar123Char125DotmdRoute
   '/{-$locale}/projects/$slug': typeof Char123LocaleChar125ProjectsSlugRoute
   '/{-$locale}/docs': typeof Char123LocaleChar125DocsIndexRoute
   '/{-$locale}/projects': typeof Char123LocaleChar125ProjectsIndexRoute
+  '/api/docs-md/$locale/$': typeof ApiDocsMdLocaleSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/llms-full.txt': typeof LlmsFullDottxtRoute
+  '/llms.txt': typeof LlmsDottxtRoute
+  '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/{-$locale}': typeof Char123LocaleChar125RouteWithChildren
+  '/{-$locale}/md': typeof Char123LocaleChar125MdRoute
+  '/{-$locale}/uses': typeof Char123LocaleChar125UsesRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
+  '/api/bing/wallpaper': typeof ApiBingWallpaperRoute
+  '/api/github/repos': typeof ApiGithubReposRoute
+  '/api/github/user': typeof ApiGithubUserRoute
+  '/{-$locale}/auth/verified': typeof Char123LocaleChar125AuthVerifiedRoute
   '/{-$locale}/docs/$': typeof Char123LocaleChar125DocsSplatRoute
   '/{-$locale}/docs/{$}.md': typeof Char123LocaleChar125DocsChar123Char125DotmdRoute
   '/{-$locale}/projects/$slug': typeof Char123LocaleChar125ProjectsSlugRoute
   '/{-$locale}/docs/': typeof Char123LocaleChar125DocsIndexRoute
   '/{-$locale}/projects/': typeof Char123LocaleChar125ProjectsIndexRoute
+  '/api/docs-md/$locale/$': typeof ApiDocsMdLocaleSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/llms-full.txt'
+    | '/llms.txt'
+    | '/manifest.webmanifest'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/{-$locale}'
+    | '/{-$locale}/md'
+    | '/{-$locale}/uses'
     | '/{-$locale}/'
+    | '/api/bing/wallpaper'
+    | '/api/github/repos'
+    | '/api/github/user'
+    | '/{-$locale}/auth/verified'
     | '/{-$locale}/docs/$'
     | '/{-$locale}/docs/{$}.md'
     | '/{-$locale}/projects/$slug'
     | '/{-$locale}/docs/'
     | '/{-$locale}/projects/'
+    | '/api/docs-md/$locale/$'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/llms-full.txt'
+    | '/llms.txt'
+    | '/manifest.webmanifest'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/{-$locale}/md'
+    | '/{-$locale}/uses'
     | '/{-$locale}'
+    | '/api/bing/wallpaper'
+    | '/api/github/repos'
+    | '/api/github/user'
+    | '/{-$locale}/auth/verified'
     | '/{-$locale}/docs/$'
     | '/{-$locale}/docs/{$}.md'
     | '/{-$locale}/projects/$slug'
     | '/{-$locale}/docs'
     | '/{-$locale}/projects'
+    | '/api/docs-md/$locale/$'
   id:
     | '__root__'
+    | '/llms-full.txt'
+    | '/llms.txt'
+    | '/manifest.webmanifest'
+    | '/robots.txt'
+    | '/sitemap.xml'
     | '/{-$locale}'
+    | '/{-$locale}/md'
+    | '/{-$locale}/uses'
     | '/{-$locale}/'
+    | '/api/bing/wallpaper'
+    | '/api/github/repos'
+    | '/api/github/user'
+    | '/{-$locale}/auth/verified'
     | '/{-$locale}/docs/$'
     | '/{-$locale}/docs/{$}.md'
     | '/{-$locale}/projects/$slug'
     | '/{-$locale}/docs/'
     | '/{-$locale}/projects/'
+    | '/api/docs-md/$locale/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  LlmsFullDottxtRoute: typeof LlmsFullDottxtRoute
+  LlmsDottxtRoute: typeof LlmsDottxtRoute
+  ManifestDotwebmanifestRoute: typeof ManifestDotwebmanifestRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   Char123LocaleChar125Route: typeof Char123LocaleChar125RouteWithChildren
+  ApiBingWallpaperRoute: typeof ApiBingWallpaperRoute
+  ApiGithubReposRoute: typeof ApiGithubReposRoute
+  ApiGithubUserRoute: typeof ApiGithubUserRoute
+  ApiDocsMdLocaleSplatRoute: typeof ApiDocsMdLocaleSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/llms-full.txt': {
+      id: '/llms-full.txt'
+      path: '/llms-full.txt'
+      fullPath: '/llms-full.txt'
+      preLoaderRoute: typeof LlmsFullDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/llms.txt': {
+      id: '/llms.txt'
+      path: '/llms.txt'
+      fullPath: '/llms.txt'
+      preLoaderRoute: typeof LlmsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifest.webmanifest': {
+      id: '/manifest.webmanifest'
+      path: '/manifest.webmanifest'
+      fullPath: '/manifest.webmanifest'
+      preLoaderRoute: typeof ManifestDotwebmanifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/{-$locale}': {
       id: '/{-$locale}'
       path: '/{-$locale}'
@@ -133,6 +323,48 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/{-$locale}/'
       preLoaderRoute: typeof Char123LocaleChar125IndexRouteImport
+      parentRoute: typeof Char123LocaleChar125Route
+    }
+    '/{-$locale}/md': {
+      id: '/{-$locale}/md'
+      path: '/md'
+      fullPath: '/{-$locale}/md'
+      preLoaderRoute: typeof Char123LocaleChar125MdRouteImport
+      parentRoute: typeof Char123LocaleChar125Route
+    }
+    '/{-$locale}/uses': {
+      id: '/{-$locale}/uses'
+      path: '/uses'
+      fullPath: '/{-$locale}/uses'
+      preLoaderRoute: typeof Char123LocaleChar125UsesRouteImport
+      parentRoute: typeof Char123LocaleChar125Route
+    }
+    '/api/bing/wallpaper': {
+      id: '/api/bing/wallpaper'
+      path: '/api/bing/wallpaper'
+      fullPath: '/api/bing/wallpaper'
+      preLoaderRoute: typeof ApiBingWallpaperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/github/repos': {
+      id: '/api/github/repos'
+      path: '/api/github/repos'
+      fullPath: '/api/github/repos'
+      preLoaderRoute: typeof ApiGithubReposRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/github/user': {
+      id: '/api/github/user'
+      path: '/api/github/user'
+      fullPath: '/api/github/user'
+      preLoaderRoute: typeof ApiGithubUserRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/{-$locale}/auth/verified': {
+      id: '/{-$locale}/auth/verified'
+      path: '/auth/verified'
+      fullPath: '/{-$locale}/auth/verified'
+      preLoaderRoute: typeof Char123LocaleChar125AuthVerifiedRouteImport
       parentRoute: typeof Char123LocaleChar125Route
     }
     '/{-$locale}/docs/': {
@@ -170,11 +402,21 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char123LocaleChar125ProjectsSlugRouteImport
       parentRoute: typeof Char123LocaleChar125Route
     }
+    '/api/docs-md/$locale/$': {
+      id: '/api/docs-md/$locale/$'
+      path: '/api/docs-md/$locale/$'
+      fullPath: '/api/docs-md/$locale/$'
+      preLoaderRoute: typeof ApiDocsMdLocaleSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 interface Char123LocaleChar125RouteChildren {
+  Char123LocaleChar125MdRoute: typeof Char123LocaleChar125MdRoute
+  Char123LocaleChar125UsesRoute: typeof Char123LocaleChar125UsesRoute
   Char123LocaleChar125IndexRoute: typeof Char123LocaleChar125IndexRoute
+  Char123LocaleChar125AuthVerifiedRoute: typeof Char123LocaleChar125AuthVerifiedRoute
   Char123LocaleChar125DocsSplatRoute: typeof Char123LocaleChar125DocsSplatRoute
   Char123LocaleChar125DocsChar123Char125DotmdRoute: typeof Char123LocaleChar125DocsChar123Char125DotmdRoute
   Char123LocaleChar125ProjectsSlugRoute: typeof Char123LocaleChar125ProjectsSlugRoute
@@ -183,7 +425,10 @@ interface Char123LocaleChar125RouteChildren {
 }
 
 const Char123LocaleChar125RouteChildren: Char123LocaleChar125RouteChildren = {
+  Char123LocaleChar125MdRoute: Char123LocaleChar125MdRoute,
+  Char123LocaleChar125UsesRoute: Char123LocaleChar125UsesRoute,
   Char123LocaleChar125IndexRoute: Char123LocaleChar125IndexRoute,
+  Char123LocaleChar125AuthVerifiedRoute: Char123LocaleChar125AuthVerifiedRoute,
   Char123LocaleChar125DocsSplatRoute: Char123LocaleChar125DocsSplatRoute,
   Char123LocaleChar125DocsChar123Char125DotmdRoute:
     Char123LocaleChar125DocsChar123Char125DotmdRoute,
@@ -197,7 +442,16 @@ const Char123LocaleChar125RouteWithChildren =
   Char123LocaleChar125Route._addFileChildren(Char123LocaleChar125RouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
+  LlmsFullDottxtRoute: LlmsFullDottxtRoute,
+  LlmsDottxtRoute: LlmsDottxtRoute,
+  ManifestDotwebmanifestRoute: ManifestDotwebmanifestRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   Char123LocaleChar125Route: Char123LocaleChar125RouteWithChildren,
+  ApiBingWallpaperRoute: ApiBingWallpaperRoute,
+  ApiGithubReposRoute: ApiGithubReposRoute,
+  ApiGithubUserRoute: ApiGithubUserRoute,
+  ApiDocsMdLocaleSplatRoute: ApiDocsMdLocaleSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

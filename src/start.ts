@@ -25,7 +25,7 @@ const canonicalLocaleMiddleware = createMiddleware().server(
 
     const explicitLocale = isLocale(url.pathname.split('/')[1])
     const pathname = explicitLocale ? deLocalizeUrl(url).pathname : url.pathname
-    const sitePage = /^\/(?:docs(?:\/.*)?|projects(?:\/.*)?)?$/
+    const sitePage = /^\/(?:docs(?:\/.*)?|projects(?:\/.*)?|uses|md|auth\/verified)?$/
     if (!sitePage.test(pathname)) return next()
 
     const locale = getLocale()
