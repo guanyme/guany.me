@@ -15,7 +15,6 @@ export function CopyMarkdownButton({ content, locale, className }: CopyMarkdownB
   return (
     <Button
       variant="outline"
-      size="sm"
       type="button"
       className={className}
       onClick={() => void copy(content)}

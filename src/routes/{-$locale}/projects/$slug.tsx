@@ -40,7 +40,6 @@ function CopyCloneButton({ fullName, locale }: { fullName: string; locale: Local
   return (
     <Button
       variant="outline"
-      size="sm"
       type="button"
       onClick={() => void copy(`https://github.com/${fullName}.git`)}
     >
@@ -90,7 +89,7 @@ function Project() {
           <CopyCloneButton fullName={repo.full_name} locale={locale} />
           {readme && <CopyMarkdownButton content={readme} locale={locale} />}
           <a
-            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            className={buttonVariants({ variant: 'outline' })}
             href={repo.html_url}
             target="_blank"
             rel="noopener noreferrer"
@@ -107,7 +106,7 @@ function Project() {
           </a>
           {repo.homepage && (
             <a
-              className={buttonVariants({ variant: 'outline', size: 'sm' })}
+              className={buttonVariants({ variant: 'outline' })}
               href={repo.homepage}
               target="_blank"
               rel="noopener noreferrer"
