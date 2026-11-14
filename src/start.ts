@@ -5,6 +5,7 @@ import {
   setCookie,
   setResponseHeader,
 } from '@tanstack/react-start/server'
+import { docsIndexSlug } from '#/lib/docs-config'
 import {
   baseLocale,
   cookieName,
@@ -24,13 +25,15 @@ const canonicalLocaleMiddleware = createMiddleware().server(
     if (isExcludedByRouteStrategy(url)) return next()
 
     const explicitLocale = isLocale(url.pathname.split('/')[1])
-    const pathname = explicitLocale ? deLocalizeUrl(url).pathname : url.pathname
+    const unlocalizedPath = explicitLocale ? deLocalizeUrl(url).pathname : url.pathname
+    const pathname = unlocalizedPath.replace(/\/+$/, '') || '/'
     const sitePage = /^\/(?:docs(?:\/.*)?|projects(?:\/.*)?|uses|md|auth\/verified)?$/
     if (!sitePage.test(pathname)) return next()
 
     const locale = getLocale()
-    const localized = localizeUrl(new URL(pathname, url), { locale }).pathname
-    const destination = pathname === '/' ? localized.replace(/(.)\/$/, '$1') : localized
+    const canonicalPath = pathname === '/docs' ? `/docs/${docsIndexSlug}` : pathname
+    const localized = localizeUrl(new URL(canonicalPath, url), { locale }).pathname
+    const destination = localized.replace(/(.)\/$/, '$1')
     const fetchDestination = request.headers.get('sec-fetch-dest')
 
     const stored = getCookie(cookieName)
@@ -40,7 +43,7 @@ const canonicalLocaleMiddleware = createMiddleware().server(
       setResponseHeader('Cache-Control', 'private, no-store')
     }
 
-    if (url.pathname !== destination && url.pathname !== `${destination}/`) {
+    if (url.pathname !== destination) {
       return new Response(null, {
         status: 307,
         headers: {

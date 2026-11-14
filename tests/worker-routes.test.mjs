@@ -82,6 +82,31 @@ const cases = [
     location: '/docs/getting-started',
   },
   {
+    name: 'document request combines the Chinese docs index and trailing slash redirect',
+    path: '/docs/?keyword=herdr&topic=ssh',
+    language: 'zh-CN',
+    fetchDestination: 'document',
+    status: 307,
+    location: '/zh/docs/getting-started?keyword=herdr&topic=ssh',
+    vary: true,
+  },
+  {
+    name: 'Chinese cookie selects the docs destination without a browser fetch destination',
+    path: '/docs/',
+    cookie: 'NEXT_LOCALE=zh',
+    status: 307,
+    location: '/zh/docs/getting-started',
+  },
+  {
+    name: 'explicit Chinese docs index overrides the English cookie in one redirect',
+    path: '/zh/docs/?keyword=herdr',
+    cookie: 'NEXT_LOCALE=en',
+    fetchDestination: 'document',
+    status: 307,
+    location: '/zh/docs/getting-started?keyword=herdr',
+    setCookie: 'NEXT_LOCALE=zh',
+  },
+  {
     name: 'bundled document SSR',
     path: '/zh/docs/herdr',
     status: 200,
@@ -100,6 +125,14 @@ const cases = [
     path: '/en/docs/herdr.md',
     status: 200,
     language: 'zh-CN',
+    markdown: 'en',
+  },
+  {
+    name: 'English raw Markdown with a trailing slash bypasses language negotiation',
+    path: '/docs/herdr.md/',
+    language: 'zh-CN',
+    fetchDestination: 'document',
+    status: 200,
     markdown: 'en',
   },
   { name: 'Chinese raw Markdown', path: '/zh/docs/herdr.md', status: 200, markdown: 'zh' },
@@ -147,6 +180,28 @@ const cases = [
     language: 'zh-CN',
     status: 307,
     location: '/zh/uses',
+  },
+  {
+    name: 'uses page combines the locale and trailing slash redirect',
+    path: '/uses/?source=docs',
+    language: 'zh-CN',
+    fetchDestination: 'document',
+    status: 307,
+    location: '/zh/uses?source=docs',
+  },
+  {
+    name: 'remote markdown page combines the locale and trailing slash redirect',
+    path: '/md/?url=https%3A%2F%2Fexample.com',
+    language: 'zh-CN',
+    status: 307,
+    location: '/zh/md?url=https%3A%2F%2Fexample.com',
+  },
+  {
+    name: 'verification page combines the locale and trailing slash redirect',
+    path: '/auth/verified/',
+    language: 'zh-CN',
+    status: 307,
+    location: '/zh/auth/verified',
   },
   {
     name: 'Chinese verification page',
@@ -253,4 +308,29 @@ test('the English alias stays English after its redirect', async () => {
   const body = await canonical.text()
   assert.match(body, /<html lang="en"[ >]/)
   assert.match(body, /<h1[^>]*>Projects<\/h1>/)
+})
+
+test('the English docs index alias reaches the English document in one redirect', async () => {
+  const headers = {
+    'Accept-Language': 'zh-CN',
+    'Sec-Fetch-Dest': 'document',
+    Cookie: 'NEXT_LOCALE=zh',
+  }
+  const response = await fetch(new URL('/en/docs/?keyword=herdr', origin), {
+    redirect: 'manual',
+    headers,
+  })
+  assert.equal(response.status, 307)
+  const location = response.headers.get('location')
+  assert.equal(location, '/docs/getting-started?keyword=herdr')
+  const preference = response.headers.get('set-cookie')?.split(';')[0]
+  assert.equal(preference, 'NEXT_LOCALE=en')
+  assert.match(response.headers.get('cache-control') ?? '', /private, no-store/)
+
+  const document = await fetch(new URL(location, origin), {
+    redirect: 'manual',
+    headers: { ...headers, Cookie: preference },
+  })
+  assert.equal(document.status, 200)
+  assert.match(await document.text(), /<html lang="en"[ >]/)
 })

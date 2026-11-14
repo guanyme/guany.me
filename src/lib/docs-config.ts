@@ -11,10 +11,12 @@ export interface DocGroup {
   items: DocItem[]
 }
 
+export const docsIndexSlug = 'getting-started'
+
 export const docsConfig: DocGroup[] = [
   {
     titleKey: 'guide',
-    items: [{ titleKey: 'introduction', slug: 'getting-started' }],
+    items: [{ titleKey: 'introduction', slug: docsIndexSlug }],
   },
   {
     titleKey: 'environment',
