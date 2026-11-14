@@ -26,14 +26,14 @@ const cases = [
     path: '/',
     status: 200,
     language: 'zh-CN',
-    cookie: 'NEXT_LOCALE=en',
+    cookie: 'PARAGLIDE_LOCALE=en',
     htmlLang: 'en',
   },
   {
     name: 'language preference redirect',
     path: '/',
     status: 307,
-    cookie: 'NEXT_LOCALE=zh',
+    cookie: 'PARAGLIDE_LOCALE=zh',
     location: '/zh',
   },
   {
@@ -41,16 +41,16 @@ const cases = [
     path: '/zh',
     status: 200,
     htmlLang: 'zh',
-    setCookie: 'NEXT_LOCALE=zh',
+    setCookie: 'PARAGLIDE_LOCALE=zh',
     body: /<h1[^>]*>Guany<\/h1>/,
   },
   {
     name: 'explicit Chinese URL overrides an English cookie',
     path: '/zh/projects',
     status: 200,
-    cookie: 'NEXT_LOCALE=en',
+    cookie: 'PARAGLIDE_LOCALE=en',
     htmlLang: 'zh',
-    setCookie: 'NEXT_LOCALE=zh',
+    setCookie: 'PARAGLIDE_LOCALE=zh',
     body: /<h1[^>]*>项目<\/h1>/,
   },
   {
@@ -59,7 +59,7 @@ const cases = [
     status: 307,
     fetchDestination: 'document',
     location: '/zh/projects',
-    setCookie: 'NEXT_LOCALE=zh',
+    setCookie: 'PARAGLIDE_LOCALE=zh',
   },
   { name: 'unrecognized English alias path', path: '/en/no-such-route', status: 404 },
   { name: 'locale prefixes are case-sensitive', path: '/ZH/projects', status: 404 },
@@ -93,18 +93,18 @@ const cases = [
   {
     name: 'Chinese cookie selects the docs destination without a browser fetch destination',
     path: '/docs/',
-    cookie: 'NEXT_LOCALE=zh',
+    cookie: 'PARAGLIDE_LOCALE=zh',
     status: 307,
     location: '/zh/docs/getting-started',
   },
   {
     name: 'explicit Chinese docs index overrides the English cookie in one redirect',
     path: '/zh/docs/?keyword=herdr',
-    cookie: 'NEXT_LOCALE=en',
+    cookie: 'PARAGLIDE_LOCALE=en',
     fetchDestination: 'document',
     status: 307,
     location: '/zh/docs/getting-started?keyword=herdr',
-    setCookie: 'NEXT_LOCALE=zh',
+    setCookie: 'PARAGLIDE_LOCALE=zh',
   },
   {
     name: 'bundled document SSR',
@@ -288,7 +288,7 @@ test('the English alias stays English after its redirect', async () => {
   const headers = {
     'Accept-Language': 'zh-CN',
     'Sec-Fetch-Dest': 'document',
-    Cookie: 'NEXT_LOCALE=zh',
+    Cookie: 'PARAGLIDE_LOCALE=zh',
   }
   const alias = await fetch(new URL('/en/projects?keyword=guany', origin), {
     redirect: 'manual',
@@ -298,7 +298,7 @@ test('the English alias stays English after its redirect', async () => {
   const location = alias.headers.get('location')
   assert.equal(location, '/projects?keyword=guany')
   const preference = alias.headers.get('set-cookie')?.split(';')[0]
-  assert.equal(preference, 'NEXT_LOCALE=en')
+  assert.equal(preference, 'PARAGLIDE_LOCALE=en')
 
   const canonical = await fetch(new URL(location, origin), {
     redirect: 'manual',
@@ -314,7 +314,7 @@ test('the English docs index alias reaches the English document in one redirect'
   const headers = {
     'Accept-Language': 'zh-CN',
     'Sec-Fetch-Dest': 'document',
-    Cookie: 'NEXT_LOCALE=zh',
+    Cookie: 'PARAGLIDE_LOCALE=zh',
   }
   const response = await fetch(new URL('/en/docs/?keyword=herdr', origin), {
     redirect: 'manual',
@@ -324,7 +324,7 @@ test('the English docs index alias reaches the English document in one redirect'
   const location = response.headers.get('location')
   assert.equal(location, '/docs/getting-started?keyword=herdr')
   const preference = response.headers.get('set-cookie')?.split(';')[0]
-  assert.equal(preference, 'NEXT_LOCALE=en')
+  assert.equal(preference, 'PARAGLIDE_LOCALE=en')
   assert.match(response.headers.get('cache-control') ?? '', /private, no-store/)
 
   const document = await fetch(new URL(location, origin), {

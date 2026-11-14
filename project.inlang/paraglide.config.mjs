@@ -5,7 +5,6 @@ const negotiated = ['cookie', 'preferredLanguage', 'baseLocale']
 export default defineConfig({
   outdir: './src/paraglide',
   emitTsDeclarations: true,
-  cookieName: 'NEXT_LOCALE',
   cookieSameSite: 'lax',
   strategy: ['baseLocale'],
   routeStrategies: [
