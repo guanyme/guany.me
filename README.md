@@ -23,6 +23,8 @@ In a second terminal, run `pnpm test:routes`. Set `WORKER_PREVIEW_URL` if the pr
 
 Set `VITE_SITE_URL` before building to generate canonical URLs for a different site origin. Use `.dev.vars` for optional local Worker settings, including `GITHUB_TOKEN` and `SITE_CONFIG_URL`. Store the production GitHub token as a Worker secret. The `PUBLIC_DATA_CACHE` KV binding uses local storage in the preview.
 
+Cloudflare Workers Builds deploys the `main` branch with `pnpm build` and `wrangler deploy`. Configure `GITHUB_TOKEN` and `SITE_CONFIG_URL` as runtime secrets in the Worker settings.
+
 ## License
 
 [MIT](https://opensource.org/licenses/MIT) © Guany

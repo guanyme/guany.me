@@ -25,4 +25,6 @@ pnpm preview --ip 127.0.0.1 --port 4179
 
 ## 使用许可
 
+Cloudflare Workers Builds 使用 `pnpm build` 和 `wrangler deploy` 部署 `main` 分支。在 Worker 设置中将 `GITHUB_TOKEN` 和 `SITE_CONFIG_URL` 配置为运行时密钥。
+
 [MIT](https://opensource.org/licenses/MIT) © Guany
