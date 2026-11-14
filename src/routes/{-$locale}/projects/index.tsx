@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { ProjectCard } from '#/components/home/project-card'
+import { Input } from '#/components/ui/input'
 import { siteHead } from '#/lib/site'
 import { m } from '#/paraglide/messages.js'
 import { baseLocale } from '#/paraglide/runtime.js'
@@ -44,7 +45,7 @@ function Projects() {
       <div className="sticky top-20 z-40 mb-6">
         <div className="relative">
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
+          <Input
             type="search"
             aria-label={searchLabel}
             placeholder={searchLabel}
@@ -57,7 +58,7 @@ function Projects() {
                 resetScroll: false,
               })
             }}
-            className="h-9 w-full rounded-lg border border-input bg-background py-1 pr-3 pl-10 text-sm shadow-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            className="h-9 bg-background pr-3 pl-10 text-sm shadow-sm dark:bg-background"
           />
         </div>
       </div>
