@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useMemo } from 'react'
 import { ContentFooter } from '#/components/content-footer'
 import { CopyMarkdownButton } from '#/components/copy-markdown-button'
 import { DocsNav } from '#/components/docs/docs-nav'
@@ -43,7 +44,7 @@ export const Route = createFileRoute('/{-$locale}/docs/$')({
 
 function Document() {
   const { content: doc, locale } = Route.useLoaderData()
-  const toc = extractToc(doc.markdown)
+  const toc = useMemo(() => extractToc(doc.markdown), [doc.markdown])
   const { prev, next } = getDocNavigation(doc.slug)
 
   return (

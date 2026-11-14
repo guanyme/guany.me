@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from '@tanstack/react-router'
 import { CopyMarkdownButton } from '#/components/copy-markdown-button'
 import type { extractToc } from '#/components/markdown/headings'
 import { m } from '#/paraglide/messages.js'
@@ -11,6 +12,7 @@ interface DocsTocProps {
 }
 
 export function DocsToc({ toc, markdown, locale }: DocsTocProps) {
+  const navigate = useNavigate()
   const [activeId, setActiveId] = useState(toc[0]?.id)
   useEffect(() => {
     let scrolled = false
@@ -30,8 +32,15 @@ export function DocsToc({ toc, markdown, locale }: DocsTocProps) {
       if (!active) return
 
       setActiveId(active.id)
-      if (scrolled && window.location.hash !== `#${encodeURIComponent(active.id)}`) {
-        history.replaceState(history.state, '', `#${encodeURIComponent(active.id)}`)
+      const hash = encodeURIComponent(active.id)
+      if (scrolled && window.location.hash !== `#${hash}`) {
+        void navigate({
+          hash,
+          search: true,
+          replace: true,
+          resetScroll: false,
+          hashScrollIntoView: false,
+        })
       }
     }
 
@@ -43,6 +52,8 @@ export function DocsToc({ toc, markdown, locale }: DocsTocProps) {
       scrolled = true
     }
     const onHashChange = () => {
+      scrolled = false
+      cancelAnimationFrame(frame)
       const active = ids.find((id) => window.location.hash === `#${encodeURIComponent(id)}`)
       if (active) setActiveId(active)
     }
@@ -60,7 +71,7 @@ export function DocsToc({ toc, markdown, locale }: DocsTocProps) {
       window.removeEventListener('touchmove', markUserScroll)
       window.removeEventListener('hashchange', onHashChange)
     }
-  }, [toc])
+  }, [navigate, toc])
 
   return (
     <aside className="fixed top-24 right-4 hidden max-h-[calc(100vh-6rem)] w-60 flex-col xl:flex 2xl:right-[calc((100vw-80rem)/2+1rem)]">
