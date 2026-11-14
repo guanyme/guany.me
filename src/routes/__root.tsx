@@ -2,7 +2,8 @@ import { HeadContent, Scripts, createRootRoute, useParams } from '@tanstack/reac
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
 
-import { defaultLocale, isLocale } from '#/locale'
+import { m } from '#/paraglide/messages.js'
+import { baseLocale, isLocale } from '#/paraglide/runtime.js'
 
 import appCss from '../styles.css?url'
 
@@ -28,14 +29,19 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: RootDocument,
-  notFoundComponent: () => <p>Not Found</p>,
+  notFoundComponent: NotFound,
 })
+
+function NotFound() {
+  const { locale } = useParams({ strict: false })
+  return <p>{m.not_found({}, { locale: isLocale(locale) ? locale : baseLocale })}</p>
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   const { locale } = useParams({ strict: false })
 
   return (
-    <html lang={isLocale(locale) ? locale : defaultLocale}>
+    <html lang={isLocale(locale) ? locale : baseLocale}>
       <head>
         <HeadContent />
       </head>

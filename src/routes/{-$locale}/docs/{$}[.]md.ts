@@ -1,12 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { defaultLocale, isLocale } from '#/locale'
+import { baseLocale, isLocale } from '#/paraglide/runtime.js'
 import { getDocument } from '#/server/docs.server'
 
 export const Route = createFileRoute('/{-$locale}/docs/{$}.md')({
   server: {
     handlers: {
       GET: ({ params }) => {
-        const locale = params.locale ?? defaultLocale
+        const locale = params.locale ?? baseLocale
         const markdown = isLocale(locale) && getDocument(locale, params._splat ?? '')
         if (!markdown) return new Response('Not Found', { status: 404 })
         return new Response(markdown, {

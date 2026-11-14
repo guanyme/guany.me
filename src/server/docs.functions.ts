@@ -1,6 +1,6 @@
 import { createServerFn } from '@tanstack/react-start'
 import { notFound } from '@tanstack/react-router'
-import { isLocale } from '#/locale'
+import { isLocale } from '#/paraglide/runtime.js'
 import { getDocument } from './docs.server'
 
 export const getDocumentForRoute = createServerFn({ method: 'GET' })

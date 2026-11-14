@@ -17,5 +17,5 @@
       }
     ]
   },
-  "ignorePatterns": ["dist", "src/routeTree.gen.ts"]
+  "ignorePatterns": ["dist", "src/routeTree.gen.ts", "src/paraglide"]
 }

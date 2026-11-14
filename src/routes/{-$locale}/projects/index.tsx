@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { m } from '#/paraglide/messages.js'
 
 export const Route = createFileRoute('/{-$locale}/projects/')({
   validateSearch: (search): { keyword?: string } => ({
@@ -15,7 +16,7 @@ function Projects() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold">{locale === 'zh' ? '项目' : 'Projects'}</h1>
+      <h1 className="text-3xl font-bold">{m.projects_title({}, { locale })}</h1>
       {showProject && (
         <Link
           className="mt-4 inline-block underline"

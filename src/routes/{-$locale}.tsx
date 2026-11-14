@@ -1,5 +1,6 @@
 import { Link, Outlet, createFileRoute } from '@tanstack/react-router'
-import { defaultLocale, isLocale, localeCookie } from '#/locale'
+import { m } from '#/paraglide/messages.js'
+import { baseLocale, isLocale, setLocale } from '#/paraglide/runtime.js'
 
 export const Route = createFileRoute('/{-$locale}')({
   params: {
@@ -8,35 +9,32 @@ export const Route = createFileRoute('/{-$locale}')({
       return { locale }
     },
   },
-  beforeLoad: ({ params }) => ({ locale: params.locale ?? defaultLocale }),
+  beforeLoad: ({ params }) => ({ locale: params.locale ?? baseLocale }),
   component: LocaleLayout,
 })
 
 function LocaleLayout() {
   const { locale } = Route.useRouteContext()
   const otherLocale = locale === 'zh' ? 'en' : 'zh'
-  const localeParams = { locale: locale === 'zh' ? locale : undefined }
+  const localeParams = { locale: locale === baseLocale ? undefined : locale }
 
   return (
     <main className="mx-auto max-w-3xl p-6">
-      <nav
-        className="mb-6 flex flex-wrap gap-4"
-        aria-label={locale === 'zh' ? '主导航' : 'Main navigation'}
-      >
+      <nav className="mb-6 flex flex-wrap gap-4" aria-label={m.nav_label({}, { locale })}>
         <Link to="/{-$locale}" params={localeParams}>
           Guany
         </Link>
         <Link to="/{-$locale}/projects" params={localeParams}>
-          {locale === 'zh' ? '项目' : 'Projects'}
+          {m.projects_title({}, { locale })}
         </Link>
         <Link to="/{-$locale}/docs/$" params={{ ...localeParams, _splat: 'getting-started' }}>
-          {locale === 'zh' ? '文档' : 'Docs'}
+          {m.nav_docs({}, { locale })}
         </Link>
         <Link
           to="."
           params={(params) => ({
             ...params,
-            locale: otherLocale === 'en' ? undefined : otherLocale,
+            locale: otherLocale === baseLocale ? undefined : otherLocale,
           })}
           search
           hash
@@ -44,10 +42,10 @@ function LocaleLayout() {
           lang={otherLocale}
           onClick={(event) => {
             if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) return
-            document.cookie = `${localeCookie}=${otherLocale}; Path=/; SameSite=Lax`
+            void setLocale(otherLocale, { reload: false })
           }}
         >
-          {otherLocale === 'zh' ? '中文' : 'English'}
+          {m.language_name({}, { locale: otherLocale })}
         </Link>
       </nav>
       <Outlet />

@@ -9,6 +9,7 @@
   "ignorePatterns": [
     "dist",
     "src/routeTree.gen.ts",
+    "src/paraglide",
     "pnpm-lock.yaml",
     "components/ui",
     ".agents",

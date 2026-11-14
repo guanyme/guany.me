@@ -49,3 +49,8 @@ next-env.d.ts
 /.tanstack/
 /.wrangler/
 .dev.vars*
+
+# Paraglide JS and inlang
+/src/paraglide/
+/project.inlang/cache/
+/project.inlang/project_id

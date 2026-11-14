@@ -1,4 +1,4 @@
-import type { Locale } from '#/locale'
+import type { Locale } from '#/paraglide/runtime.js'
 
 const files = import.meta.glob<string>(
   ['../../content/{en,zh}/docs/getting-started.md', '../../content/{en,zh}/docs/herdr.md'],

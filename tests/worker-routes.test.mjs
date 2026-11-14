@@ -12,6 +12,7 @@ const cases = [
     language: 'en',
     htmlLang: 'en',
     vary: true,
+    body: /<p[^>]*>Guany’s website<\/p>/,
   },
   {
     name: 'Chinese browser redirect',
@@ -41,7 +42,27 @@ const cases = [
     status: 200,
     htmlLang: 'zh',
     setCookie: 'NEXT_LOCALE=zh',
+    body: /<p[^>]*>Guany 的网站<\/p>/,
   },
+  {
+    name: 'explicit Chinese URL overrides an English cookie',
+    path: '/zh/projects',
+    status: 200,
+    cookie: 'NEXT_LOCALE=en',
+    htmlLang: 'zh',
+    setCookie: 'NEXT_LOCALE=zh',
+    body: /<h1[^>]*>项目<\/h1>/,
+  },
+  {
+    name: 'localized trailing slash redirect records the language preference',
+    path: '/zh/projects/',
+    status: 307,
+    fetchDestination: 'document',
+    location: '/zh/projects',
+    setCookie: 'NEXT_LOCALE=zh',
+  },
+  { name: 'unrecognized English alias path', path: '/en/no-such-route', status: 404 },
+  { name: 'locale prefixes are case-sensitive', path: '/ZH/projects', status: 404 },
   {
     name: 'canonical English query preservation',
     path: '/en/projects?keyword=guany',
@@ -129,6 +150,7 @@ for (const scenario of cases) {
       headers: {
         'Accept-Language': scenario.language ?? 'en',
         ...(scenario.cookie ? { Cookie: scenario.cookie } : {}),
+        ...(scenario.fetchDestination ? { 'Sec-Fetch-Dest': scenario.fetchDestination } : {}),
       },
     })
 
@@ -156,3 +178,29 @@ for (const scenario of cases) {
     }
   })
 }
+
+test('the English alias stays English after its redirect', async () => {
+  const headers = {
+    'Accept-Language': 'zh-CN',
+    'Sec-Fetch-Dest': 'document',
+    Cookie: 'NEXT_LOCALE=zh',
+  }
+  const alias = await fetch(new URL('/en/projects?keyword=guany', origin), {
+    redirect: 'manual',
+    headers,
+  })
+  assert.equal(alias.status, 307)
+  const location = alias.headers.get('location')
+  assert.equal(location, '/projects?keyword=guany')
+  const preference = alias.headers.get('set-cookie')?.split(';')[0]
+  assert.equal(preference, 'NEXT_LOCALE=en')
+
+  const canonical = await fetch(new URL(location, origin), {
+    redirect: 'manual',
+    headers: { ...headers, Cookie: preference },
+  })
+  assert.equal(canonical.status, 200)
+  const body = await canonical.text()
+  assert.ok(body.includes('<html lang="en">'))
+  assert.match(body, /<h1[^>]*>Projects<\/h1>/)
+})
