@@ -4,5 +4,6 @@ Keep file routes under `src/routes`. Let the Vite plugin generate `src/routeTree
 
 ```sh
 pnpm dlx @tanstack/intent list
-pnpm dlx @tanstack/intent load @tanstack/react-start#lifecycle/migrate-from-nextjs
+pnpm dlx @tanstack/intent load @tanstack/start-client-core#start-core/execution-model
+pnpm dlx @tanstack/intent load @tanstack/start-client-core#start-core/server-routes
 ```
