@@ -185,11 +185,11 @@ const cases = [
     media: 'image/png',
   },
   {
-    name: 'typed locale link preserves project search',
+    name: 'localized language menu trigger renders on the projects page',
     path: '/zh/projects?keyword=guany',
     status: 200,
     htmlLang: 'zh',
-    body: /href="\/projects\?keyword=guany"[^>]*>English<\/a>/,
+    body: /<button(?=[^>]*aria-label="语言")(?=[^>]*aria-haspopup="menu")/,
   },
 ]
 

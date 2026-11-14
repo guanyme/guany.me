@@ -1,7 +1,16 @@
 import { Link, Outlet, createFileRoute } from '@tanstack/react-router'
+import { Languages } from 'lucide-react'
 import { SiteHeader } from '#/components/layout/site-header'
+import { Button } from '#/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '#/components/ui/dropdown-menu'
 import { m } from '#/paraglide/messages.js'
-import { baseLocale, isLocale, setLocale } from '#/paraglide/runtime.js'
+import { baseLocale, isLocale, locales, setLocale } from '#/paraglide/runtime.js'
 
 export const Route = createFileRoute('/{-$locale}')({
   params: {
@@ -16,32 +25,59 @@ export const Route = createFileRoute('/{-$locale}')({
 
 function LocaleLayout() {
   const { locale } = Route.useRouteContext()
-  const otherLocale = locale === 'zh' ? 'en' : 'zh'
 
   return (
     <div className="flex min-h-full flex-col">
       <SiteHeader
         locale={locale}
         languageSwitch={
-          <Link
-            className="inline-flex h-8 items-center rounded-lg px-2 text-sm hover:bg-muted"
-            to="."
-            params={(params) => ({
-              ...params,
-              locale: otherLocale === baseLocale ? undefined : otherLocale,
-            })}
-            search
-            hash
-            preload={false}
-            lang={otherLocale}
-            title={m.nav_language({}, { locale })}
-            onClick={(event) => {
-              if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) return
-              void setLocale(otherLocale, { reload: false })
-            }}
-          >
-            {m.language_name({}, { locale: otherLocale })}
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon" aria-label={m.nav_language({}, { locale })} />
+              }
+            >
+              <Languages aria-hidden />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuGroup>
+                {locales.map((language) => {
+                  const isCurrent = language === locale
+
+                  return (
+                    <DropdownMenuItem
+                      key={language}
+                      lang={language}
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className={isCurrent ? 'font-medium' : undefined}
+                      render={
+                        isCurrent ? undefined : (
+                          <Link
+                            to="."
+                            params={(params) => ({
+                              ...params,
+                              locale: language === baseLocale ? undefined : language,
+                            })}
+                            search
+                            hash
+                            replace
+                            preload={false}
+                            onClick={(event) => {
+                              if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+                                return
+                              void setLocale(language, { reload: false })
+                            }}
+                          />
+                        )
+                      }
+                    >
+                      {m.language_name({}, { locale: language })}
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         }
       />
       <main className="flex-1 pt-16">
