@@ -7,7 +7,7 @@ import { MarkdownView } from '#/components/markdown/markdown-view'
 import { softwareJsonLd } from '#/lib/json-ld'
 import { siteHead, siteUrl } from '#/lib/site'
 import { useCopy } from '#/lib/use-copy'
-import { Button } from '#/components/ui/button'
+import { Button, buttonVariants } from '#/components/ui/button'
 import { m } from '#/paraglide/messages.js'
 import { baseLocale, localizeHref, type Locale } from '#/paraglide/runtime.js'
 import { getProjectPage } from '#/server/projects.functions'
@@ -30,9 +30,6 @@ export const Route = createFileRoute('/{-$locale}/projects/$slug')({
   notFoundComponent: ProjectNotFound,
 })
 
-const actionStyle =
-  'inline-flex h-8 items-center justify-center gap-1.5 rounded-md border bg-background px-2.5 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring'
-
 function projectPath(slug: string) {
   return `/projects/${encodeURIComponent(slug)}`
 }
@@ -42,12 +39,12 @@ function CopyCloneButton({ fullName, locale }: { fullName: string; locale: Local
 
   return (
     <Button
-      unstyled
+      variant="outline"
+      size="sm"
       type="button"
-      className={actionStyle}
       onClick={() => void copy(`https://github.com/${fullName}.git`)}
     >
-      {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+      {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
       {copied ? m.projects_copied({}, { locale }) : m.projects_copy_clone_url({}, { locale })}
     </Button>
   )
@@ -92,20 +89,30 @@ function Project() {
         <div className="flex flex-wrap items-center gap-2">
           <CopyCloneButton fullName={repo.full_name} locale={locale} />
           {readme && <CopyMarkdownButton content={readme} locale={locale} />}
-          <a className={actionStyle} href={repo.html_url} target="_blank" rel="noopener noreferrer">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor" className="size-4">
+          <a
+            className={buttonVariants({ variant: 'outline', size: 'sm' })}
+            href={repo.html_url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              data-icon="inline-start"
+            >
               <path d={siGithub.path} />
             </svg>
             GitHub
           </a>
           {repo.homepage && (
             <a
-              className={actionStyle}
+              className={buttonVariants({ variant: 'outline', size: 'sm' })}
               href={repo.homepage}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <ExternalLink className="size-4" />
+              <ExternalLink data-icon="inline-start" />
               {m.projects_visit({}, { locale })}
             </a>
           )}

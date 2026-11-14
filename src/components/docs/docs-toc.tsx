@@ -75,11 +75,7 @@ export function DocsToc({ toc, markdown, locale }: DocsTocProps) {
 
   return (
     <aside className="fixed top-24 right-4 hidden max-h-[calc(100vh-6rem)] w-60 flex-col xl:flex 2xl:right-[calc((100vw-80rem)/2+1rem)]">
-      <CopyMarkdownButton
-        content={markdown}
-        locale={locale}
-        className="mb-4 w-full shrink-0 text-xs"
-      />
+      <CopyMarkdownButton content={markdown} locale={locale} className="mb-4 w-full shrink-0" />
       {toc.length > 0 && (
         <>
           <h4 className="mb-3 shrink-0 font-semibold">{m.docs_page_nav({}, { locale })}</h4>

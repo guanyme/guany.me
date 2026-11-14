@@ -34,34 +34,33 @@ export function MarkdownLinkDialog({
           {m.link_safety_title({}, { locale })}
         </h2>
         <Button
-          unstyled
+          variant="ghost"
+          size="icon"
           type="button"
           onClick={onClose}
           aria-label={m.link_safety_close({}, { locale })}
-          className="rounded p-1 hover:bg-muted"
         >
-          <X className="size-4" />
+          <X aria-hidden="true" />
         </Button>
       </div>
       <p className="mb-4 text-muted-foreground">{m.link_safety_description({}, { locale })}</p>
       <div className="mb-4 rounded bg-muted p-3 text-sm break-all">{url}</div>
       <div className="flex gap-2">
         <Button
-          unstyled
+          variant="outline"
           type="button"
           onClick={() => void navigator.clipboard.writeText(url)}
-          className="flex flex-1 items-center justify-center gap-2 rounded border px-4 py-2 hover:bg-muted"
+          className="flex-1"
         >
-          <Copy className="size-4" />
+          <Copy data-icon="inline-start" />
           {m.link_safety_copy_link({}, { locale })}
         </Button>
         <Button
-          unstyled
           type="button"
           onClick={onConfirm}
-          className="flex flex-1 items-center justify-center gap-2 rounded bg-primary px-4 py-2 text-primary-foreground hover:opacity-90"
+          className="flex-1"
         >
-          <ExternalLink className="size-4" />
+          <ExternalLink data-icon="inline-start" />
           {m.link_safety_open_link({}, { locale })}
         </Button>
       </div>

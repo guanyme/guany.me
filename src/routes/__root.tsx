@@ -44,7 +44,7 @@ function RouteError() {
   return (
     <div className="mx-auto max-w-7xl space-y-3 p-6" role="alert">
       <p>{m.route_error({}, { locale })}</p>
-      <Button unstyled className="text-primary underline" onClick={() => void router.invalidate()}>
+      <Button variant="link" onClick={() => void router.invalidate()}>
         {m.try_again({}, { locale })}
       </Button>
     </div>

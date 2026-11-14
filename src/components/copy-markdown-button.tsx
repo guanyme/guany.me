@@ -10,16 +10,17 @@ interface CopyMarkdownButtonProps {
   className?: string
 }
 
-export function CopyMarkdownButton({ content, locale, className = '' }: CopyMarkdownButtonProps) {
+export function CopyMarkdownButton({ content, locale, className }: CopyMarkdownButtonProps) {
   const [copied, copy] = useCopy()
   return (
     <Button
-      unstyled
+      variant="outline"
+      size="sm"
       type="button"
-      className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md border bg-background px-3 text-sm font-medium transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring ${className}`}
+      className={className}
       onClick={() => void copy(content)}
     >
-      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+      {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
       <span aria-live="polite">
         {copied ? m.copy_copied({}, { locale }) : m.copy_copy_markdown({}, { locale })}
       </span>
