@@ -3,12 +3,13 @@
   "semi": false,
   "singleQuote": true,
   "sortTailwindcss": {
-    "stylesheet": "app/globals.css",
+    "stylesheet": "src/styles.css",
     "functions": ["cn", "cva"]
   },
   "ignorePatterns": [
-    ".next",
-    "next-env.d.ts",
+    "dist",
+    "src/routeTree.gen.ts",
+    "src/paraglide",
     "pnpm-lock.yaml",
     "components/ui",
     ".agents",

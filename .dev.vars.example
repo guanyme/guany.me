@@ -1,0 +1,3 @@
+# Copy to .dev.vars to use these optional Worker settings in local preview.
+# GITHUB_TOKEN=
+# SITE_CONFIG_URL=

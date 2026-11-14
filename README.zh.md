@@ -2,63 +2,26 @@
 
 ▲ Guany 的网站
 
-| 分类   | 技术栈                     |
-| ------ | -------------------------- |
-| 框架   | Next.js 16 (App Router)    |
-| UI     | shadcn/ui + Tailwind CSS 4 |
-| 内容   | Streamdown                 |
-| 国际化 | next-intl                  |
+网站使用 TanStack Start 和 Cloudflare Workers。简体中文和英文界面文案由 Paraglide JS 编译。
 
 ## 安装
 
-```bash
-pnpm install
-cp .env.example .env.local
+```sh
+pnpm install --frozen-lockfile
 ```
 
-### 环境变量
+## 使用
 
-| 变量              | 必需 | 描述                                                                       |
-| ----------------- | ---- | -------------------------------------------------------------------------- |
-| `SITE_URL`        | 否   | 站点公开地址，用于 sitemap 和 metadata                                     |
-| `GITHUB_TOKEN`    | 是   | GitHub 个人访问令牌                                                        |
-| `SITE_CONFIG_URL` | 否   | 远程站点配置 JSON 地址，例如 `https://assets.example.com/config/site.json` |
+用 `pnpm dev` 启动开发服务器。要在本地验证 Cloudflare Worker 的生产构建，运行以下命令。
 
-## 使用说明
-
-### 开发
-
-```bash
-pnpm dev
-```
-
-### 构建
-
-```bash
+```sh
 pnpm build
+pnpm preview --ip 127.0.0.1 --port 4179
 ```
 
-### Hero 背景图配置
+在另一个终端运行 `pnpm test:routes`。预览地址不同时，用 `WORKER_PREVIEW_URL` 指定。用 `pnpm typecheck` 和 `pnpm lint` 检查源码。 用 `pnpm test:markdown` 检查远程 Markdown 的请求限制。
 
-Hero 背景图会优先读取 `SITE_CONFIG_URL` 指向的远程站点配置，并从中读取 `hero` 字段；如果远程配置不可用或无效，则自动回退到必应每日壁纸。
-
-`site.json` 示例：
-
-```json
-{
-  "hero": {
-    "mode": "custom",
-    "url": "https://assets.example.com/img/background.webp",
-    "position": "center"
-  }
-}
-```
-
-支持字段：
-
-- `mode`：`custom` 或 `bing`
-- `url`：自定义 Hero 背景图地址
-- `position`：会直接透传给 CSS `background-position`
+要为其他站点地址生成规范链接，请在构建前设置 `VITE_SITE_URL`。本地 Worker 可通过 `.dev.vars` 设置可选的 `GITHUB_TOKEN` 和 `SITE_CONFIG_URL`。生产环境请将 GitHub token 存为 Worker secret。预览环境的 `PUBLIC_DATA_CACHE` KV 绑定使用本地存储。
 
 ## 使用许可
 

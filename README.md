@@ -2,63 +2,26 @@
 
 ▲ Guany's website
 
-| Category  | Stack                      |
-| --------- | -------------------------- |
-| Framework | Next.js 16 (App Router)    |
-| UI        | shadcn/ui + Tailwind CSS 4 |
-| Content   | Streamdown                 |
-| I18n      | next-intl                  |
+The site runs on TanStack Start and Cloudflare Workers. Paraglide JS compiles the English and Simplified Chinese interface messages.
 
 ## Install
 
-```bash
-pnpm install
-cp .env.example .env.local
+```sh
+pnpm install --frozen-lockfile
 ```
-
-### Environment Variables
-
-| Variable          | Required | Description                                                                     |
-| ----------------- | -------- | ------------------------------------------------------------------------------- |
-| `SITE_URL`        | No       | Public site URL used for sitemap and metadata                                   |
-| `GITHUB_TOKEN`    | Yes      | GitHub personal access token                                                    |
-| `SITE_CONFIG_URL` | No       | Remote site config JSON URL, e.g. `https://assets.example.com/config/site.json` |
 
 ## Usage
 
-### Development
+Run the development server with `pnpm dev`. To check the Cloudflare Worker with the production bundle, run the following commands.
 
-```bash
-pnpm dev
-```
-
-### Build
-
-```bash
+```sh
 pnpm build
+pnpm preview --ip 127.0.0.1 --port 4179
 ```
 
-### Hero Background Config
+In a second terminal, run `pnpm test:routes`. Set `WORKER_PREVIEW_URL` if the preview uses a different origin. Run `pnpm typecheck` and `pnpm lint` to check the source. `pnpm test:markdown` checks the remote Markdown request limits.
 
-Hero background first tries to load the remote site config from `SITE_CONFIG_URL` and read the `hero` field. If the remote config is unavailable or invalid, it falls back to Bing daily wallpaper.
-
-Example `site.json`:
-
-```json
-{
-  "hero": {
-    "mode": "custom",
-    "url": "https://assets.example.com/img/background.webp",
-    "position": "center"
-  }
-}
-```
-
-Supported fields:
-
-- `mode`: `custom` or `bing`
-- `url`: custom hero background image URL
-- `position`: passed through to CSS `background-position`
+Set `VITE_SITE_URL` before building to generate canonical URLs for a different site origin. Use `.dev.vars` for optional local Worker settings, including `GITHUB_TOKEN` and `SITE_CONFIG_URL`. Store the production GitHub token as a Worker secret. The `PUBLIC_DATA_CACHE` KV binding uses local storage in the preview.
 
 ## License
 
