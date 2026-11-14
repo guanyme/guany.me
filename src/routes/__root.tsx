@@ -1,5 +1,6 @@
 import { HeadContent, Scripts, createRootRoute, useParams, useRouter } from '@tanstack/react-router'
 import { ThemeProvider } from 'next-themes'
+import { Button } from '#/components/ui/button'
 import { THEME_COLOR } from '#/lib/site'
 import { m } from '#/paraglide/messages.js'
 import { baseLocale, isLocale } from '#/paraglide/runtime.js'
@@ -43,9 +44,9 @@ function RouteError() {
   return (
     <div className="mx-auto max-w-7xl space-y-3 p-6" role="alert">
       <p>{m.route_error({}, { locale })}</p>
-      <button className="text-primary underline" onClick={() => void router.invalidate()}>
+      <Button unstyled className="text-primary underline" onClick={() => void router.invalidate()}>
         {m.try_again({}, { locale })}
-      </button>
+      </Button>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { MarkdownView } from '#/components/markdown/markdown-view'
 import { softwareJsonLd } from '#/lib/json-ld'
 import { siteHead, siteUrl } from '#/lib/site'
 import { useCopy } from '#/lib/use-copy'
+import { Button } from '#/components/ui/button'
 import { m } from '#/paraglide/messages.js'
 import { baseLocale, localizeHref, type Locale } from '#/paraglide/runtime.js'
 import { getProjectPage } from '#/server/projects.functions'
@@ -40,14 +41,15 @@ function CopyCloneButton({ fullName, locale }: { fullName: string; locale: Local
   const [copied, copy] = useCopy()
 
   return (
-    <button
+    <Button
+      unstyled
       type="button"
       className={actionStyle}
       onClick={() => void copy(`https://github.com/${fullName}.git`)}
     >
       {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
       {copied ? m.projects_copied({}, { locale }) : m.projects_copy_clone_url({}, { locale })}
-    </button>
+    </Button>
   )
 }
 
