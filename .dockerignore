@@ -1,0 +1,15 @@
+.git
+node_modules
+dist
+.output
+.tanstack
+.wrangler
+.env*
+.dev.vars*
+**/.env*
+**/.dev.vars*
+**/*.pem
+**/*.key
+src/paraglide
+project.inlang/cache
+project.inlang/project_id

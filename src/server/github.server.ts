@@ -1,6 +1,6 @@
 import '@tanstack/react-start/server-only'
 
-import { env } from 'cloudflare:workers'
+import { getRuntimeEnvironment } from './runtime-environment.server'
 import { z } from 'zod'
 import { githubRepoSchema, githubUserSchema } from '#/types/github'
 import type { GitHubRepo, GitHubUser, ProjectCardData } from '#/types/github'
@@ -18,14 +18,14 @@ const fullNamePattern = /^[\w-]+\/[\w.-]+$/
 const readmeSchema = z.string().nullable()
 
 function githubOwner() {
-  return env.GITHUB_OWNER || 'guanyme'
+  return getRuntimeEnvironment().GITHUB_OWNER || 'guanyme'
 }
 
 function githubFetch(
   path: string,
   { accept = 'application/vnd.github+json', timeout = 5_000, authenticated = true } = {},
 ) {
-  const token = authenticated && env.GITHUB_TOKEN
+  const token = authenticated && getRuntimeEnvironment().GITHUB_TOKEN
   return fetch(`https://api.github.com${path}`, {
     redirect: 'manual',
     headers: {
