@@ -230,6 +230,21 @@ const cases = [
     status: 200,
     body: /Sitemap: https:\/\/guany\.me\/sitemap\.xml/,
   },
+  {
+    name: 'security contact file serves UTF-8 text',
+    path: '/.well-known/security.txt',
+    status: 200,
+    media: 'text/plain; charset=utf-8',
+    body: /Contact: mailto:/,
+  },
+  {
+    name: 'security contact file supports HEAD',
+    method: 'HEAD',
+    path: '/.well-known/security.txt',
+    status: 200,
+    media: 'text/plain; charset=utf-8',
+  },
+  { name: 'platform headers file is private', path: '/_headers', status: 404 },
   { name: 'sitemap', path: '/sitemap.xml', status: 200, body: /https:\/\/guany\.me\/zh\/uses/ },
   { name: 'web manifest', path: '/manifest.webmanifest', status: 200, body: /"start_url":\s*"\/"/ },
   {
@@ -251,6 +266,7 @@ const cases = [
 for (const scenario of cases) {
   test(scenario.name, async () => {
     const response = await fetch(new URL(scenario.path, origin), {
+      method: scenario.method,
       redirect: 'manual',
       headers: {
         'Accept-Language': scenario.language ?? 'en',

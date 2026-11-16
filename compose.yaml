@@ -1,0 +1,13 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        VITE_SITE_URL: ${VITE_SITE_URL:-https://guany.me}
+    environment:
+      GITHUB_OWNER: ${GITHUB_OWNER:-guanyme}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      SITE_CONFIG_URL: ${SITE_CONFIG_URL:-}
+    ports:
+      - '${HOST_PORT:-3000}:3000'
+    restart: unless-stopped

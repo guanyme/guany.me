@@ -1,6 +1,6 @@
 import '@tanstack/react-start/server-only'
 
-import { env } from 'cloudflare:workers'
+import { getRuntimeEnvironment } from './runtime-environment.server'
 import { z } from 'zod'
 import type { Locale } from '#/paraglide/runtime.js'
 import { webUrl } from '#/types/github'
@@ -50,7 +50,7 @@ export function getBingWallpaper(locale: Locale) {
 }
 
 async function getRemoteHeroConfig() {
-  const configUrl = webUrl.safeParse(env.SITE_CONFIG_URL)
+  const configUrl = webUrl.safeParse(getRuntimeEnvironment().SITE_CONFIG_URL)
   if (!configUrl.success) return null
   return cachedPublicData({
     name: 'hero:configuration',

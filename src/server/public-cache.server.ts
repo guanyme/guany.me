@@ -1,6 +1,6 @@
 import '@tanstack/react-start/server-only'
 
-import { env } from 'cloudflare:workers'
+import { getRuntimeEnvironment } from './runtime-environment.server'
 import { z } from 'zod'
 
 const retryDelay = 60_000
@@ -37,7 +37,7 @@ export async function cachedPublicData<T>({
   fallback: T
 }): Promise<T> {
   const key = `public-data:v1:${name}`
-  const binding = env.PUBLIC_DATA_CACHE
+  const binding = getRuntimeEnvironment().PUBLIC_DATA_CACHE
   const entrySchema = z.object({ value: schema, refreshAfter: z.number() })
   const readEntry = (input: unknown) => {
     const result = entrySchema.safeParse(input)

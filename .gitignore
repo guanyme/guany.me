@@ -38,6 +38,7 @@ content/timestamps.json
 
 # Vite and Workers
 /dist/
+/.output/
 /.tanstack/
 /.wrangler/
 .dev.vars*
