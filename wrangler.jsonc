@@ -6,4 +6,5 @@
   "main": "./src/worker.ts",
   "vars": { "GITHUB_OWNER": "guanyme" },
   "kv_namespaces": [{ "binding": "PUBLIC_DATA_CACHE", "id": "da43633fbc8549658e1fe913700dc23e" }],
+  "previews": { "vars": { "GITHUB_OWNER": "guanyme" } },
 }
