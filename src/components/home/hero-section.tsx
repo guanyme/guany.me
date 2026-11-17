@@ -48,7 +48,9 @@ export function HeroSection({
             }`}
           >
             <h1 className="mb-3 text-4xl font-bold md:text-5xl">Guany</h1>
-            <p className="mb-6 max-w-md text-lg">{user?.bio || m.home_description({}, { locale })}</p>
+            <p className="mb-6 max-w-md text-lg">
+              {user?.bio || m.home_description({}, { locale })}
+            </p>
             {user && (
               <div className="mb-8 flex flex-wrap items-center justify-center gap-6 text-sm">
                 {user.location && (
