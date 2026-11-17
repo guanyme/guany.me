@@ -41,25 +41,27 @@ export function HeroSection({
             />
           </div>
           <div
-            className={`flex flex-col items-center rounded-2xl px-5 py-4 ${
-              backgroundUrl ? 'bg-black/70 text-white' : 'text-foreground'
+            className={`flex flex-col items-center ${
+              backgroundUrl
+                ? 'text-white drop-shadow-[0_1px_2px_black] [text-shadow:0_1px_3px_black,0_2px_8px_black]'
+                : 'text-foreground'
             }`}
           >
             <h1 className="mb-3 text-4xl font-bold md:text-5xl">Guany</h1>
-            <p className="max-w-md text-lg">{user?.bio || m.home_description({}, { locale })}</p>
+            <p className="mb-6 max-w-md text-lg">{user?.bio || m.home_description({}, { locale })}</p>
             {user && (
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm">
+              <div className="mb-8 flex flex-wrap items-center justify-center gap-6 text-sm">
                 {user.location && (
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1">
                     <MapPin className="size-4" />
                     <span>{user.location}</span>
                   </div>
                 )}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <BookMarked className="size-4" />
                   <span>{m.home_repos({ count: user.public_repos }, { locale })}</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <Users className="size-4" />
                   <span>{m.home_followers({ count: user.followers }, { locale })}</span>
                 </div>
