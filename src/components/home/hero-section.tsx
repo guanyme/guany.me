@@ -40,36 +40,28 @@ export function HeroSection({
               className="size-32 rounded-full shadow-xl ring-4 ring-white/80 dark:ring-white/20"
             />
           </div>
-          <div
-            className={`flex flex-col items-center ${
-              backgroundUrl
-                ? 'text-white drop-shadow-[0_1px_2px_black] [text-shadow:0_1px_3px_black,0_2px_8px_black]'
-                : 'text-foreground'
-            }`}
-          >
-            <h1 className="mb-3 text-4xl font-bold md:text-5xl">Guany</h1>
-            <p className="mb-6 max-w-md text-lg">
-              {user?.bio || m.home_description({}, { locale })}
-            </p>
-            {user && (
-              <div className="mb-8 flex flex-wrap items-center justify-center gap-6 text-sm">
-                {user.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin className="size-4" />
-                    <span>{user.location}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <BookMarked className="size-4" />
-                  <span>{m.home_repos({ count: user.public_repos }, { locale })}</span>
+          <h1 className="mb-3 text-4xl font-bold md:text-5xl">Guany</h1>
+          <p className="mb-6 max-w-md text-lg text-foreground">
+            {user?.bio || m.home_description({}, { locale })}
+          </p>
+          {user && (
+            <div className="mb-8 flex flex-wrap items-center justify-center gap-6">
+              {user.location && (
+                <div className="flex items-center gap-1 text-sm text-foreground">
+                  <MapPin className="size-4" />
+                  <span>{user.location}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Users className="size-4" />
-                  <span>{m.home_followers({ count: user.followers }, { locale })}</span>
-                </div>
+              )}
+              <div className="flex items-center gap-1 text-sm text-foreground">
+                <BookMarked className="size-4" />
+                <span>{m.home_repos({ count: user.public_repos }, { locale })}</span>
               </div>
-            )}
-          </div>
+              <div className="flex items-center gap-1 text-sm text-foreground">
+                <Users className="size-4" />
+                <span>{m.home_followers({ count: user.followers }, { locale })}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </section>
