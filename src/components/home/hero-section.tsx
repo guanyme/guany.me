@@ -41,22 +41,22 @@ export function HeroSection({
             />
           </div>
           <h1 className="mb-3 text-4xl font-bold md:text-5xl">Guany</h1>
-          <p className="mb-6 max-w-md text-lg text-muted-foreground">
+          <p className="mb-6 max-w-md text-lg text-foreground">
             {user?.bio || m.home_description({}, { locale })}
           </p>
           {user && (
             <div className="mb-8 flex flex-wrap items-center justify-center gap-6">
               {user.location && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <div className="flex items-center gap-1 text-sm text-foreground">
                   <MapPin className="size-4" />
                   <span>{user.location}</span>
                 </div>
               )}
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1 text-sm text-foreground">
                 <BookMarked className="size-4" />
                 <span>{m.home_repos({ count: user.public_repos }, { locale })}</span>
               </div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1 text-sm text-foreground">
                 <Users className="size-4" />
                 <span>{m.home_followers({ count: user.followers }, { locale })}</span>
               </div>

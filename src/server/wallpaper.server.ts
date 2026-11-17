@@ -54,7 +54,7 @@ async function getRemoteHeroConfig() {
   if (!configUrl.success) return null
   return cachedPublicData({
     name: 'hero:configuration',
-    ttl: 5 * 60_000,
+    ttl: 30 * 60_000,
     schema: remoteConfigSchema.nullable(),
     fallback: null,
     async load() {

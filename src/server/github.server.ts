@@ -7,9 +7,9 @@ import type { GitHubRepo, GitHubUser, ProjectCardData } from '#/types/github'
 import { cachedPublicData } from './public-cache.server'
 import { processReadmeContent, extractTagline } from './github-markdown'
 
-const repoTtl = 30 * 60_000
+const repoTtl = 6 * 60 * 60_000
 const userTtl = 60 * 60_000
-const readmeTtl = 60 * 60_000
+const readmeTtl = 12 * 60 * 60_000
 const reposSchema = githubRepoSchema.array()
 const upstreamRepoSchema = githubRepoSchema.extend({ fork: z.boolean(), private: z.boolean() })
 const nullableRepository = githubRepoSchema.nullable()
