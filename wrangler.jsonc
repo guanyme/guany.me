@@ -4,7 +4,13 @@
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "main": "./src/worker.ts",
-  "vars": { "GITHUB_OWNER": "guanyme" },
+  "vars": { "GITHUB_OWNER": "guanyme", "KV_WRITE_AUDIT_UNTIL": "2026-11-18T04:00:00Z" },
+  "observability": {
+    "enabled": true,
+    "redact_query_string": true,
+    "logs": { "enabled": true, "head_sampling_rate": 1, "invocation_logs": false },
+    "traces": { "enabled": false },
+  },
   "kv_namespaces": [{ "binding": "PUBLIC_DATA_CACHE", "id": "da43633fbc8549658e1fe913700dc23e" }],
   "previews": { "vars": { "GITHUB_OWNER": "guanyme" } },
 }
