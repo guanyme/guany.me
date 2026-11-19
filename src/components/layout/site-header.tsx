@@ -7,6 +7,7 @@ import { ModeToggle } from '#/components/mode-toggle'
 import { MobileNav } from '#/components/docs/mobile-nav'
 import { Button } from '#/components/ui/button'
 import { Bot, BookOpenText, ChevronDown, FolderGit2, Wrench } from 'lucide-react'
+import { siX } from 'simple-icons'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,6 +169,24 @@ export function SiteHeader({ locale, languageSwitch }: SiteHeaderProps) {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              nativeButton={false}
+              render={
+                <a
+                  href="https://x.com/guanyme"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="X"
+                />
+              }
+            >
+              <svg viewBox="0 0 24 24" className="size-4.5" aria-hidden="true">
+                <path fill="currentColor" d={siX.path} />
+              </svg>
+            </Button>
             <Button
               variant="ghost"
               size="icon"
