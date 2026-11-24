@@ -11,7 +11,9 @@ interface CopyMarkdownButtonProps {
 }
 
 export function CopyMarkdownButton({ content, locale, className }: CopyMarkdownButtonProps) {
-  const [copied, copy] = useCopy()
+  const [status, copy] = useCopy()
+  const copied = status === 'copied'
+  const feedback = copied ? m.copy_copied({}, { locale }) : m.copy_failed({}, { locale })
   return (
     <Button
       variant="outline"
@@ -21,7 +23,7 @@ export function CopyMarkdownButton({ content, locale, className }: CopyMarkdownB
     >
       {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
       <span aria-live="polite">
-        {copied ? m.copy_copied({}, { locale }) : m.copy_copy_markdown({}, { locale })}
+        {status === 'idle' ? m.copy_copy_markdown({}, { locale }) : feedback}
       </span>
     </Button>
   )

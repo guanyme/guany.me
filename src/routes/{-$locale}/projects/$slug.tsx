@@ -35,7 +35,9 @@ function projectPath(slug: string) {
 }
 
 function CopyCloneButton({ fullName, locale }: { fullName: string; locale: Locale }) {
-  const [copied, copy] = useCopy()
+  const [status, copy] = useCopy()
+  const copied = status === 'copied'
+  const feedback = copied ? m.projects_copied({}, { locale }) : m.copy_failed({}, { locale })
 
   return (
     <Button
@@ -44,7 +46,9 @@ function CopyCloneButton({ fullName, locale }: { fullName: string; locale: Local
       onClick={() => void copy(`https://github.com/${fullName}.git`)}
     >
       {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
-      {copied ? m.projects_copied({}, { locale }) : m.projects_copy_clone_url({}, { locale })}
+      <span aria-live="polite">
+        {status === 'idle' ? m.projects_copy_clone_url({}, { locale }) : feedback}
+      </span>
     </Button>
   )
 }

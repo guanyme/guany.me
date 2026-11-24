@@ -38,6 +38,16 @@ function Projects() {
       )
     : repos
   const searchLabel = m.projects_search_placeholder({}, { locale })
+  const announcement = visible.length
+    ? visible.length === 1
+      ? m.projects_one_result({}, { locale })
+      : m.projects_result_count(
+          { count: new Intl.NumberFormat(locale).format(visible.length) },
+          { locale },
+        )
+    : query
+      ? m.projects_no_match({}, { locale })
+      : m.projects_no_projects({}, { locale })
 
   return (
     <div className="mx-auto max-w-4xl px-4 pt-8 pb-24">
@@ -47,6 +57,8 @@ function Projects() {
           <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
+            name="keyword"
+            autoComplete="off"
             aria-label={searchLabel}
             placeholder={searchLabel}
             value={keyword ?? ''}
@@ -62,16 +74,15 @@ function Projects() {
           />
         </div>
       </div>
-      {visible.length ? (
+      <p role="status" className={visible.length ? 'sr-only' : 'text-center text-muted-foreground'}>
+        {announcement}
+      </p>
+      {visible.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2">
           {visible.map((repo) => (
             <ProjectCard key={repo.id} repo={repo} locale={locale} />
           ))}
         </div>
-      ) : (
-        <p className="text-center text-muted-foreground">
-          {query ? m.projects_no_match({}, { locale }) : m.projects_no_projects({}, { locale })}
-        </p>
       )}
     </div>
   )

@@ -28,6 +28,12 @@ function LocaleLayout() {
 
   return (
     <div className="flex min-h-full flex-col">
+      <a
+        href="#main-content"
+        className="sr-only rounded-md bg-background px-4 py-2 text-foreground shadow-md focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[60]"
+      >
+        {m.nav_skip_to_content({}, { locale })}
+      </a>
       <SiteHeader
         locale={locale}
         languageSwitch={
@@ -80,7 +86,7 @@ function LocaleLayout() {
           </DropdownMenu>
         }
       />
-      <main className="flex-1 pt-16">
+      <main id="main-content" tabIndex={-1} className="flex-1 pt-16">
         <Outlet />
       </main>
     </div>

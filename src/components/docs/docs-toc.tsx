@@ -78,7 +78,7 @@ export function DocsToc({ toc, markdown, locale }: DocsTocProps) {
       <CopyMarkdownButton content={markdown} locale={locale} className="mb-4 w-full shrink-0" />
       {toc.length > 0 && (
         <>
-          <h4 className="mb-3 shrink-0 font-semibold">{m.docs_page_nav({}, { locale })}</h4>
+          <p className="mb-3 shrink-0 font-semibold">{m.docs_page_nav({}, { locale })}</p>
           <nav
             aria-label={m.docs_page_nav({}, { locale })}
             className="min-h-0 flex-1 overflow-y-auto pr-2 pb-8"

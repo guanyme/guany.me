@@ -17,7 +17,7 @@ export function ProjectCard({
   const animation = featuredIndex === undefined ? '' : 'animate-fade-in-up'
   return (
     <article
-      className={`group relative flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-1 hover:border-primary hover:shadow-lg ${animation}`}
+      className={`group relative flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition-[border-color,box-shadow,translate] hover:-translate-y-1 hover:border-primary hover:shadow-lg ${animation}`}
       style={
         featuredIndex === undefined
           ? undefined

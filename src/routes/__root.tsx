@@ -1,5 +1,6 @@
 import { HeadContent, Scripts, createRootRoute, useParams, useRouter } from '@tanstack/react-router'
-import { ThemeProvider } from 'next-themes'
+import { ThemeProvider, useTheme } from 'next-themes'
+import { useEffect } from 'react'
 import { Button } from '#/components/ui/button'
 import { THEME_COLOR } from '#/lib/site'
 import { m } from '#/paraglide/messages.js'
@@ -76,10 +77,24 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           enableSystem
           disableTransitionOnChange
         >
+          <SyncThemeColor />
           {children}
         </ThemeProvider>
         <Scripts />
       </body>
     </html>
   )
+}
+
+function SyncThemeColor() {
+  const { resolvedTheme } = useTheme()
+
+  useEffect(() => {
+    if (resolvedTheme !== 'light' && resolvedTheme !== 'dark') return
+    for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+      meta.content = THEME_COLOR[resolvedTheme]
+    }
+  }, [resolvedTheme])
+
+  return null
 }

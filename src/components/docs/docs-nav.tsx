@@ -8,11 +8,11 @@ export function DocsNav({ locale, onNavigate }: { locale: Locale; onNavigate?: (
     <nav className="space-y-6" aria-label={m.nav_docs({}, { locale })}>
       {docsConfig.map((group) => (
         <div key={group.titleKey}>
-          <h4 className="mb-2 font-semibold">
+          <p className="mb-2 font-semibold">
             {group.titleKey === 'guide'
               ? m.docs_guide({}, { locale })
               : m.docs_environment({}, { locale })}
-          </h4>
+          </p>
           <ul className="space-y-1">
             {group.items.map((item) => (
               <li key={item.slug}>

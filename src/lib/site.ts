@@ -2,7 +2,7 @@ import { m } from '#/paraglide/messages.js'
 import { localizeUrl, type Locale } from '#/paraglide/runtime.js'
 
 export const siteUrl = (import.meta.env.VITE_SITE_URL || 'https://guany.me').replace(/\/$/, '')
-export const THEME_COLOR = { light: '#ffffff', dark: '#121212' } as const
+export const THEME_COLOR = { light: '#ffffff', dark: '#0a0a0a' } as const
 
 export function siteHead({
   locale,
