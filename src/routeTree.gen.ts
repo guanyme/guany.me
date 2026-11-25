@@ -16,13 +16,11 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as Char123LocaleChar125RouteImport } from './routes/{-$locale}'
 import { Route as Char123LocaleChar125IndexRouteImport } from './routes/{-$locale}/index'
-import { Route as Char123LocaleChar125MdRouteImport } from './routes/{-$locale}/md'
 import { Route as Char123LocaleChar125UsesRouteImport } from './routes/{-$locale}/uses'
 import { Route as Char123LocaleChar125UsesDotmdRouteImport } from './routes/{-$locale}/uses[.]md'
 import { Route as ApiBingWallpaperRouteImport } from './routes/api/bing/wallpaper'
 import { Route as ApiGithubReposRouteImport } from './routes/api/github/repos'
 import { Route as ApiGithubUserRouteImport } from './routes/api/github/user'
-import { Route as Char123LocaleChar125AuthVerifiedRouteImport } from './routes/{-$locale}/auth/verified'
 import { Route as Char123LocaleChar125DocsIndexRouteImport } from './routes/{-$locale}/docs/index'
 import { Route as Char123LocaleChar125DocsSplatRouteImport } from './routes/{-$locale}/docs/$'
 import { Route as Char123LocaleChar125DocsChar123Char125DotmdRouteImport } from './routes/{-$locale}/docs/{$}[.]md'
@@ -66,11 +64,6 @@ const Char123LocaleChar125IndexRoute =
     path: '/',
     getParentRoute: () => Char123LocaleChar125Route,
   } as any)
-const Char123LocaleChar125MdRoute = Char123LocaleChar125MdRouteImport.update({
-  id: '/md',
-  path: '/md',
-  getParentRoute: () => Char123LocaleChar125Route,
-} as any)
 const Char123LocaleChar125UsesRoute =
   Char123LocaleChar125UsesRouteImport.update({
     id: '/uses',
@@ -98,12 +91,6 @@ const ApiGithubUserRoute = ApiGithubUserRouteImport.update({
   path: '/api/github/user',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char123LocaleChar125AuthVerifiedRoute =
-  Char123LocaleChar125AuthVerifiedRouteImport.update({
-    id: '/auth/verified',
-    path: '/auth/verified',
-    getParentRoute: () => Char123LocaleChar125Route,
-  } as any)
 const Char123LocaleChar125DocsIndexRoute =
   Char123LocaleChar125DocsIndexRouteImport.update({
     id: '/docs/',
@@ -147,14 +134,12 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/{-$locale}': typeof Char123LocaleChar125RouteWithChildren
-  '/{-$locale}/md': typeof Char123LocaleChar125MdRoute
   '/{-$locale}/uses': typeof Char123LocaleChar125UsesRoute
   '/{-$locale}/uses.md': typeof Char123LocaleChar125UsesDotmdRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/api/bing/wallpaper': typeof ApiBingWallpaperRoute
   '/api/github/repos': typeof ApiGithubReposRoute
   '/api/github/user': typeof ApiGithubUserRoute
-  '/{-$locale}/auth/verified': typeof Char123LocaleChar125AuthVerifiedRoute
   '/{-$locale}/docs/$': typeof Char123LocaleChar125DocsSplatRoute
   '/{-$locale}/docs/{$}.md': typeof Char123LocaleChar125DocsChar123Char125DotmdRoute
   '/{-$locale}/projects/$slug': typeof Char123LocaleChar125ProjectsSlugRoute
@@ -168,14 +153,12 @@ export interface FileRoutesByTo {
   '/manifest.webmanifest': typeof ManifestDotwebmanifestRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/{-$locale}/md': typeof Char123LocaleChar125MdRoute
   '/{-$locale}/uses': typeof Char123LocaleChar125UsesRoute
   '/{-$locale}/uses.md': typeof Char123LocaleChar125UsesDotmdRoute
   '/{-$locale}': typeof Char123LocaleChar125IndexRoute
   '/api/bing/wallpaper': typeof ApiBingWallpaperRoute
   '/api/github/repos': typeof ApiGithubReposRoute
   '/api/github/user': typeof ApiGithubUserRoute
-  '/{-$locale}/auth/verified': typeof Char123LocaleChar125AuthVerifiedRoute
   '/{-$locale}/docs/$': typeof Char123LocaleChar125DocsSplatRoute
   '/{-$locale}/docs/{$}.md': typeof Char123LocaleChar125DocsChar123Char125DotmdRoute
   '/{-$locale}/projects/$slug': typeof Char123LocaleChar125ProjectsSlugRoute
@@ -191,14 +174,12 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/{-$locale}': typeof Char123LocaleChar125RouteWithChildren
-  '/{-$locale}/md': typeof Char123LocaleChar125MdRoute
   '/{-$locale}/uses': typeof Char123LocaleChar125UsesRoute
   '/{-$locale}/uses.md': typeof Char123LocaleChar125UsesDotmdRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/api/bing/wallpaper': typeof ApiBingWallpaperRoute
   '/api/github/repos': typeof ApiGithubReposRoute
   '/api/github/user': typeof ApiGithubUserRoute
-  '/{-$locale}/auth/verified': typeof Char123LocaleChar125AuthVerifiedRoute
   '/{-$locale}/docs/$': typeof Char123LocaleChar125DocsSplatRoute
   '/{-$locale}/docs/{$}.md': typeof Char123LocaleChar125DocsChar123Char125DotmdRoute
   '/{-$locale}/projects/$slug': typeof Char123LocaleChar125ProjectsSlugRoute
@@ -215,14 +196,12 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/{-$locale}'
-    | '/{-$locale}/md'
     | '/{-$locale}/uses'
     | '/{-$locale}/uses.md'
     | '/{-$locale}/'
     | '/api/bing/wallpaper'
     | '/api/github/repos'
     | '/api/github/user'
-    | '/{-$locale}/auth/verified'
     | '/{-$locale}/docs/$'
     | '/{-$locale}/docs/{$}.md'
     | '/{-$locale}/projects/$slug'
@@ -236,14 +215,12 @@ export interface FileRouteTypes {
     | '/manifest.webmanifest'
     | '/robots.txt'
     | '/sitemap.xml'
-    | '/{-$locale}/md'
     | '/{-$locale}/uses'
     | '/{-$locale}/uses.md'
     | '/{-$locale}'
     | '/api/bing/wallpaper'
     | '/api/github/repos'
     | '/api/github/user'
-    | '/{-$locale}/auth/verified'
     | '/{-$locale}/docs/$'
     | '/{-$locale}/docs/{$}.md'
     | '/{-$locale}/projects/$slug'
@@ -258,14 +235,12 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sitemap.xml'
     | '/{-$locale}'
-    | '/{-$locale}/md'
     | '/{-$locale}/uses'
     | '/{-$locale}/uses.md'
     | '/{-$locale}/'
     | '/api/bing/wallpaper'
     | '/api/github/repos'
     | '/api/github/user'
-    | '/{-$locale}/auth/verified'
     | '/{-$locale}/docs/$'
     | '/{-$locale}/docs/{$}.md'
     | '/{-$locale}/projects/$slug'
@@ -338,13 +313,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char123LocaleChar125IndexRouteImport
       parentRoute: typeof Char123LocaleChar125Route
     }
-    '/{-$locale}/md': {
-      id: '/{-$locale}/md'
-      path: '/md'
-      fullPath: '/{-$locale}/md'
-      preLoaderRoute: typeof Char123LocaleChar125MdRouteImport
-      parentRoute: typeof Char123LocaleChar125Route
-    }
     '/{-$locale}/uses': {
       id: '/{-$locale}/uses'
       path: '/uses'
@@ -379,13 +347,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/github/user'
       preLoaderRoute: typeof ApiGithubUserRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/{-$locale}/auth/verified': {
-      id: '/{-$locale}/auth/verified'
-      path: '/auth/verified'
-      fullPath: '/{-$locale}/auth/verified'
-      preLoaderRoute: typeof Char123LocaleChar125AuthVerifiedRouteImport
-      parentRoute: typeof Char123LocaleChar125Route
     }
     '/{-$locale}/docs/': {
       id: '/{-$locale}/docs/'
@@ -433,11 +394,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface Char123LocaleChar125RouteChildren {
-  Char123LocaleChar125MdRoute: typeof Char123LocaleChar125MdRoute
   Char123LocaleChar125UsesRoute: typeof Char123LocaleChar125UsesRoute
   Char123LocaleChar125UsesDotmdRoute: typeof Char123LocaleChar125UsesDotmdRoute
   Char123LocaleChar125IndexRoute: typeof Char123LocaleChar125IndexRoute
-  Char123LocaleChar125AuthVerifiedRoute: typeof Char123LocaleChar125AuthVerifiedRoute
   Char123LocaleChar125DocsSplatRoute: typeof Char123LocaleChar125DocsSplatRoute
   Char123LocaleChar125DocsChar123Char125DotmdRoute: typeof Char123LocaleChar125DocsChar123Char125DotmdRoute
   Char123LocaleChar125ProjectsSlugRoute: typeof Char123LocaleChar125ProjectsSlugRoute
@@ -446,11 +405,9 @@ interface Char123LocaleChar125RouteChildren {
 }
 
 const Char123LocaleChar125RouteChildren: Char123LocaleChar125RouteChildren = {
-  Char123LocaleChar125MdRoute: Char123LocaleChar125MdRoute,
   Char123LocaleChar125UsesRoute: Char123LocaleChar125UsesRoute,
   Char123LocaleChar125UsesDotmdRoute: Char123LocaleChar125UsesDotmdRoute,
   Char123LocaleChar125IndexRoute: Char123LocaleChar125IndexRoute,
-  Char123LocaleChar125AuthVerifiedRoute: Char123LocaleChar125AuthVerifiedRoute,
   Char123LocaleChar125DocsSplatRoute: Char123LocaleChar125DocsSplatRoute,
   Char123LocaleChar125DocsChar123Char125DotmdRoute:
     Char123LocaleChar125DocsChar123Char125DotmdRoute,

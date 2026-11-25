@@ -13,7 +13,6 @@ import {
   defaultUrlTransform,
   type StreamdownProps,
 } from 'streamdown'
-import { publicMarkdownUrl } from '#/lib/remote-markdown'
 import { m } from '#/paraglide/messages.js'
 import { localizeHref, type Locale } from '#/paraglide/runtime.js'
 import { MarkdownLinkDialog } from './markdown-link-dialog'
@@ -31,7 +30,6 @@ interface MarkdownViewProps {
   children: string
   trusted?: boolean
   repositoryReadme?: boolean
-  baseUrl?: string
   locale?: Locale
   className?: string
 }
@@ -104,13 +102,12 @@ const readmeSchema = {
   },
 }
 
-const localizedPaths = /^\/(?:docs|projects|uses|md)(?:[/?#]|$)/
+const localizedPaths = /^\/(?:docs|projects|uses)(?:[/?#]|$)/
 
 export function MarkdownView({
   children,
   trusted = false,
   repositoryReadme = false,
-  baseUrl,
   locale,
   className,
 }: MarkdownViewProps) {
@@ -125,8 +122,7 @@ export function MarkdownView({
         [rehypeHeadings, { locale }],
       ]
     }
-    if (baseUrl) return [rehypeSanitize]
-  }, [trusted, repositoryReadme, baseUrl, locale])
+  }, [trusted, repositoryReadme, locale])
 
   const components = useMemo(
     () => ({
@@ -159,27 +155,8 @@ export function MarkdownView({
     },
     urlTransform: (url, key, node) => {
       if (url.startsWith('#')) return url
-      let resolved = url
-      if (baseUrl) {
-        try {
-          const target = new URL(url, baseUrl)
-          if (key === 'href' && /\.mdx?$/i.test(target.pathname)) {
-            const allowed = publicMarkdownUrl(target.href)
-            if (allowed) {
-              const hash = allowed.hash
-              allowed.hash = ''
-              const preview = `/md?${new URLSearchParams({ url: allowed.href })}${hash}`
-              return localizeHref(preview, { locale })
-            }
-          }
-          resolved = target.href
-        } catch {
-          return
-        }
-      } else if (locale && key === 'href' && localizedPaths.test(url)) {
-        resolved = localizeHref(url, { locale })
-      }
-
+      const resolved =
+        locale && key === 'href' && localizedPaths.test(url) ? localizeHref(url, { locale }) : url
       return defaultUrlTransform(resolved, key, node)
     },
   }

@@ -1,7 +1,7 @@
 {
   "name": "guany.me",
   "private": true,
-  "description": "▲ Guany’s website",
+  "description": "▲ Guany's website",
   "type": "module",
   "imports": {
     "#/*": "./src/*"
@@ -17,8 +17,7 @@
     "typecheck": "paraglide-js compile && tsc --noEmit",
     "test:routes": "node --test tests/worker-routes.test.mjs",
     "lint": "oxlint src tests",
-    "format": "oxfmt .",
-    "test:markdown": "node --test tests/remote-markdown.test.mjs"
+    "format": "oxfmt ."
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

@@ -15,7 +15,5 @@ export default defineConfig({
     { match: '/docs/:path(.*)?', strategy: negotiated },
     { match: '/projects/:path(.*)?', strategy: negotiated },
     { match: '/uses{/}?', strategy: negotiated },
-    { match: '/md{/}?', strategy: negotiated },
-    { match: '/auth/verified{/}?', strategy: negotiated },
   ],
 })

@@ -16,7 +16,7 @@ pnpm install --frozen-lockfile
 
 ## 使用说明
 
-用 `pnpm dev` 启动开发服务器。用 `pnpm typecheck` 和 `pnpm lint` 检查源码，用 `pnpm test:markdown` 验证远程 Markdown 的请求限制。
+用 `pnpm dev` 启动开发服务器。用 `pnpm typecheck` 和 `pnpm lint` 检查源码。
 
 ### Cloudflare Workers
 

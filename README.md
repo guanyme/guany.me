@@ -16,7 +16,7 @@ pnpm install --frozen-lockfile
 
 ## Usage
 
-Run `pnpm dev` for local development. Run `pnpm typecheck` and `pnpm lint` to check the source. Run `pnpm test:markdown` to verify the remote Markdown request limits.
+Run `pnpm dev` for local development. Run `pnpm typecheck` and `pnpm lint` to check the source.
 
 ### Cloudflare Workers
 
