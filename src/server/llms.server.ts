@@ -102,8 +102,16 @@ export async function getLlmsResponse({ full }: { full: boolean }) {
     if (full) lines.push('---', '', uses.markdown.trim(), '')
     else {
       lines.push(
-        entry('What I use', `${siteUrl}/uses`, uses.description || m.uses_description({}, english)),
+        entry(
+          'What I use',
+          `${siteUrl}/uses.md`,
+          uses.description || m.uses_description({}, english),
+        ),
       )
+      const chineseUses = getContent('zh', 'pages', 'uses')
+      if (chineseUses) {
+        lines.push(entry(chineseUses.title, `${siteUrl}/zh/uses.md`, chineseUses.description))
+      }
     }
   }
 

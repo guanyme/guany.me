@@ -251,6 +251,12 @@ const cases = [
     status: 200,
     body: /https:\/\/guany\.me\/docs\/herdr/,
   },
+  {
+    name: 'llms index links to English and Chinese Uses Markdown',
+    path: '/llms.txt',
+    status: 200,
+    body: /\]\(https:\/\/guany\.me\/uses\.md\)[^\n]*\n- \[[^\]]+\]\(https:\/\/guany\.me\/zh\/uses\.md\)/,
+  },
   { name: 'full llms export', path: '/llms-full.txt', status: 200, body: /Herdr App/ },
   {
     name: 'robots',
