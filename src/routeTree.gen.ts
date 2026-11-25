@@ -18,6 +18,7 @@ import { Route as Char123LocaleChar125RouteImport } from './routes/{-$locale}'
 import { Route as Char123LocaleChar125IndexRouteImport } from './routes/{-$locale}/index'
 import { Route as Char123LocaleChar125MdRouteImport } from './routes/{-$locale}/md'
 import { Route as Char123LocaleChar125UsesRouteImport } from './routes/{-$locale}/uses'
+import { Route as Char123LocaleChar125UsesDotmdRouteImport } from './routes/{-$locale}/uses[.]md'
 import { Route as ApiBingWallpaperRouteImport } from './routes/api/bing/wallpaper'
 import { Route as ApiGithubReposRouteImport } from './routes/api/github/repos'
 import { Route as ApiGithubUserRouteImport } from './routes/api/github/user'
@@ -74,6 +75,12 @@ const Char123LocaleChar125UsesRoute =
   Char123LocaleChar125UsesRouteImport.update({
     id: '/uses',
     path: '/uses',
+    getParentRoute: () => Char123LocaleChar125Route,
+  } as any)
+const Char123LocaleChar125UsesDotmdRoute =
+  Char123LocaleChar125UsesDotmdRouteImport.update({
+    id: '/uses.md',
+    path: '/uses.md',
     getParentRoute: () => Char123LocaleChar125Route,
   } as any)
 const ApiBingWallpaperRoute = ApiBingWallpaperRouteImport.update({
@@ -142,6 +149,7 @@ export interface FileRoutesByFullPath {
   '/{-$locale}': typeof Char123LocaleChar125RouteWithChildren
   '/{-$locale}/md': typeof Char123LocaleChar125MdRoute
   '/{-$locale}/uses': typeof Char123LocaleChar125UsesRoute
+  '/{-$locale}/uses.md': typeof Char123LocaleChar125UsesDotmdRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/api/bing/wallpaper': typeof ApiBingWallpaperRoute
   '/api/github/repos': typeof ApiGithubReposRoute
@@ -162,6 +170,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/{-$locale}/md': typeof Char123LocaleChar125MdRoute
   '/{-$locale}/uses': typeof Char123LocaleChar125UsesRoute
+  '/{-$locale}/uses.md': typeof Char123LocaleChar125UsesDotmdRoute
   '/{-$locale}': typeof Char123LocaleChar125IndexRoute
   '/api/bing/wallpaper': typeof ApiBingWallpaperRoute
   '/api/github/repos': typeof ApiGithubReposRoute
@@ -184,6 +193,7 @@ export interface FileRoutesById {
   '/{-$locale}': typeof Char123LocaleChar125RouteWithChildren
   '/{-$locale}/md': typeof Char123LocaleChar125MdRoute
   '/{-$locale}/uses': typeof Char123LocaleChar125UsesRoute
+  '/{-$locale}/uses.md': typeof Char123LocaleChar125UsesDotmdRoute
   '/{-$locale}/': typeof Char123LocaleChar125IndexRoute
   '/api/bing/wallpaper': typeof ApiBingWallpaperRoute
   '/api/github/repos': typeof ApiGithubReposRoute
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/{-$locale}'
     | '/{-$locale}/md'
     | '/{-$locale}/uses'
+    | '/{-$locale}/uses.md'
     | '/{-$locale}/'
     | '/api/bing/wallpaper'
     | '/api/github/repos'
@@ -227,6 +238,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/{-$locale}/md'
     | '/{-$locale}/uses'
+    | '/{-$locale}/uses.md'
     | '/{-$locale}'
     | '/api/bing/wallpaper'
     | '/api/github/repos'
@@ -248,6 +260,7 @@ export interface FileRouteTypes {
     | '/{-$locale}'
     | '/{-$locale}/md'
     | '/{-$locale}/uses'
+    | '/{-$locale}/uses.md'
     | '/{-$locale}/'
     | '/api/bing/wallpaper'
     | '/api/github/repos'
@@ -339,6 +352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char123LocaleChar125UsesRouteImport
       parentRoute: typeof Char123LocaleChar125Route
     }
+    '/{-$locale}/uses.md': {
+      id: '/{-$locale}/uses.md'
+      path: '/uses.md'
+      fullPath: '/{-$locale}/uses.md'
+      preLoaderRoute: typeof Char123LocaleChar125UsesDotmdRouteImport
+      parentRoute: typeof Char123LocaleChar125Route
+    }
     '/api/bing/wallpaper': {
       id: '/api/bing/wallpaper'
       path: '/api/bing/wallpaper'
@@ -415,6 +435,7 @@ declare module '@tanstack/react-router' {
 interface Char123LocaleChar125RouteChildren {
   Char123LocaleChar125MdRoute: typeof Char123LocaleChar125MdRoute
   Char123LocaleChar125UsesRoute: typeof Char123LocaleChar125UsesRoute
+  Char123LocaleChar125UsesDotmdRoute: typeof Char123LocaleChar125UsesDotmdRoute
   Char123LocaleChar125IndexRoute: typeof Char123LocaleChar125IndexRoute
   Char123LocaleChar125AuthVerifiedRoute: typeof Char123LocaleChar125AuthVerifiedRoute
   Char123LocaleChar125DocsSplatRoute: typeof Char123LocaleChar125DocsSplatRoute
@@ -427,6 +448,7 @@ interface Char123LocaleChar125RouteChildren {
 const Char123LocaleChar125RouteChildren: Char123LocaleChar125RouteChildren = {
   Char123LocaleChar125MdRoute: Char123LocaleChar125MdRoute,
   Char123LocaleChar125UsesRoute: Char123LocaleChar125UsesRoute,
+  Char123LocaleChar125UsesDotmdRoute: Char123LocaleChar125UsesDotmdRoute,
   Char123LocaleChar125IndexRoute: Char123LocaleChar125IndexRoute,
   Char123LocaleChar125AuthVerifiedRoute: Char123LocaleChar125AuthVerifiedRoute,
   Char123LocaleChar125DocsSplatRoute: Char123LocaleChar125DocsSplatRoute,

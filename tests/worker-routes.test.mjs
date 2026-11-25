@@ -118,14 +118,14 @@ const cases = [
     path: '/docs/herdr.md',
     status: 200,
     language: 'zh-CN',
-    markdown: 'en',
+    markdown: 'en/docs/herdr.md',
   },
   {
     name: 'explicit English raw Markdown remains available',
     path: '/en/docs/herdr.md',
     status: 200,
     language: 'zh-CN',
-    markdown: 'en',
+    markdown: 'en/docs/herdr.md',
   },
   {
     name: 'English raw Markdown with a trailing slash bypasses language negotiation',
@@ -133,9 +133,37 @@ const cases = [
     language: 'zh-CN',
     fetchDestination: 'document',
     status: 200,
-    markdown: 'en',
+    markdown: 'en/docs/herdr.md',
   },
-  { name: 'Chinese raw Markdown', path: '/zh/docs/herdr.md', status: 200, markdown: 'zh' },
+  {
+    name: 'Chinese raw Markdown',
+    path: '/zh/docs/herdr.md',
+    status: 200,
+    markdown: 'zh/docs/herdr.md',
+  },
+  {
+    name: 'English Uses Markdown bypasses language negotiation',
+    path: '/uses.md',
+    status: 200,
+    language: 'zh-CN',
+    cookie: 'PARAGLIDE_LOCALE=zh',
+    fetchDestination: 'document',
+    markdown: 'en/pages/uses.md',
+  },
+  {
+    name: 'explicit English Uses Markdown remains available',
+    path: '/en/uses.md',
+    status: 200,
+    markdown: 'en/pages/uses.md',
+  },
+  {
+    name: 'Chinese Uses Markdown',
+    path: '/zh/uses.md',
+    status: 200,
+    cookie: 'PARAGLIDE_LOCALE=en',
+    markdown: 'zh/pages/uses.md',
+  },
+  { name: 'unknown Uses Markdown locale', path: '/fr/uses.md', status: 404 },
   {
     name: 'unknown localized document',
     path: '/zh/docs/unknown-document',
@@ -286,7 +314,7 @@ for (const scenario of cases) {
     }
     if (scenario.markdown) {
       const source = await readFile(
-        new URL(`../content/${scenario.markdown}/docs/herdr.md`, import.meta.url),
+        new URL(`../content/${scenario.markdown}`, import.meta.url),
         'utf8',
       )
       const frontmatterEnd = source.indexOf('\n---', 3)

@@ -9,6 +9,7 @@ export default defineConfig({
   strategy: ['baseLocale'],
   routeStrategies: [
     { match: '/:locale(en|zh)?/docs/:file(.*).md{/}?', exclude: true },
+    { match: '/:locale(en|zh)?/uses.md{/}?', exclude: true },
     { match: '/:locale(en|zh)/:path(.*)?', strategy: ['url', 'cookie', 'baseLocale'] },
     { match: '/', strategy: negotiated },
     { match: '/docs/:path(.*)?', strategy: negotiated },
