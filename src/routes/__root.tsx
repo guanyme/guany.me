@@ -1,7 +1,8 @@
-import { HeadContent, Scripts, createRootRoute, useParams, useRouter } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRoute, useParams } from '@tanstack/react-router'
+import { TanStackDevtools } from '@tanstack/react-devtools'
+import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { ThemeProvider, useTheme } from 'next-themes'
 import { useEffect } from 'react'
-import { Button } from '#/components/ui/button'
 import { THEME_COLOR } from '#/lib/site'
 import { m } from '#/paraglide/messages.js'
 import { baseLocale, isLocale } from '#/paraglide/runtime.js'
@@ -25,7 +26,6 @@ export const Route = createRootRoute({
   }),
   shellComponent: RootDocument,
   notFoundComponent: NotFound,
-  errorComponent: RouteError,
 })
 
 function useDocumentLocale() {
@@ -36,20 +36,6 @@ function useDocumentLocale() {
 function NotFound() {
   const locale = useDocumentLocale()
   return <p className="mx-auto max-w-7xl p-6">{m.not_found({}, { locale })}</p>
-}
-
-function RouteError() {
-  const locale = useDocumentLocale()
-  const router = useRouter()
-
-  return (
-    <div className="mx-auto max-w-7xl space-y-3 p-6" role="alert">
-      <p>{m.route_error({}, { locale })}</p>
-      <Button variant="link" onClick={() => void router.invalidate()}>
-        {m.try_again({}, { locale })}
-      </Button>
-    </div>
-  )
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
@@ -80,6 +66,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
           <SyncThemeColor />
           {children}
         </ThemeProvider>
+        <TanStackDevtools
+          plugins={[{ name: 'TanStack Router', render: <TanStackRouterDevtoolsPanel /> }]}
+        />
         <Scripts />
       </body>
     </html>

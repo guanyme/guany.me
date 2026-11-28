@@ -320,6 +320,19 @@ for (const scenario of cases) {
   })
 }
 
+test('direct project search links preserve literal numeric keywords', async () => {
+  for (const keyword of ['123', '1e3', '9007199254740993']) {
+    const response = await fetch(new URL(`/projects?keyword=${keyword}`, origin), {
+      headers: { 'Accept-Language': 'en' },
+    })
+
+    assert.equal(response.status, 200)
+    assert.match(response.headers.get('content-type') ?? '', /^text\/html\b/)
+    const body = await response.text()
+    assert.match(body, new RegExp(`<input(?=[^>]*name="keyword")(?=[^>]*value="${keyword}")`))
+  }
+})
+
 test('the English alias stays English after its redirect', async () => {
   const headers = {
     'Accept-Language': 'zh-CN',

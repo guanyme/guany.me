@@ -27,7 +27,8 @@ export const getProjectPage = createServerFn({ method: 'GET' })
   .handler(async ({ data: { slug, locale } }) => {
     const repos = await getRepos()
     const repo = await getRepoByName(slug, repos)
-    if (!repo) throw notFound()
+    if (repo === 'unavailable') throw new Error('GitHub repository data is temporarily unavailable')
+    if (repo === null) throw notFound()
     const readme = await getRepoReadme(repo.full_name, repo.default_branch, locale)
     const index = repos.findIndex(({ id }) => id === repo.id)
     return {

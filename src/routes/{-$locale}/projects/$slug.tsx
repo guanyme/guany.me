@@ -14,14 +14,17 @@ import { getProjectPage } from '#/server/projects.functions'
 
 export const Route = createFileRoute('/{-$locale}/projects/$slug')({
   loader: ({ context: { locale }, params: { slug } }) => getProjectPage({ data: { locale, slug } }),
-  head: ({ loaderData, params }) => {
+  head: ({ loaderData, match, params }) => {
     const locale = params.locale ?? baseLocale
     const pathname = projectPath(params.slug)
     const repo = loaderData?.repo
     return siteHead({
       locale,
       pathname,
-      title: repo?.name ?? m.projects_not_found({}, { locale }),
+      title:
+        match.status === 'notFound'
+          ? m.projects_not_found({}, { locale })
+          : (repo?.name ?? params.slug),
       description:
         repo?.description ?? m.projects_project_details({ name: params.slug }, { locale }),
     })

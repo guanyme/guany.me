@@ -12,7 +12,7 @@ const userTtl = 60 * 60_000
 const readmeTtl = 12 * 60 * 60_000
 const reposSchema = githubRepoSchema.array()
 const upstreamRepoSchema = githubRepoSchema.extend({ fork: z.boolean(), private: z.boolean() })
-const nullableRepository = githubRepoSchema.nullable()
+const repositoryLookupSchema = z.union([githubRepoSchema.nullable(), z.literal('unavailable')])
 const slugPattern = /^[\w.-]+$/
 const fullNamePattern = /^[\w-]+\/[\w.-]+$/
 const readmeSchema = z.string().nullable()
@@ -88,7 +88,7 @@ export function getRepos(): Promise<GitHubRepo[]> {
 export async function getRepoByName(
   name: string,
   repos?: GitHubRepo[],
-): Promise<GitHubRepo | null> {
+): Promise<z.infer<typeof repositoryLookupSchema>> {
   if (!slugPattern.test(name) || name === '.' || name === '..') return null
   const repo = (repos ?? (await getRepos())).find((entry) => entry.name === name)
   if (repo) return repo
@@ -97,8 +97,8 @@ export async function getRepoByName(
   return cachedPublicData({
     name: `github:repo:${owner}/${name}`,
     ttl: repoTtl,
-    schema: nullableRepository,
-    fallback: null,
+    schema: repositoryLookupSchema,
+    fallback: 'unavailable',
     async load() {
       const response = await githubFetch(
         `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(name)}`,
